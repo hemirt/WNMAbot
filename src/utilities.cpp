@@ -1,5 +1,11 @@
 #include "utilities.hpp"
 
+#include <algorithm>
+#include <ctime>
+#include <iomanip>
+#include <locale>
+#include <sstream>
+
 void
 changeToLower(std::string &str)
 {

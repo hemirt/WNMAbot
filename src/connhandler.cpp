@@ -1,4 +1,5 @@
 #include "connhandler.hpp"
+#include "channel.hpp"
 
 ConnHandler::ConnHandler(const std::string &pss, const std::string &nck)
     : pass(pss)
@@ -10,11 +11,13 @@ ConnHandler::ConnHandler(const std::string &pss, const std::string &nck)
     twitch_it = resolver.resolve(query);
 
     auto lambda = [this] {
-        if (!(this->quit))
+        if (!(this->quit)) {
             return;
+        }
         for (auto &i : currentChannels) {
-            if (i.second->messageCount > 0)
+            if (i.second->messageCount > 0) {
                 --i.second->messageCount;
+            }
         }
         std::this_thread::sleep_for(std::chrono::seconds(2));
     };

@@ -1,11 +1,6 @@
 #ifndef UTILITIES_HPP
 #define UTILITIES_HPP
 
-#include <algorithm>
-#include <ctime>
-#include <iomanip>
-#include <locale>
-#include <sstream>
 #include <string>
 #include <vector>
 

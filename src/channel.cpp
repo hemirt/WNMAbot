@@ -1,5 +1,7 @@
 #include "channel.hpp"
+#include "connhandler.hpp"
 
+#include <iostream>
 #include <string>
 
 void

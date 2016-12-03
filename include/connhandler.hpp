@@ -1,16 +1,13 @@
 #ifndef CONNHANDLER_HPP
 #define CONNHANDLER_HPP
 
-#include "channel.hpp"
 #include "eventqueue.hpp"
 #include "utilities.hpp"
 
 #include <boost/asio.hpp>
 
-#include <iostream>
 #include <map>
 #include <memory>
-#include <set>
 #include <string>
 
 class Channel;

@@ -1,16 +1,13 @@
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
-#include "connhandler.hpp"
 #include "eventqueue.hpp"
 
 #include <boost/asio.hpp>
 
 #include <atomic>
 #include <chrono>
-#include <iostream>
 #include <map>
-#include <memory>
 #include <string>
 
 class ConnHandler;
