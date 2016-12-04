@@ -52,7 +52,7 @@
 !dysnomia#all#say#Dysnomia officially (136199) Eris I Dysnomia is the only known moon of the dwarf planet Eris. It was discovered in 2005 by Mike Brown and the laser guide star adaptive optics team at the W. M. Keck Observatory, and carried the provisional designation of S/2005 (2003 UB313) 1 until officially named Dysnomia after the daughter of the Greek goddess Eris.
 !earth#all#say#Earth (otherwise known as the world, in Greek: Γαῖα Gaia, or in Latin: Terra) is the third planet from the Sun, the densest planet in the Solar System, the largest of the Solar System's four terrestrial planets, and the only astronomical object known to harbor life.
 !ele#all#say#ele
-!enation#all#say#/me WEEB NATION 👌 VoHiYo
+!enation#all#say#NATION AUTISTIC @ifrnd@<50#4HEad#@ifrnd@>50#4Head#@ifrnd@=50#EleGiggle# 👌
 !enceladus#all#say#Enceladus is the sixth-largest moon of Saturn. It is approximately 500 kilometers in diameter, about a tenth of that of Saturn's largest moon, Titan. Enceladus is mostly covered by fresh, clean ice, reflecting almost all the sunlight that strikes it, making its surface temperature at noon reach only −198 °C.
 !eris#all#say#Eris (minor-planet designation 136199 Eris) is the most massive and second-largest dwarf planet known in the Solar System. It is also the ninth-most-massive known body directly orbiting the Sun, and the largest known body in the Solar System not visited by a spacecraft.
 !europa#all#say#Europa (Jupiter II), is the sixth-closest moon of Jupiter, and the smallest of its four Galilean satellites, and the sixth-largest moon in the Solar System. Europa was discovered in 1610 by Galileo Galilei and was named after Europa, mother of King Minos of Crete, who became one of Zeus' lovers.
@@ -62,9 +62,11 @@
 !fab#all#say#OpieOP
 !fabulouspotato69#all#say#OpieOP
 !fag#all#say#DansGame
+!fedx#all#say#nature.com/article-assets/npg/srep/2016/161123/srep37740/images/w926/srep37740-f1.jpg Substoichiometric FeDx crystal with all octahedral D sites (small red circles) and all tetrahedral vacancy sites (small yellow circles) in an Fe (large white circles) hexagonal close-packed (hcp) lattice at 332 GPa and 4820 K near the inner core centre. PagChomp
 !fourtf#hemirt#say#fourtf https://nlguillemot.wordpress.com/2016/11/18/opengl-renderer-design/ SeemsGood
 !ganymede#all#say#Ganymede (Jupiter III) is the largest moon of Jupiter and in the Solar System, and the only moon known to have a magnetic field. It is the seventh satellite outward from Jupiter and third of the Galilean moons. Ganymede orbits Jupiter in roughly seven days and is in a 1:2:4 orbital resonance with the moons Europa and Io.
 !gekota#all#say#http://i.imgur.com/PznxJl2.png FeelsGoodMan
+!gnkiss#all#say#@me@ bids @id1@ goodnight and gently kisses their 4HEad
 !gnome#all#say#http://i.imgur.com/89HlXNX.png pajaDank
 !golden#all#say#golden Kappa Test
 !goldenkappa#all#say#Golden Kappa Check
@@ -186,6 +188,7 @@ pajaw#talaendril#say#PajaWLookingOutOfHisMemePortal
 php#all#say#p 4HEad h 4HEad p
 pong#lobbytf#say#fourtfbot, STOP OPPRESSING ME HotPokket , also lobbytf icdb47 OMEGALUL
 shutthefuckupweebs#all#say#nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls
+thinkingfaceemoji#all#say#ThinkingFaceEmoji
 weneedmoreautisticbots#all#say#@me@, 👋 MrDestructoid
 weneedmoreautisticbots,#all#say#@me@, 👋 MrDestructoid
 🤔#all#say#🤔

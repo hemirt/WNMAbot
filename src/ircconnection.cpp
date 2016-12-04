@@ -1120,19 +1120,6 @@ IrcConnection::handleCommands(std::string &user, const std::string &channel,
             return;
         }
 
-        // if(msg.compare(0, strlen("!size"), "!size") == 0)
-        // {
-        // try
-        // {
-        // std::cout << channel << " size: " <<
-        // this->channels.channelsItemsMap.at(channel).size() << std::endl;
-        // }
-        // catch(std::exception &e)
-        // {
-        // std::cout << "exception get size: " << e.what() << std::endl;
-        // }
-        // return;
-        // }
         if (msg.compare(0, strlen("!rolet "), "!rolet ") == 0) {
             std::vector<std::string> vek;
             while (msg.find(".") != std::string::npos) {
