@@ -13,6 +13,7 @@ Channel::Channel(const std::string &_channelName, BotEventQueue &_eventQueue,
     , owner(_owner)
     , ioService(_ioService)
     , credentials(owner->nick, owner->pass)
+    , messageCount(0)
 {
     // Create initial connection
     this->createConnection();

@@ -39,7 +39,7 @@ public:
     std::atomic<bool> quit;
 
     // right now public, connhandler is using it
-    unsigned int messageCount = 0;
+    std::atomic<unsigned int> messageCount;
 
     const bool
     operator<(const Channel &r) const
