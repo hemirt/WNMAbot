@@ -51,8 +51,6 @@ private:
     // Dummy work that makes sure ioService doesn't shut down
     boost::asio::io_service::work dummyWork;
 
-    std::thread asioThread;
-
     BoostConnection::resolver resolver;
 
     // Iterator for twitch chat server endpoints

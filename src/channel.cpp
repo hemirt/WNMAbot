@@ -86,6 +86,15 @@ Channel::handleMessage(const IRCMessage &message)
 
             return true;
         } break;
+
+        case IRCMessage::Type::PING: {
+            // TODO: This needs to reply to the specific connection
+            // handleMessage should take a shared_ptr to the connection the
+            // message came from as a parameter
+            // only relevant when we have more than one connection per channel
+            this->sendToOne("PONG :" + message.params);
+        } break;
+
         default: {
             // Unknown message type
         } break;

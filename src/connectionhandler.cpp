@@ -10,7 +10,6 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
     , nick(_nick)
     , quit(false)
     , dummyWork(this->ioService)
-    , asioThread([&] { this->ioService.run(); })
     , resolver(this->ioService)
     , twitchEndpoint(
           this->resolver
@@ -21,6 +20,7 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
         if (!(this->quit)) {
             return;
         }
+        // XXX(pajlada): don't you need a mutex here too?
         for (auto &i : this->channels) {
             if (i.second.messageCount > 0) {
                 --i.second.messageCount;
@@ -75,65 +75,9 @@ ConnectionHandler::leaveChannel(const std::string &channelName)
 void
 ConnectionHandler::run()
 {
-    while (!(this->quit)) {
-        this->eventQueue.wait();
-        while (!(this->eventQueue.empty()) && !(this->quit)) {
-            // std::cout << "event" << std::endl;
-            auto pair = this->eventQueue.pop();
-            std::unique_ptr<boost::asio::streambuf> b(std::move(pair.first));
-            std::string chn = pair.second;
-
-            std::istream is(&(*b));
-            std::string line(std::istreambuf_iterator<char>(is), {});
-
-            std::string delimiter = "\r\n";
-            std::vector<std::string> vek;
-
-            size_t pos = 0;
-            while ((pos = line.find(delimiter)) != std::string::npos) {
-                vek.push_back(line.substr(0, pos));
-                line.erase(0, pos + delimiter.length());
-            }
-
-            for (int i = 0; i < vek.size(); ++i) {
-                std::string oneline = vek.at(i);
-
-                if (oneline.find("PRIVMSG") != std::string::npos) {
-                    size_t pos =
-                        oneline.find("PRIVMSG #") + strlen("PRIVMSG #");
-                    std::string channelName = oneline.substr(
-                        pos,
-                        oneline.find(":", oneline.find("PRIVMSG #")) - pos - 1);
-                    std::string ht_chn = "#" + channelName;
-                    std::string msg = oneline.substr(
-                        oneline.find(":", oneline.find(ht_chn)) + 1,
-                        std::string::npos);
-                    std::string user = oneline.substr(
-                        oneline.find(":") + 1,
-                        oneline.find("!") - oneline.find(":") - 1);
-                    {
-                        //this->handleMessage(user, channelName, msg);
-                    }
-                } else if (oneline.find("PING") != std::string::npos) {
-                    if (this->channels.count(chn) == 1) {
-                        std::cout << "PONGING" << chn << std::endl;
-                        std::string pong = "PONG :tmi.twitch.tv\r\n";
-                        // this->channelSockets[chn].sock->async_send(boost::asio::buffer(pong),
-                        // handler); //define hnadler
-                    }
-                }
-                /*else if(oneline.find("PONG") != std::string::npos)
-                {
-                        {
-                                std::cout << "got ping " << chn << std::endl;
-                                std::lock_guard<std::mutex>
-                lk(this->pingMap[chn]->mtx);
-                                this->pingMap[chn]->pinged = true;
-                        }
-                        this->pingMap[chn]->cv.notify_all();
-                }
-                */
-            }
-        }
+    try {
+        this->ioService.run();
+    } catch(const std::exception &ex) {
+        std::cerr << "Exception caught in ConnectionHandler::run(): " << ex.what() << std::endl;
     }
 }
