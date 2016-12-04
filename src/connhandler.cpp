@@ -150,10 +150,15 @@ void
 ConnHandler::handleCommands(std::string &user, const std::string &channel,
                             std::string &msg)
 {
-    if (user == "hemirt")
+    if (user == "hemirt") {
         sendMsg(channel, "EleGiggle");
-    if (user == "hemirt" && msg == "!dung")
-        quit = true;
-    if (user == "hemirt" && msg == "!deng")
-        leaveChannel(channel);
+
+        if (msg == "!dung") {
+            quit = true;
+        } else if (msg == "!deng") {
+            leaveChannel(channel);
+        }
+    } else if (user == "pajlada") {
+        sendMsg(channel, "KKona");
+    }
 }
