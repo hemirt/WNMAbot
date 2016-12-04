@@ -1,5 +1,5 @@
 #include "channel.hpp"
-#include "connhandler.hpp"
+#include "connectionhandler.hpp"
 
 #include <iostream>
 #include <string>
@@ -9,13 +9,13 @@ handler(const boost::system::error_code &error, std::size_t bytes_transferred)
 {
 }
 
-Channel::Channel(const std::string &_channelName, BotEventQueue &evq,
-                 boost::asio::io_service &io_s, ConnHandler *_owner)
+Channel::Channel(const std::string &_channelName, BotEventQueue &_eventQueue,
+                 boost::asio::io_service &ioService, ConnectionHandler *_owner)
     : channelName(_channelName)
-    , eventQueue(evq)
+    , eventQueue(_eventQueue)
     , pingReplied(false)
     , quit(false)
-    , sock(io_s)
+    , sock(ioService)
     , owner(_owner)
     , readThread(&Channel::read, this)
 {

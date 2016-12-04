@@ -10,13 +10,13 @@
 #include <map>
 #include <string>
 
-class ConnHandler;
+class ConnectionHandler;
 
 class Channel
 {
 public:
-    Channel(const std::string &_channelName, BotEventQueue &evq,
-            boost::asio::io_service &io_s, ConnHandler *_owner);
+    Channel(const std::string &_channelName, BotEventQueue &_eventQueue,
+            boost::asio::io_service &ioService, ConnectionHandler *_owner);
     ~Channel();
 
     void read();
@@ -56,8 +56,9 @@ private:
     // Used in anti-spam measure so we don't get globally banned
     std::chrono::high_resolution_clock::time_point lastMessageTime;
 
-    // The ConnHandler managin this channel, should be only one in whole app
-    ConnHandler *owner;
+    // The ConnectionHandler managin this channel, should be only one in whole
+    // app
+    ConnectionHandler *owner;
 
     // thread that reads and we join
     std::thread readThread;

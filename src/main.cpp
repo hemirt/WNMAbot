@@ -1,4 +1,4 @@
-#include "connhandler.hpp"
+#include "connectionhandler.hpp"
 
 #include <iostream>
 
@@ -11,7 +11,7 @@ main(int argc, char *argv[])
         return 1;
     }
 
-    ConnHandler irc(argv[1], argv[2]);
+    ConnectionHandler irc(argv[1], argv[2]);
 
     irc.joinChannel("pajlada");
     irc.joinChannel("hemirt");

@@ -1,7 +1,8 @@
-#include "connhandler.hpp"
+#include "connectionhandler.hpp"
 #include "channel.hpp"
 
-ConnHandler::ConnHandler(const std::string &pss, const std::string &nck)
+ConnectionHandler::ConnectionHandler(const std::string &pss,
+                                     const std::string &nck)
     : pass(pss)
     , nick(nck)
     , quit(false)
@@ -25,7 +26,7 @@ ConnHandler::ConnHandler(const std::string &pss, const std::string &nck)
     msgDecreaser = std::thread(lambda);
 }
 
-ConnHandler::~ConnHandler()
+ConnectionHandler::~ConnectionHandler()
 {
     std::cout << "destructing" << std::endl;
     msgDecreaser.join();
@@ -35,7 +36,7 @@ ConnHandler::~ConnHandler()
 }
 
 bool
-ConnHandler::joinChannel(const std::string &channelName)
+ConnectionHandler::joinChannel(const std::string &channelName)
 {
     std::lock_guard<std::mutex> lk(mtx);
 
@@ -51,7 +52,7 @@ ConnHandler::joinChannel(const std::string &channelName)
 }
 
 bool
-ConnHandler::leaveChannel(const std::string &channelName)
+ConnectionHandler::leaveChannel(const std::string &channelName)
 {
     std::lock_guard<std::mutex> lk(mtx);
 
@@ -66,7 +67,7 @@ ConnHandler::leaveChannel(const std::string &channelName)
 }
 
 void
-ConnHandler::run()
+ConnectionHandler::run()
 {
     while (!(this->quit)) {
         this->eventQueue.wait();
@@ -131,7 +132,8 @@ ConnHandler::run()
 }
 
 void
-ConnHandler::sendMsg(const std::string &channel, const std::string &message)
+ConnectionHandler::sendMsg(const std::string &channel,
+                           const std::string &message)
 {
     std::lock_guard<std::mutex> lk(mtx);
 
@@ -143,9 +145,9 @@ ConnHandler::sendMsg(const std::string &channel, const std::string &message)
 }
 
 bool
-ConnHandler::handleMessage(const std::string &user,
-                           const std::string &channelName,
-                           const std::string &msg)
+ConnectionHandler::handleMessage(const std::string &user,
+                                 const std::string &channelName,
+                                 const std::string &msg)
 {
     auto chanIt = this->channels.find(channelName);
     if (chanIt == this->channels.end()) {

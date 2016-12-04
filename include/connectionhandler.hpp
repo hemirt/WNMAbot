@@ -12,11 +12,11 @@
 
 class Channel;
 
-class ConnHandler
+class ConnectionHandler
 {
 public:
-    ConnHandler(const std::string &pass, const std::string &nick);
-    ~ConnHandler();
+    ConnectionHandler(const std::string &pass, const std::string &nick);
+    ~ConnectionHandler();
 
     bool joinChannel(const std::string &channelName);
     bool leaveChannel(const std::string &channelName);
