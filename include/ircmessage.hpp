@@ -1,6 +1,7 @@
 #ifndef IRCMESSAGE_HPP
 #define IRCMESSAGE_HPP
 
+#include <algorithm>
 #include <string>
 
 struct MiddleMessage {

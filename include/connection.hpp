@@ -16,8 +16,6 @@ public:
                MessageHandler *_handler);
     virtual ~Connection();
 
-    void start();
-
     void writeMessage(const std::string &message);
 
 private:

@@ -47,7 +47,7 @@
 !ding#pajlada#say#DING DONG
 !ding#ian678#say#dong gachiGASM
 !ding#hemirt#say#One gong for Goshujin-sama VoHiYo
-!ding#lilguy066#say#dong xD 
+!ding#lilguy066#dong#xDD
 !dione#all#say#Dione (/daɪˈoʊni/; Greek: Διώνη) is a moon of Saturn. It was discovered by Italian astronomer Giovanni Domenico Cassini in 1684. It is named after the Titaness Dione of Greek mythology. It is also designated Saturn IV.
 !dysnomia#all#say#Dysnomia officially (136199) Eris I Dysnomia is the only known moon of the dwarf planet Eris. It was discovered in 2005 by Mike Brown and the laser guide star adaptive optics team at the W. M. Keck Observatory, and carried the provisional designation of S/2005 (2003 UB313) 1 until officially named Dysnomia after the daughter of the Greek goddess Eris.
 !earth#all#say#Earth (otherwise known as the world, in Greek: Γαῖα Gaia, or in Latin: Terra) is the third planet from the Sun, the densest planet in the Solar System, the largest of the Solar System's four terrestrial planets, and the only astronomical object known to harbor life.
@@ -115,6 +115,7 @@
 !nice#all#say#NICE BOT EleGiggle
 !nicememe#all#say#nͫiͤcͫeͤ
 !nogger#all#say#TriHard
+!nuuls#hemirt#say#std::nullptr_t nuuls BabyRage
 !oberon#all#say#Oberon, also designated Uranus IV, is the outermost major moon of the planet Uranus. It is the second-largest and second most massive of the Uranian moons, and the ninth most massive moon in the Solar System. Discovered by William Herschel in 1787. Its orbit lies partially outside Uranus's magnetosphere.
 !orcus#all#say#90482 Orcus is a Kuiper belt object with a large moon, Vanth. It was discovered on February 17, 2004 by Michael Brown of Caltech, Chad Trujillo of the Gemini Observatory, and David Rabinowitz of Yale University. Precovery images as early as November 8, 1951 were later identified. It is probably a dwarf planet.
 !oyasumi#all#say#Oyasumi @id1@-chan, mata ashita ne VoHiYo
@@ -178,17 +179,18 @@
 !zzz#all#say#ResidentSleeper ResidentSleeper ResidentSleeper ResidentSleeper ResidentSleeper ResidentSleeper ResidentSleeper
 !čas#all#say#Právě je @time@.
 !češi#all#say#ČEŠI V CHATE FailFish
+4head#fourtf#say#ZULUL
 @weneedmoreautisticbots#all#say#@me@, 👋 MrDestructoid
 @weneedmoreautisticbots,#all#say#@me@, 👋 MrDestructoid
 all#say#@me@#told @id1@ to keep themselves safe FeelsGoodMan
 elelul#all#say#čhehad 
 f#all#say#Press f to pay respects. f
-kkaper#nuulsbot#say#KKaper
+miniop#all#say#MiniOP 🍕 🍰 🍫
+miniop#🍕#🍰#🍫 🍨
 pajaw#talaendril#say#PajaWLookingOutOfHisMemePortal
 php#all#say#p 4HEad h 4HEad p
 pong#lobbytf#say#fourtfbot, STOP OPPRESSING ME HotPokket , also lobbytf icdb47 OMEGALUL
 shutthefuckupweebs#all#say#nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls nyanPls
-thinkingfaceemoji#all#say#ThinkingFaceEmoji
 weneedmoreautisticbots#all#say#@me@, 👋 MrDestructoid
 weneedmoreautisticbots,#all#say#@me@, 👋 MrDestructoid
 🤔#all#say#🤔

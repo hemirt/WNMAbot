@@ -15,17 +15,11 @@ Connection::Connection(boost::asio::io_service &ioService,
     , handler(_handler)
 {
     // When the connection object is started, we start connecting
-    this->start();
+    this->startConnect();
 }
 
 Connection::~Connection()
 {
-}
-
-void
-Connection::start()
-{
-    this->startConnect();
 }
 
 void
