@@ -20,7 +20,6 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
         if (!(this->quit)) {
             return;
         }
-        // XXX(pajlada): don't you need a mutex here too?
         for (auto &i : this->channels) {
             if (i.second.messageCount > 0) {
                 --i.second.messageCount;
