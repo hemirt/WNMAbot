@@ -65,10 +65,12 @@ Channel::sendMsg(const std::string &msg)
 
     // Message length at most 350 characters
     if (msg.length() >= 350) {
-        rawMessage += msg.substr(0, 350) + ' ';
+        rawMessage += msg.substr(0, 350);
+    } else {
+        rawMessage += msg;
     }
 
-    rawMessage += "\r\n";
+    rawMessage += " \r\n";
 
     sock.async_send(boost::asio::buffer(rawMessage),
                     handler);  // define handler
