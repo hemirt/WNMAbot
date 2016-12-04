@@ -4,11 +4,6 @@
 #include <iostream>
 #include <string>
 
-void
-handler(const boost::system::error_code &error, std::size_t bytes_transferred)
-{
-}
-
 Channel::Channel(const std::string &_channelName, BotEventQueue &_eventQueue,
                  boost::asio::io_service &_ioService, ConnectionHandler *_owner)
     : channelName(_channelName)

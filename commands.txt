@@ -185,8 +185,7 @@
 all#say#@me@#told @id1@ to keep themselves safe FeelsGoodMan
 elelul#all#say#čhehad 
 f#all#say#Press f to pay respects. f
-miniop#all#say#MiniOP 🍕 🍰 🍫
-miniop#🍕#🍰#🍫 🍨
+miniop#all#say#MiniOP 🍕 🍫 🍰 🍨
 pajaw#talaendril#say#PajaWLookingOutOfHisMemePortal
 php#all#say#p 4HEad h 4HEad p
 pong#lobbytf#say#fourtfbot, STOP OPPRESSING ME HotPokket , also lobbytf icdb47 OMEGALUL
