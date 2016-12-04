@@ -85,7 +85,6 @@ Channel::sendMsg(const std::string &msg)
 bool
 Channel::handleMessage(const std::string &user, const std::string &msg)
 {
-    std::cerr << "handle message" << std::endl;
     if (user == "hemirt") {
         return this->sendMsg("EleGiggle");
 
@@ -113,7 +112,6 @@ Channel::read()
             // i++;
             // std::cout << i << channelName << std::endl;
             // if(i > 7) this->quit = true;
-            std::cout << "xD" << std::endl;
             std::unique_ptr<boost::asio::streambuf> b(
                 new boost::asio::streambuf);
             boost::system::error_code ec;
