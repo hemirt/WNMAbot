@@ -10,6 +10,7 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
     , nick(_nick)
     , quit(false)
     , dummyWork(this->ioService)
+    , asioThread([&] { this->ioService.run(); })
 {
     boost::asio::ip::tcp::resolver resolver(this->ioService);
     boost::asio::ip::tcp::resolver::query query(IRC_HOST, IRC_PORT);

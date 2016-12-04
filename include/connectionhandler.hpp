@@ -50,13 +50,12 @@ private:
     // A bool for quit? checking
     std::atomic<bool> quit;
 
-    // Why do you shorten this?
-    // TODO: rename to ioService
     boost::asio::io_service ioService;
+
+    // Dummy work that makes sure ioService doesn't shut down
     boost::asio::io_service::work dummyWork;
 
-    // Dummy work that we can start/stop at will to control the ioService
-    std::unique_ptr<boost::asio::io_service::work> dummywork;
+    std::thread asioThread;
 
     // Thread which decreases the messageCount on all Channels
     std::thread msgDecreaser;
