@@ -19,7 +19,7 @@ Channel::Channel(const std::string &_channelName, BotEventQueue &_eventQueue,
     , owner(_owner)
     , readThread(&Channel::read, this)
 {
-    boost::asio::connect(sock, owner->twitch_it);
+    boost::asio::connect(sock, owner->twitchResolverIterator);
 
     std::string passx = "PASS " + owner->pass + "\r\n";
     std::string nickx = "NICK " + owner->nick + "\r\n";
@@ -51,7 +51,6 @@ Channel::sendMsg(const std::string &msg)
         std::chrono::duration_cast<std::chrono::milliseconds>(timeNow -
                                                               lastMessageTime);
 
-    std::cerr << messageCount << std::endl;
     if (messageCount >= 19) {
         // Too many messages sent recently
         return false;

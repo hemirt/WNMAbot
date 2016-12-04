@@ -1,15 +1,19 @@
 #include "connectionhandler.hpp"
 #include "channel.hpp"
 
-ConnectionHandler::ConnectionHandler(const std::string &pss,
-                                     const std::string &nck)
-    : pass(pss)
-    , nick(nck)
+static const char *IRC_HOST = "irc.chat.twitch.tv";
+static const char *IRC_PORT = "6667";
+
+ConnectionHandler::ConnectionHandler(const std::string &_pass,
+                                     const std::string &_nick)
+    : pass(_pass)
+    , nick(_nick)
     , quit(false)
+    , dummyWork(this->ioService)
 {
-    boost::asio::ip::tcp::resolver resolver(io_s);
-    boost::asio::ip::tcp::resolver::query query("irc.chat.twitch.tv", "6667");
-    twitch_it = resolver.resolve(query);
+    boost::asio::ip::tcp::resolver resolver(this->ioService);
+    boost::asio::ip::tcp::resolver::query query(IRC_HOST, IRC_PORT);
+    this->twitchResolverIterator = resolver.resolve(query);
 
     auto lambda = [this] {
         if (!(this->quit)) {
@@ -46,7 +50,7 @@ ConnectionHandler::joinChannel(const std::string &channelName)
 
     this->channels.emplace(
         std::piecewise_construct, std::forward_as_tuple(channelName),
-        std::forward_as_tuple(channelName, eventQueue, io_s, this));
+        std::forward_as_tuple(channelName, eventQueue, this->ioService, this));
 
     return true;
 }
@@ -82,6 +86,7 @@ ConnectionHandler::run()
 
             std::string delimiter = "\r\n";
             std::vector<std::string> vek;
+
             size_t pos = 0;
             while ((pos = line.find(delimiter)) != std::string::npos) {
                 vek.push_back(line.substr(0, pos));

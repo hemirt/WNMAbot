@@ -15,14 +15,13 @@ class Channel;
 class ConnectionHandler
 {
 public:
-    ConnectionHandler(const std::string &pass, const std::string &nick);
+    ConnectionHandler(const std::string &_pass, const std::string &_nick);
     ~ConnectionHandler();
 
     bool joinChannel(const std::string &channelName);
     bool leaveChannel(const std::string &channelName);
     void run();
 
-    // user should be a const string reference
     bool handleMessage(const std::string &user, const std::string &channelName,
                        const std::string &msg);
 
@@ -36,7 +35,7 @@ public:
     BotEventQueue eventQueue;
 
     // Iterator for twitch chat server endpoints
-    boost::asio::ip::tcp::resolver::iterator twitch_it;
+    boost::asio::ip::tcp::resolver::iterator twitchResolverIterator;
 
     // Login details
     std::string pass;
@@ -53,7 +52,8 @@ private:
 
     // Why do you shorten this?
     // TODO: rename to ioService
-    boost::asio::io_service io_s;
+    boost::asio::io_service ioService;
+    boost::asio::io_service::work dummyWork;
 
     // Dummy work that we can start/stop at will to control the ioService
     std::unique_ptr<boost::asio::io_service::work> dummywork;
