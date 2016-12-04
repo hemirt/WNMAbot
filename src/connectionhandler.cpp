@@ -11,11 +11,12 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
     , quit(false)
     , dummyWork(this->ioService)
     , asioThread([&] { this->ioService.run(); })
+    , resolver(this->ioService)
+    , twitchEndpoint(
+          this->resolver
+              .resolve(BoostConnection::resolver::query(IRC_HOST, IRC_PORT))
+              ->endpoint())
 {
-    boost::asio::ip::tcp::resolver resolver(this->ioService);
-    boost::asio::ip::tcp::resolver::query query(IRC_HOST, IRC_PORT);
-    this->twitchResolverIterator = resolver.resolve(query);
-
     auto lambda = [this] {
         if (!(this->quit)) {
             return;
@@ -111,7 +112,7 @@ ConnectionHandler::run()
                         oneline.find(":") + 1,
                         oneline.find("!") - oneline.find(":") - 1);
                     {
-                        this->handleMessage(user, channelName, msg);
+                        //this->handleMessage(user, channelName, msg);
                     }
                 } else if (oneline.find("PING") != std::string::npos) {
                     if (this->channels.count(chn) == 1) {
@@ -135,31 +136,4 @@ ConnectionHandler::run()
             }
         }
     }
-}
-
-void
-ConnectionHandler::sendMsg(const std::string &channel,
-                           const std::string &message)
-{
-    std::lock_guard<std::mutex> lk(mtx);
-
-    if (this->channels.count(channel) != 1) {
-        return;
-    }
-
-    this->channels.at(channel).sendMsg(message);
-}
-
-bool
-ConnectionHandler::handleMessage(const std::string &user,
-                                 const std::string &channelName,
-                                 const std::string &msg)
-{
-    auto chanIt = this->channels.find(channelName);
-    if (chanIt == this->channels.end()) {
-        // Can't resolve channel
-        return false;
-    }
-
-    return chanIt->second.handleMessage(user, msg);
 }

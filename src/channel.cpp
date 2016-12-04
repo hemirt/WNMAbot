@@ -10,41 +10,33 @@ handler(const boost::system::error_code &error, std::size_t bytes_transferred)
 }
 
 Channel::Channel(const std::string &_channelName, BotEventQueue &_eventQueue,
-                 boost::asio::io_service &ioService, ConnectionHandler *_owner)
+                 boost::asio::io_service &_ioService, ConnectionHandler *_owner)
     : channelName(_channelName)
     , eventQueue(_eventQueue)
     , pingReplied(false)
     , quit(false)
-    , sock(ioService)
     , owner(_owner)
-    , readThread(&Channel::read, this)
+    , ioService(_ioService)
+    , credentials(owner->nick, owner->pass)
 {
-    boost::asio::connect(sock, owner->twitchResolverIterator);
-
-    std::string passx = "PASS " + owner->pass + "\r\n";
-    std::string nickx = "NICK " + owner->nick + "\r\n";
-    std::string cmds = "CAP REQ :twitch.tv/commands\r\n";
-    std::string join = "JOIN #" + channelName + "\r\n";
-
-    sock.send(boost::asio::buffer(passx));
-    sock.send(boost::asio::buffer(nickx));
-    sock.send(boost::asio::buffer(cmds));
-    sock.send(boost::asio::buffer(join));
+    // Create initial connection
+    this->createConnection();
 }
 
 Channel::~Channel()
 {
     quit = true;
-    sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-    sock.close();
-    std::cout << "channel " << channelName << " before join" << std::endl;
-    // std::cout << "threadjoinable: " << readThread.joinable() << std::endl;
-    readThread.join();
-    std::cout << "channel " << channelName << " destructed" << std::endl;
+}
+
+void
+Channel::createConnection()
+{
+    this->connections.emplace_back(this->ioService, this->owner->getEndpoint(),
+                                   this->credentials, this->channelName, this);
 }
 
 bool
-Channel::sendMsg(const std::string &msg)
+Channel::say(const std::string &message)
 {
     auto timeNow = std::chrono::high_resolution_clock::now();
     auto msSinceLastMessage =
@@ -61,19 +53,16 @@ Channel::sendMsg(const std::string &msg)
         return false;
     }
 
-    std::string rawMessage = "PRIVMSG #" + channelName + " :";
+    std::string rawMessage = "PRIVMSG #" + this->channelName + " :";
 
     // Message length at most 350 characters
-    if (msg.length() >= 350) {
-        rawMessage += msg.substr(0, 350);
+    if (message.length() >= 350) {
+        rawMessage += message.substr(0, 350);
     } else {
-        rawMessage += msg;
+        rawMessage += message;
     }
 
-    rawMessage += " \r\n";
-
-    sock.async_send(boost::asio::buffer(rawMessage),
-                    handler);  // define handler
+    this->sendToOne(rawMessage);
 
     messageCount++;
     lastMessageTime = timeNow;
@@ -82,62 +71,42 @@ Channel::sendMsg(const std::string &msg)
 }
 
 bool
-Channel::handleMessage(const std::string &user, const std::string &msg)
+Channel::handleMessage(const IRCMessage &message)
 {
-    if (user == "hemirt") {
-        return this->sendMsg("EleGiggle");
+    switch (message.type) {
+        case IRCMessage::Type::PRIVMSG: {
+            std::cout << message.user << ": " << message.params << std::endl;
 
-        /*
-        if (msg == "!dung") {
-            quit = true;
-        } else if (msg == "!deng") {
-            leaveChannel(channel);
-        }
-        */
-    } else if (user == "pajlada") {
-        return this->sendMsg("KKona");
+            // TODO: Implement command handler here
+            if (message.user == "pajlada") {
+                this->say("KKona");
+            } else if (message.user == "hemirt") {
+                this->say("EleGiggle");
+            }
+
+            return true;
+        } break;
+        default: {
+            // Unknown message type
+        } break;
     }
 
     return false;
 }
 
 void
-Channel::read()
+Channel::sendToOne(const std::string &message)
 {
-    std::cout << "started reading: " << channelName << std::endl;
-    // int i = 0;
-    try {
-        while (!this->quit) {
-            // i++;
-            // std::cout << i << channelName << std::endl;
-            // if(i > 7) this->quit = true;
-            std::unique_ptr<boost::asio::streambuf> b(
-                new boost::asio::streambuf);
-            boost::system::error_code ec;
-            boost::asio::read_until(sock, *b, "\r\n", ec);
-            if (!(ec && !(this->quit))) {
-                eventQueue.push(
-                    std::pair<std::unique_ptr<boost::asio::streambuf>,
-                              std::string>(std::move(b), channelName));
-            } else
-                break;
-        }
-    } catch (std::exception &e) {
-        std::cout << "exception running Channel" << channelName << " "
-                  << e.what() << std::endl;
-    }
+    // TODO: randomize which connection to send to if we have multiple
+    auto &connection = this->connections.at(0);
 
-    if (!(this->quit)) {
-        // this restarted reading, but tbh its quite pointless because it stops
-        // reading only
-        // when quiting(destroying this) or when the socket is in a wrong state,
-        // therefore we need to recreate this object
+    connection.writeMessage(message);
+}
 
-        // this->readThread.detach();
-        // this->readThread = std::thread(&Channel::read, this);
-
-        // cant do this, cause it results in a deadlock (this function will wait
-        // for this function to end)
-        // owner->leaveChannel(channelName);
+void
+Channel::sendToAll(const std::string &message)
+{
+    for (auto &connection : this->connections) {
+        connection.writeMessage(message);
     }
 }
