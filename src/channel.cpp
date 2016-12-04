@@ -47,24 +47,36 @@ bool
 Channel::sendMsg(const std::string &msg)
 {
     auto timeNow = std::chrono::high_resolution_clock::now();
-    if (messageCount < 19 &&
+    auto msSinceLastMessage =
         std::chrono::duration_cast<std::chrono::milliseconds>(timeNow -
-                                                              lastMessageTime)
-                .count() > 1500) {
-        std::string sendirc = "PRIVMSG #" + channelName + " :";
-        sendirc += msg + ' ';
-        if (sendirc.length() > 387)
-            sendirc = sendirc.substr(0, 387) + "\r\n";
-        else
-            sendirc += "\r\n";
-        sock.async_send(boost::asio::buffer(sendirc),
-                        handler);  // define handler
-        messageCount++;
-        lastMessageTime = timeNow;
-        return true;
-    } else {
+                                                              lastMessageTime);
+
+    if (messageCount >= 19) {
+        // Too many messages sent recently
         return false;
     }
+
+    if (msSinceLastMessage.count() <= 1500) {
+        // Last message was sent less than 1.5 seconds ago
+        return false;
+    }
+
+    std::string rawMessage = "PRIVMSG #" + channelName + " :";
+
+    // Message length at most 350 characters
+    if (msg.length() >= 350) {
+        rawMessage += msg.substr(0, 350) + ' ';
+    }
+
+    rawMessage += "\r\n";
+
+    sock.async_send(boost::asio::buffer(rawMessage),
+                    handler);  // define handler
+
+    messageCount++;
+    lastMessageTime = timeNow;
+
+    return true;
 }
 
 void
