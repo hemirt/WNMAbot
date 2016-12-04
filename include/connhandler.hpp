@@ -18,8 +18,8 @@ public:
     ConnHandler(const std::string &pass, const std::string &nick);
     ~ConnHandler();
 
-    void joinChannel(const std::string &);
-    void leaveChannel(const std::string &);
+    bool joinChannel(const std::string &channelName);
+    bool leaveChannel(const std::string &channelName);
     void run();
 
     // user should be a const string reference
@@ -31,7 +31,7 @@ public:
 
     // It's not a map of channel sockets, it's a map of channels.
     // I would just rename this to channels
-    std::map<std::string, std::unique_ptr<Channel>> currentChannels;
+    std::map<std::string, Channel> channels;
 
     BotEventQueue eventQueue;
 

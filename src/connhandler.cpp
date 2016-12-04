@@ -14,9 +14,9 @@ ConnHandler::ConnHandler(const std::string &pss, const std::string &nck)
         if (!(this->quit)) {
             return;
         }
-        for (auto &i : currentChannels) {
-            if (i.second->messageCount > 0) {
-                --i.second->messageCount;
+        for (auto &i : this->channels) {
+            if (i.second.messageCount > 0) {
+                --i.second.messageCount;
             }
         }
         std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -30,28 +30,39 @@ ConnHandler::~ConnHandler()
     std::cout << "destructing" << std::endl;
     msgDecreaser.join();
     std::cout << "joined" << std::endl;
-    currentChannels.clear();
+    this->channels.clear();
     std::cout << "cleared end destr" << std::endl;
 }
 
-void
-ConnHandler::joinChannel(const std::string &chn)
+bool
+ConnHandler::joinChannel(const std::string &channelName)
 {
     std::lock_guard<std::mutex> lk(mtx);
 
-    if (currentChannels.count(chn) == 1)
-        return;
-    currentChannels.emplace(
-        chn, std::make_unique<Channel>(chn, eventQueue, io_s, this));
+    if (this->channels.count(channelName) == 1) {
+        return false;
+    }
+
+    this->channels.emplace(
+        std::piecewise_construct, std::forward_as_tuple(channelName),
+        std::forward_as_tuple(channelName, eventQueue, io_s, this));
+
+    return true;
 }
 
-void
-ConnHandler::leaveChannel(const std::string &chn)
+bool
+ConnHandler::leaveChannel(const std::string &channelName)
 {
     std::lock_guard<std::mutex> lk(mtx);
-    if (currentChannels.count(chn) == 0)
-        return;
-    currentChannels.erase(chn);
+
+    if (this->channels.count(channelName) == 0) {
+        // We are not connected to the given channel
+        return false;
+    }
+
+    this->channels.erase(channelName);
+
+    return true;
 }
 
 void
@@ -100,7 +111,7 @@ ConnHandler::run()
                         handleCommands(user, channel, msg);
                     }
                 } else if (oneline.find("PING") != std::string::npos) {
-                    if (this->currentChannels.count(chn) == 1) {
+                    if (this->channels.count(chn) == 1) {
                         std::cout << "PONGING" << chn << std::endl;
                         std::string pong = "PONG :tmi.twitch.tv\r\n";
                         // this->channelSockets[chn].sock->async_send(boost::asio::buffer(pong),
@@ -127,9 +138,12 @@ void
 ConnHandler::sendMsg(const std::string &channel, const std::string &message)
 {
     std::lock_guard<std::mutex> lk(mtx);
-    if (currentChannels.count(channel) != 1)
+
+    if (this->channels.count(channel) != 1) {
         return;
-    currentChannels[channel]->sendMsg(message);
+    }
+
+    this->channels.at(channel).sendMsg(message);
 }
 
 void

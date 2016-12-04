@@ -11,8 +11,8 @@ handler(const boost::system::error_code &error, std::size_t bytes_transferred)
 
 Channel::Channel(const std::string &_channelName, BotEventQueue &evq,
                  boost::asio::io_service &io_s, ConnHandler *_owner)
-    : channelName{_channelName}
-    , eventQueue{evq}
+    : channelName(_channelName)
+    , eventQueue(evq)
     , pingReplied(false)
     , quit(false)
     , sock(io_s)
@@ -30,13 +30,6 @@ Channel::Channel(const std::string &_channelName, BotEventQueue &evq,
     sock.send(boost::asio::buffer(nickx));
     sock.send(boost::asio::buffer(cmds));
     sock.send(boost::asio::buffer(join));
-
-    // thread reading the socket
-    // readThread = std::thread([this]()
-    //{
-    //    this->read();
-    //});
-    // readThread.detach();
 }
 
 Channel::~Channel()
@@ -80,10 +73,11 @@ Channel::read()
     std::cout << "started reading: " << channelName << std::endl;
     // int i = 0;
     try {
-        while (!(this->quit)) {
+        while (!this->quit) {
             // i++;
             // std::cout << i << channelName << std::endl;
             // if(i > 7) this->quit = true;
+            std::cout << "xD" << std::endl;
             std::unique_ptr<boost::asio::streambuf> b(
                 new boost::asio::streambuf);
             boost::system::error_code ec;
