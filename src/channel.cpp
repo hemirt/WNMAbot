@@ -81,6 +81,27 @@ Channel::sendMsg(const std::string &msg)
     return true;
 }
 
+bool
+Channel::handleMessage(const std::string &user, const std::string &msg)
+{
+    std::cerr << "handle message" << std::endl;
+    if (user == "hemirt") {
+        return this->sendMsg("EleGiggle");
+
+        /*
+        if (msg == "!dung") {
+            quit = true;
+        } else if (msg == "!deng") {
+            leaveChannel(channel);
+        }
+        */
+    } else if (user == "pajlada") {
+        return this->sendMsg("KKona");
+    }
+
+    return false;
+}
+
 void
 Channel::read()
 {

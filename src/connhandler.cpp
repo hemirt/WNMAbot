@@ -93,10 +93,10 @@ ConnHandler::run()
                 if (oneline.find("PRIVMSG") != std::string::npos) {
                     size_t pos =
                         oneline.find("PRIVMSG #") + strlen("PRIVMSG #");
-                    std::string channel = oneline.substr(
+                    std::string channelName = oneline.substr(
                         pos,
                         oneline.find(":", oneline.find("PRIVMSG #")) - pos - 1);
-                    std::string ht_chn = "#" + channel;
+                    std::string ht_chn = "#" + channelName;
                     std::string msg = oneline.substr(
                         oneline.find(":", oneline.find(ht_chn)) + 1,
                         std::string::npos);
@@ -104,11 +104,7 @@ ConnHandler::run()
                         oneline.find(":") + 1,
                         oneline.find("!") - oneline.find(":") - 1);
                     {
-                        if (user == "hemirt" && msg == "!quit") {
-                            std::cout << "quiting irc" << std::endl;
-                            this->quit = true;
-                        }
-                        handleCommands(user, channel, msg);
+                        this->handleMessage(user, channelName, msg);
                     }
                 } else if (oneline.find("PING") != std::string::npos) {
                     if (this->channels.count(chn) == 1) {
@@ -146,19 +142,16 @@ ConnHandler::sendMsg(const std::string &channel, const std::string &message)
     this->channels.at(channel).sendMsg(message);
 }
 
-void
-ConnHandler::handleCommands(std::string &user, const std::string &channel,
-                            std::string &msg)
+bool
+ConnHandler::handleMessage(const std::string &user,
+                           const std::string &channelName,
+                           const std::string &msg)
 {
-    if (user == "hemirt") {
-        sendMsg(channel, "EleGiggle");
-
-        if (msg == "!dung") {
-            quit = true;
-        } else if (msg == "!deng") {
-            leaveChannel(channel);
-        }
-    } else if (user == "pajlada") {
-        sendMsg(channel, "KKona");
+    auto chanIt = this->channels.find(channelName);
+    if (chanIt == this->channels.end()) {
+        // Can't resolve channel
+        return false;
     }
+
+    return chanIt->second.handleMessage(user, msg);
 }

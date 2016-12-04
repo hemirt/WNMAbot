@@ -23,8 +23,8 @@ public:
     void run();
 
     // user should be a const string reference
-    void handleCommands(std::string &user, const std::string &channel,
-                        std::string &msg);
+    bool handleMessage(const std::string &user, const std::string &channelName,
+                       const std::string &msg);
 
     // Send message to channel
     void sendMsg(const std::string &channel, const std::string &message);

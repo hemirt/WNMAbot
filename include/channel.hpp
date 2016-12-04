@@ -23,6 +23,7 @@ public:
     void read();
     bool sendMsg(const std::string &msg);
     void ping();
+    bool handleMessage(const std::string &user, const std::string &msg);
 
     // Channel name (i.e. "pajlada" or "forsenlol)
     std::string channelName;
