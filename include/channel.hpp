@@ -17,7 +17,6 @@ class Channel
 public:
     Channel(const std::string &_channelName, BotEventQueue &evq,
             boost::asio::io_service &io_s, ConnHandler *_owner);
-    //Channel(Channel &&o);
     ~Channel();
 
     void read();

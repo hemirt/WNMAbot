@@ -51,6 +51,7 @@ Channel::sendMsg(const std::string &msg)
         std::chrono::duration_cast<std::chrono::milliseconds>(timeNow -
                                                               lastMessageTime);
 
+    std::cerr << messageCount << std::endl;
     if (messageCount >= 19) {
         // Too many messages sent recently
         return false;
