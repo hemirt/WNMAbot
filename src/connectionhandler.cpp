@@ -16,27 +16,41 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
               .resolve(BoostConnection::resolver::query(IRC_HOST, IRC_PORT))
               ->endpoint())
 {
-    auto lambda = [this] {
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+    auto timer = new boost::asio::steady_timer(this->ioService);
+    timer->expires_from_now(std::chrono::seconds(2));
+    timer->async_wait(
+        boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
+    
+}
+
+void
+ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
+{
+    if(!ec) {
         std::lock_guard<std::mutex> lk(mtx);
-        if (!(this->quit)) {
+        
+        if(this->quit) {
             return;
         }
-        for (auto &i : this->channels) {
-            if (i.second.messageCount > 0) {
+        
+        for(auto &i : this->channels) {
+            if(i.second.messageCount > 0) {
                 --i.second.messageCount;
             }
         }
-    };
-
-    msgDecreaser = std::thread(lambda);
+        
+        auto timer = new boost::asio::steady_timer(this->ioService);
+        timer->expires_from_now(std::chrono::seconds(2));
+        timer->async_wait(
+            boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
+    } else {
+        std::cerr << "MsgDecreaseHandler error " << ec << std::endl;
+    }
 }
 
 ConnectionHandler::~ConnectionHandler()
 {
     std::cout << "destructing" << std::endl;
-    msgDecreaser.join();
-    std::cout << "joined" << std::endl;
     this->channels.clear();
     std::cout << "cleared end destr" << std::endl;
 }

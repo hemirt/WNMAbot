@@ -5,6 +5,9 @@
 #include "network.hpp"
 #include "utilities.hpp"
 
+#include <boost/asio/steady_timer.hpp>
+#include <boost/bind.hpp>
+
 #include <map>
 #include <memory>
 #include <string>
@@ -58,8 +61,8 @@ private:
     // Iterator for twitch chat server endpoints
     BoostConnection::endpoint twitchEndpoint;
 
-    // Thread which decreases the messageCount on all Channels
-    std::thread msgDecreaser;
+    // steady_timer handler which decreases the messageCount on all Channels
+    void MsgDecreaseHandler(const boost::system::error_code &ec);
 };
 
 #endif
