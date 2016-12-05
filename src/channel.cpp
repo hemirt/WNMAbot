@@ -74,7 +74,10 @@ Channel::handleMessage(const IRCMessage &message)
             std::cout << message.user << ": " << message.params << std::endl;
 
             // TODO: Implement command handler here
-            if (message.user == "pajlada") {
+            if(message.params.find("ZULUL") != std::string::npos) {
+                this->say("Shutting down FeelsBadMan");
+                owner->shutdown();
+            } else if (message.user == "pajlada") {
                 this->say("KKona");
             } else if (message.user == "hemirt") {
                 this->say("EleGiggle");

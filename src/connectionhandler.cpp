@@ -9,7 +9,7 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
     : pass(_pass)
     , nick(_nick)
     , quit(false)
-    , dummyWork(this->ioService)
+    , dummyWork(new boost::asio::io_service::work(this->ioService))
     , resolver(this->ioService)
     , twitchEndpoint(
           this->resolver
@@ -79,4 +79,12 @@ ConnectionHandler::run()
     } catch(const std::exception &ex) {
         std::cerr << "Exception caught in ConnectionHandler::run(): " << ex.what() << std::endl;
     }
+}
+
+void
+ConnectionHandler::shutdown()
+{
+        this->quit = true;
+        this->dummyWork.reset();
+        this->ioService.stop();
 }

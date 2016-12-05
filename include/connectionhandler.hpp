@@ -36,6 +36,8 @@ public:
     {
         return this->twitchEndpoint;
     }
+    
+    void shutdown();
 
 private:
     // What does this mutex do?
@@ -49,7 +51,7 @@ private:
     boost::asio::io_service ioService;
 
     // Dummy work that makes sure ioService doesn't shut down
-    boost::asio::io_service::work dummyWork;
+    std::unique_ptr<boost::asio::io_service::work> dummyWork;
 
     BoostConnection::resolver resolver;
 
