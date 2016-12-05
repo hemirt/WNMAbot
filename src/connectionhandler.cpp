@@ -17,6 +17,8 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
               ->endpoint())
 {
     auto lambda = [this] {
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+        std::lock_guard<std::mutex> lk(mtx);
         if (!(this->quit)) {
             return;
         }
@@ -25,7 +27,6 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
                 --i.second.messageCount;
             }
         }
-        std::this_thread::sleep_for(std::chrono::seconds(2));
     };
 
     msgDecreaser = std::thread(lambda);
@@ -84,6 +85,7 @@ ConnectionHandler::run()
 void
 ConnectionHandler::shutdown()
 {
+    std::lock_guard<std::mutex> lk(mtx);
     this->quit = true;
     this->channels.clear();
     this->dummyWork.reset();
