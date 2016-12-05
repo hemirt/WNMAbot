@@ -84,7 +84,7 @@ ConnectionHandler::run()
 void
 ConnectionHandler::shutdown()
 {
-        this->quit = true;
-        this->dummyWork.reset();
-        this->ioService.stop();
+    this->quit = true;
+    this->dummyWork.reset();
+    this->ioService.stop();
 }
