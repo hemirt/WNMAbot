@@ -85,6 +85,7 @@ void
 ConnectionHandler::shutdown()
 {
     this->quit = true;
+    this->channels.clear();
     this->dummyWork.reset();
     this->ioService.stop();
 }
