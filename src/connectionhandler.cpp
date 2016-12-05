@@ -26,7 +26,10 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
 void
 ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
 {
-    if(!ec) {
+    if(ec) {
+        std::cerr << "MsgDecreaseHandler error " << ec << std::endl;
+        return;
+    } else {
         std::lock_guard<std::mutex> lk(mtx);
         
         if(this->quit) {
@@ -43,8 +46,6 @@ ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
         timer->expires_from_now(std::chrono::seconds(2));
         timer->async_wait(
             boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
-    } else {
-        std::cerr << "MsgDecreaseHandler error " << ec << std::endl;
     }
 }
 
