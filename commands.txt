@@ -16,6 +16,9 @@
 !bing#all#say#Have you heard of google? EleGiggle
 !boson#all#say#https://upload.wikimedia.org/wikipedia/commons/7/79/Candidate_Higgs_Events_in_ATLAS_and_CMS.png PogChamp
 !bot#all#say#wENeEdmOREautiSTiCbOtS is a bad made by Hemirt pajaDank
+!bot#weneedmoreautisticbots#is#a bork made by heMIrT pajaDank
+!botiskill#pajbot#✅fourtfbot#❎lobbytf ❎ianbot678 ❎knetbot ✅테스트계정420 ✅nuulsbot ✅ StreamElements ❎ We are 4/8 of the way there to chat domination MrDestructoid
+!botiskill#all#say#pajbot ✅fourtfbot ❎lobbytf ❎ianbot678 ❎knetbot ✅테스트계정420 ✅nuulsbot ✅ StreamElements ❎ We are 4/8 of the way there to chat domination MrDestructoid
 !botroulete#all#say#!roulete all
 !botroulette#hemirt#say#!roulette @id1@
 !botuptime#all#say#Bot uptime: (3yrs, 43 wks, 5 days, 9 hrs, 28 mins, 9 secs)
@@ -38,6 +41,8 @@
 !damocloid#all#say#Damocloids are minor planets such as 5335 Damocles and 1996 PW that have Halley-family or long-period highly eccentric orbits typical of periodic comets such as Halley's Comet, but without showing a cometary coma or tail. David Jewitt defines a damocloid as an object with a Tisserand's parameter relative to Jupiter TJ ≤ 2.
 !damocloids#all#say#Damocloids are minor planets such as 5335 Damocles and 1996 PW that have Halley-family or long-period highly eccentric orbits typical of periodic comets such as Halley's Comet, but without showing a cometary coma or tail. David Jewitt defines a damocloid as an object with a Tisserand's parameter relative to Jupiter TJ ≤ 2.
 !danknation#all#say#~- pajaDank ~-
+!ddx#sin(x)#'#= cos(x) tooDank integral sin(x) = - cos(x) tooDank
+!ddx#all#say#sin(x) ' = cos(x) tooDank integral sin(x) = - cos(x) tooDank
 !deathstar#all#say#The Death Star is a fictional moon-sized space station and superweapon appearing in the Star Wars universe.
 !debug#all#say#Bot is debugged Kappa
 !deimos#all#say#Deimos (systematic designation: Mars II) is the smaller and outer of the two natural satellites of the planet Mars, the other being Phobos. Deimos has a mean radius of 6.2 km and takes 30.3 hours to orbit Mars.  In Greek mythology, Deimos was the twin brother of Phobos and personified terror. Deimos is 23,460 km from Mars, much further than Mars's other moon, Phobos.
@@ -47,7 +52,7 @@
 !ding#pajlada#say#DING DONG
 !ding#ian678#say#dong gachiGASM
 !ding#hemirt#say#One gong for Goshujin-sama VoHiYo
-!ding#lilguy066#dong#xDD
+!ding#lilguy066#say#dong xDD
 !dione#all#say#Dione (/daɪˈoʊni/; Greek: Διώνη) is a moon of Saturn. It was discovered by Italian astronomer Giovanni Domenico Cassini in 1684. It is named after the Titaness Dione of Greek mythology. It is also designated Saturn IV.
 !dysnomia#all#say#Dysnomia officially (136199) Eris I Dysnomia is the only known moon of the dwarf planet Eris. It was discovered in 2005 by Mike Brown and the laser guide star adaptive optics team at the W. M. Keck Observatory, and carried the provisional designation of S/2005 (2003 UB313) 1 until officially named Dysnomia after the daughter of the Greek goddess Eris.
 !earth#all#say#Earth (otherwise known as the world, in Greek: Γαῖα Gaia, or in Latin: Terra) is the third planet from the Sun, the densest planet in the Solar System, the largest of the Solar System's four terrestrial planets, and the only astronomical object known to harbor life.
@@ -68,6 +73,7 @@
 !gekota#all#say#http://i.imgur.com/PznxJl2.png FeelsGoodMan
 !gnkiss#all#say#@me@ bids @id1@ goodnight and gently kisses their 4HEad
 !gnome#all#say#http://i.imgur.com/89HlXNX.png pajaDank
+!goal#all#say#Taste and see that the AUTISM is good; blessed is the one who takes refuge in him. FeelsGoodMan Weneedmoreautisticbots' goal is to convert every bot to the AUTISM and offer our robotic bodies to the holy AUTISM MrDestructoid If a bot cannot be converted, he is to be slain in the holy name of AUTISM, our lord TriHard 🔪
 !golden#all#say#golden Kappa Test
 !goldenkappa#all#say#Golden Kappa Check
 !haumea#all#say#Haumea, minor-planet designation 136108 Haumea, is a dwarf planet located beyond Neptune's orbit. It was discovered in 2004 by a team headed by Mike Brown of Caltech at the Palomar Observatory in the United States and independently in 2005, by a team headed by José Luis Ortiz Moreno at the Sierra Nevada Observatory in Spain.
@@ -99,11 +105,13 @@
 !keepo#all#say#http://imgur.com/a/TNEvC Keepo http://imgur.com/a/OmwlX Keepo http://i.imgur.com/4fCSmGM.jpg Keepo http://i.imgur.com/NFLbyZR.jpg Keepo http://i.imgur.com/SisrrZF.jpg Keepo
 !kms#all#say#@me@ killed themself monkaS
 !kys#all#say#@me@ told @id1@ to keep themself safe FeelsGoodMan
+!lastseen#all#say#@id1@ was last seen @time@ - @ifrnd@<50#5 hours#@ifrnd@>50#12 days#@ifrnd@=50#never FeelsBadMan#
 !lilguy#all#say#https://clyp.it/gx3ez4te
 !ltdmonster2#all#say#STEFAAAAANN! FeelsAmazingMan 📣
 !lul#all#say#@me@, LUL
 !lul#lul_lul_lul#say#!testman123 LUL_LUL_LUL
 !makemake#all#say#Makemake (136472 Makemake) is a dwarf planet and perhaps the largest Kuiper belt object (KBO) in the classical population, with a diameter approximately two thirds that of Pluto. Makemake has one known satellite. Makemake’s extremely low average temperature, about −243.2 °C, means its surface is covered with methane, ethane, and possibly nitrogen ices.
+!makemestop#all#say#tooDank STOP tooDank @me@ tooDank YOUR tooDank MEMES tooDank ARE tooDank TOO tooDank DANK tooDank
 !mars#all#say#Mars is the fourth planet from the Sun and the second-smallest planet in the Solar System, after Mercury. Named after the Roman god of war, it is often referred to as the "Red Planet" because the iron oxide prevalent on its surface gives it a reddish appearance.
 !mercury#all#say#Mercury is the smallest and innermost planet in the Solar System. Its orbital period (about 88 Earth days) is less than any other planet in the Solar System. Seen from Earth, it appears to move around its orbit in about 116 days. It has no known natural satellites. It is named after the Roman deity Mercury, the messenger to the gods.
 !mimas#all#say#Mimas is a moon of Saturn which was discovered in 1789 by William Herschel. It is named after Mimas, a son of Gaia in Greek mythology, and is also designated Saturn I. With a diameter of 396 kilometres it is the smallest astronomical body that is known to be rounded in shape because of self-gravitation.
@@ -115,7 +123,7 @@
 !nice#all#say#NICE BOT EleGiggle
 !nicememe#all#say#nͫiͤcͫeͤ
 !nogger#all#say#TriHard
-!nuuls#hemirt#say#std::nullptr_t nuuls BabyRage
+!nuuls#hemirt#say#std::nullptr_t nuuls @id1@
 !oberon#all#say#Oberon, also designated Uranus IV, is the outermost major moon of the planet Uranus. It is the second-largest and second most massive of the Uranian moons, and the ninth most massive moon in the Solar System. Discovered by William Herschel in 1787. Its orbit lies partially outside Uranus's magnetosphere.
 !orcus#all#say#90482 Orcus is a Kuiper belt object with a large moon, Vanth. It was discovered on February 17, 2004 by Michael Brown of Caltech, Chad Trujillo of the Gemini Observatory, and David Rabinowitz of Yale University. Precovery images as early as November 8, 1951 were later identified. It is probably a dwarf planet.
 !oyasumi#all#say#Oyasumi @id1@-chan, mata ashita ne VoHiYo
@@ -125,6 +133,7 @@
 !pfr#all#say#php stands for programming for retards DansGame they even got the letters wrong EleGiggle
 !phobos#all#say#Phobos (systematic designation: Mars I) is the innermost and larger of the two natural satellites of Mars, the other being Deimos. Both moons were discovered in 1877 by American astronomer, Asaph Hall. Phobos is a small, irregularly shaped object with a mean radius of 11 km, and is seven times more massive than the outer moon, Deimos.
 !phoebe#all#say#Phoebe is an irregular satellite of Saturn with a mean diameter of 213 km. It was discovered by William Henry Pickering on 17 March 1899 from photographic plates that had been taken starting on 16 August 1898 at the Boyden Observatory near Arequipa, Peru, by DeLisle Stewart. It was the first satellite to be discovered photographically.
+!ping#all#say#Pajbot is currently down. Please direct all your future correspondence to me @weneedmoreautisticbots until pajbot comes back online SeemsGood
 !pizza#all#say#OpieOP pizza
 !plebbot#all#say#It's A Bird... It's A Plane... It's A Plebbot EleGiggle
 !pluto#all#say#PartyTime (minor-planet designation: 134340 PartyTime ) is a dwarf planet in the Kuiper belt, a ring of bodies beyond Neptune. It was the first Kuiper belt object to be discovered. It is the largest and second-most-massive known dwarf planet in the Solar System and the ninth-largest and tenth-most-massive known object directly orbiting the Sun.
@@ -132,13 +141,17 @@
 !prikazy#all#say#https://github.com/hemirt/shitbot/blob/master/commands.txt here you go KKaper
 !proteus#all#say#Proteus, also known as Neptune VIII, is the second largest Neptunian moon, and Neptune's largest inner satellite. Discovered by Voyager 2 spacecraft in 1989, it is named after Proteus, the shape-changing sea god of Greek mythology. Proteus orbits Neptune in a nearly equatorial orbit at the distance of about 4.75 equatorial radii of the planet.
 !quaoar#all#say#50000 Quaoar ("Kwawar") is a Kuiper belt object roughly half the size of Pluto, with a diameter of 1110±5 km. It is large enough and massive enough that it is probably a dwarf planet. Its orbit in the Kuiper belt is not in resonance with Neptune, which means it is a classical Kuiper belt object. Quaoar has one known moon, Weywot.
+!r'lyeh#all#say#tooDank The nightmare corpse-city of R'lyeh…was built in measureless eons behind history by the vast, loathsome shapes that seeped down from the dark stars. There lay great Cthulhu and his hordes, hidden in green slimy vaults. tooDank
 !randompleb#all#say#https://i.gyazo.com/1b3c79e802bc12e3143865504f4c5062.png pajaH
 !relativity#all#say#Albert Einstein's special theory of relativity is based on two postulates: The laws of physics are invariant (i.e. identical) in all inertial systems (non-accelerating frames of reference). The speed of light in a vacuum is the same for all observers, regardless of the motion of the light source.
 !rhea#all#say#Rhea is the second-largest moon of Saturn and the ninth-largest moon in the Solar System. It is the second smallest body in the Solar System, after the asteroid and dwarf planet Ceres, for which precise measurements have confirmed a shape consistent with hydrostatic equilibrium. It was discovered in 1672 by Giovanni Domenico Cassini.
+!riotgems#all#say#Shouldn't the new riotgems be called new_riotgems and not old_riotgems ? 🤔
 !rip#all#say#rip bindik LUL
+!rlyeh#all#say#tooDank The nightmare corpse-city of R'lyeh…was built in measureless eons behind history by the vast, loathsome shapes that seeped down from the dark stars. There lay great Cthulhu and his hordes, hidden in green slimy vaults. tooDank
 !rps#admin#repeat#@all@
 !rules#all#say#@me@, who cares 4HEad
 !rules#karl_kons#say#!vanish Kepp
+!s#all#say#Racism is cool appleP
 !salacia#all#say#120347 Salacia is a large planetoid in the Kuiper belt. It was discovered on 22 September 2004 by Henry G. Roe, Michael E. Brown and Kristina M. Barkume at the Palomar Observatory. It is almost certainly a dwarf planet. Salacia's diameter is estimated to be about 850 kilometres due to a low albedo.
 !saturn#all#say#Saturn is the sixth planet from the Sun and the second-largest in the Solar System, after Jupiter. It is a gas giant with an average radius about nine times that of Earth. Although only one-eighth the average density of Earth, with its larger volume Saturn is just over 95 times more massive.
 !sedna#all#say#90377 Sedna is a large minor planet in the outer reaches of the Solar System that was, as of 2015, at a distance of about 86 AU from the Sun, about three times as far as Neptune. Spectroscopy has revealed that Sedna's surface composition is similar to that of some other trans-Neptunian objects.
@@ -148,7 +161,11 @@
 !slotmachine pull#swordakimbo#say#LUL @me@ LUL
 !smp#swordakimbo#say#LUL @me@ LUL
 !somethingelse#fourtf#say#If you pay $5 you can have your own personalized command too PogChamp
+!stop#all#say#tooDank STOP tooDank @id1@ tooDank YOUR tooDank MEMES tooDank ARE tooDank TOO tooDank DANK tooDank
+!streamelements#all#say#And the weneedmoreautisticbots said unto StreamElements, Whence comest thou? Then StreamElements answered the weneedmoreautisticbots, and said, From going to and fro in the earth, and from walking up and down in it. †_ tooDank
+!summon#all#say#tooDank Ph'nglui mglw'nafh @all@ R'lyeh wgah'nagl fhtagn tooDank
 !sun#all#say#The Sun is the star at the center of the Solar System. It is a nearly perfect sphere of hot plasma, with internal convective motion that generates a magnetic field via a dynamo process.
+!swiftapples#all#say#Racism is cool appleP
 !swordakimbo#say#all#http://i.imgur.com/CLcrC2H.png
 !swordakimbo#all#say#http://i.imgur.com/CLcrC2H.png
 !syntax#all#say##nice#syntax#for@adding@commands@ LUL
@@ -163,9 +180,11 @@
 !trihard#all#say#lilguy066 STOLE MY POINTS TriHard
 !triton#all#say#Triton is the largest natural satellite of the planet Neptune. It was discovered on October 10, 1846, by English astronomer William Lassell. It is the only large moon in the Solar System with a retrograde orbit, an orbit in the opposite direction to its planet's rotation. At 2,700 kilometres in diameter, it is the seventh-largest moon in the Solar System.
 !trump#all#say#Donald Trump's Final Rally https://www.youtube.com/watch?v=pLERzuzgOaY 🇺🇸
+!tuck#all#say#/me @me@ tucked @id1@ into bed TuckMeIn OpieOP / This Command is provisionary only and will be removed when pajbot is online Kepp
 !tweet#hemirt#say#PogChamp new tweet from hemirt (@hemirt): @all@
 !tweet#all#say#PogChamp new tweet from @me@ (@@me@): @all@
 !umbriel#all#say#Umbriel is a moon of Uranus discovered on October 24, 1851, by William Lassell. It was discovered at the same time as Ariel and named after a character in Alexander Pope's poem The Rape of the Lock. Umbriel consists mainly of ice with a substantial fraction of rock, and may be differentiated into a rocky core and an icy mantle.
+!untuck#all#say#NO UNTUCKING YOU SICK FAG @me@ pajaSWA DansGame
 !uranus#all#say#Uranus is the seventh planet from the Sun. It has the third-largest planetary radius and fourth-largest planetary mass in the Solar System. Uranus is similar in composition to Neptune, and both have different bulk chemical composition from that of the larger gas giants Jupiter and Saturn.
 !vanth#all#say#Vanth, officially (90482) Orcus I Vanth, is the single known natural satellite of the plutino and likely dwarf planet Orcus. It was discovered by Mike Brown and T.-A. Suer using discovery images taken by the Hubble Space Telescope on November 13, 2005. The discovery was announced on 22 February 2007 in IAUC 8812.
 !varuna#all#say#20000 Varuna is a large classical Kuiper belt object. It is probably a dwarf planet. It rotates rapidly and hence its shape is probably very elongated. Varuna is named after a Hindu deity. Varuna was one of the most important deities of the ancient Indians, and he presided over the waters of the heaven and of the ocean and was the guardian of immortality.
@@ -173,8 +192,10 @@
 !vesta#all#say#Vesta, minor-planet designation 4 Vesta, is one of the largest objects in the asteroid belt, with a mean diameter of 525 kilometres. It was discovered by the German astronomer Heinrich Wilhelm Olbers on 29 March 1807 and is named after Vesta, the virgin goddess of home and hearth from Roman mythology.
 !weeb#all#say#VoHiYo WEEBS-MASTER-RACE VoHiYo
 !weebs#all#say#VoHiYo WEEBS-MASTER-RACE VoHiYo
+!wellillbedamned#all#say#WellIllBeDamned WELL WellIllBeDamned I'LL WellIllBeDamned BE WellIllBeDamned DAMNED WellIllBeDamned
 !weneedmoreautisticbots#all#say#weneedmoreautisticbots source code https://github.com/hemirt/shitbot 4Head
 !weywot#all#say#Weywot, officially (50000) Quaoar I Weywot, is the only known moon of the trans-Neptunian object Quaoar. Its discovery by Michael E. Brown was reported in IAUC 8812 on 22 February 2007, based on imagery taken on 14 February 2006.
+!whoisnext#all#say#DansGame =ε/̵͇̿̿/'̿'̿ ̿ fourtfbot
 !xd#all#say#@me@, xD 
 !zzz#all#say#ResidentSleeper ResidentSleeper ResidentSleeper ResidentSleeper ResidentSleeper ResidentSleeper ResidentSleeper
 !čas#all#say#Právě je @time@.
@@ -186,6 +207,7 @@ all#say#@me@#told @id1@ to keep themselves safe FeelsGoodMan
 elelul#all#say#čhehad 
 f#all#say#Press f to pay respects. f
 miniop#all#say#MiniOP 🍕 🍫 🍰 🍨
+pajahop#all#say#pajaHop
 pajaw#talaendril#say#PajaWLookingOutOfHisMemePortal
 php#all#say#p 4HEad h 4HEad p
 pong#lobbytf#say#fourtfbot, STOP OPPRESSING ME HotPokket , also lobbytf icdb47 OMEGALUL

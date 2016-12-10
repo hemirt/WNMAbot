@@ -18,6 +18,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utilities.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/channel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/commandshandler.cpp
 )
 
 add_executable(WNMAbot ${SOURCE})
