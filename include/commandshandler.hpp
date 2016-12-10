@@ -5,19 +5,28 @@
 
 #include <string>
 
+class Response
+{
+public:
+    Response::Response();
+    
+    bool isValid() const {
+        return this->valid;
+    }
+    
+    std::string message;
+    
+private:
+    bool valid = false;
+};
+
 class CommandsHandler
 {
 public:
-    CommandsHandler(const IRCMessage &message);
+    CommandsHandler();
     
-    explicit operator bool() const {
-        return this->isValid;
-    }
-    
-    std::string response;
-    
-private:
-    bool isValid = false;
+    Response handle(const IRCMessage &message)
+
 };
 
 #endif
