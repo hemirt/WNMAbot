@@ -77,7 +77,7 @@ private:
 
     Credentials credentials;
     
-    CommandsHandler cmdsHandler;
+    CommandsHandler commandHandler;
 };
 
 #endif

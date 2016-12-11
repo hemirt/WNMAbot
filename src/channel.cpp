@@ -77,7 +77,7 @@ Channel::handleMessage(const IRCMessage &message)
             
             //CommandsHandler* x = new CommandsHandler();
             
-            auto response = this->cmdsHandler.handle(message);
+            const auto response = this->commandHandler.handle(message);
             
             
             if(response.valid)

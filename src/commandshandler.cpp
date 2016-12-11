@@ -42,22 +42,18 @@ CommandsHandler::reconnect()
 
 Response CommandsHandler::handle(const IRCMessage &message)
 {
-    std::cout << message.user << isAdmin(message.user) << std::endl;
     Response response;
-    std::vector<std::string> vector;
-    boost::algorithm::split(vector,message.params,boost::algorithm::is_any_of("\t "),boost::token_compress_on); 
     
-    for(auto i : vector)
-    {
-        std::cout << "\"" << i << "\"" << std::endl;
-    }
-
+    std::vector<std::string> vector;
+    boost::algorithm::split(vector,message.params, boost::algorithm::is_space(), boost::token_compress_on); 
     
     std::string s = "HGETALL WNMA:hemirt:" + vector[0];
+    redisReply* reply = static_cast<redisReply *>(redisCommand(this->redisC, s.c_str()));
 
-    redisReply* reply = (redisReply *)redisCommand(this->redisC, s.c_str());
-
-    if(!reply) return Response();
+    if(!reply) {
+        return Response();
+    }
+    
     if(reply->type != REDIS_REPLY_ARRAY){
         freeReplyObject(reply);
         return Response();
@@ -80,6 +76,7 @@ Response CommandsHandler::handle(const IRCMessage &message)
             response.valid = true;
         }
     }
+    
     return response;
     //lookup command in db
     
@@ -107,16 +104,21 @@ Response CommandsHandler::addCommand()
 bool
 CommandsHandler::isAdmin(const std::string& user)
 {
-    redisReply* reply = (redisReply *)redisCommand(this->redisC, "SISMEMBER WNMA:admins %s", user.c_str());
-    if(!reply) return false;
+    redisReply* reply = static_cast<redisReply *>(redisCommand(this->redisC, "SISMEMBER WNMA:admins %s", user.c_str()));
+    if(!reply) {
+        return false;
+    }
+    
     if(reply->type != REDIS_REPLY_INTEGER){
         freeReplyObject(reply);
         return false;
     }
+    
     if(reply->integer == 1) {
         freeReplyObject(reply);
         return true;
     }
+    
     else {
         freeReplyObject(reply);
         return false;

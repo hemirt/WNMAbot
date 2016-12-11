@@ -3,7 +3,7 @@
 
 #include "ircmessage.hpp"
 
-#include "hiredis/hiredis.h"
+#include <hiredis/hiredis.h>
 
 #include <string>
 #include <iostream>
@@ -12,10 +12,6 @@ class Response
 {
 public:
     Response() = default;
-    
-    bool isValid() const {
-        return this->valid;
-    }
     
     bool valid = false;
     
