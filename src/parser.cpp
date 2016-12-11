@@ -86,10 +86,13 @@ parseMessage(const std::string &rawMessage)
     std::cout << "Command: " << mm.middle << std::endl;
     */
 
-    if (mm.params.back() == '\n')
+    if (mm.params.back() == '\n') {
         mm.params.pop_back();
-    if (mm.params.back() == '\r')
+    }
+
+    if (mm.params.back() == '\r') {
         mm.params.pop_back();
+    }
 
     return IRCMessage(mm);
 }
