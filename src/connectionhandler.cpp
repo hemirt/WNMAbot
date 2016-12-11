@@ -20,29 +20,28 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
     timer->expires_from_now(std::chrono::seconds(2));
     timer->async_wait(
         boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
-    
 }
 
 void
 ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
 {
-    if(ec) {
+    if (ec) {
         std::cerr << "MsgDecreaseHandler error " << ec << std::endl;
         return;
     }
-    
+
     std::lock_guard<std::mutex> lk(mtx);
-    
-    if(this->quit) {
+
+    if (this->quit) {
         return;
     }
-    
-    for(auto &i : this->channels) {
-        if(i.second.messageCount > 0) {
+
+    for (auto &i : this->channels) {
+        if (i.second.messageCount > 0) {
             --i.second.messageCount;
         }
     }
-    
+
     auto timer = new boost::asio::steady_timer(this->ioService);
     timer->expires_from_now(std::chrono::seconds(2));
     timer->async_wait(
@@ -92,8 +91,9 @@ ConnectionHandler::run()
 {
     try {
         this->ioService.run();
-    } catch(const std::exception &ex) {
-        std::cerr << "Exception caught in ConnectionHandler::run(): " << ex.what() << std::endl;
+    } catch (const std::exception &ex) {
+        std::cerr << "Exception caught in ConnectionHandler::run(): "
+                  << ex.what() << std::endl;
     }
 }
 

@@ -39,7 +39,7 @@ public:
     {
         return this->twitchEndpoint;
     }
-    
+
     void shutdown();
 
 private:

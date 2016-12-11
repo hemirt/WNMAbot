@@ -41,13 +41,15 @@ public:
                 if (at == mm.prefix.end()) {
                     this->nickname = mm.prefix;
                 } else {
-                    auto exclamation = std::find(mm.prefix.begin(), mm.prefix.end(), '!');
+                    auto exclamation =
+                        std::find(mm.prefix.begin(), mm.prefix.end(), '!');
 
                     if (exclamation == mm.prefix.end()) {
                         this->nickname = std::string(mm.prefix.begin(), at);
                         this->host = std::string(at + 1, mm.prefix.end());
                     } else if (exclamation < at) {
-                        this->nickname = std::string(mm.prefix.begin(), exclamation);
+                        this->nickname =
+                            std::string(mm.prefix.begin(), exclamation);
                         this->user = std::string(exclamation + 1, at);
                         this->host = std::string(at + 1, mm.prefix.end());
                     }

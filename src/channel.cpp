@@ -74,18 +74,18 @@ Channel::handleMessage(const IRCMessage &message)
             std::cout << message.user << ": " << message.params << std::endl;
 
             // TODO: Implement command handler here
-            
-            //CommandsHandler* x = new CommandsHandler();
-            
+
+            // CommandsHandler* x = new CommandsHandler();
+
             const auto response = this->commandHandler.handle(message);
-            
-            
-            if(response.valid)
+
+            if (response.valid)
                 this->say(response.message);
-            
-            //delete x;
-            
-            if(message.params.find("ZULULending") != std::string::npos && message.user == "hemirt") {
+
+            // delete x;
+
+            if (message.params.find("ZULULending") != std::string::npos &&
+                message.user == "hemirt") {
                 this->say("Shutting down FeelsBadMan");
                 this->owner->shutdown();
             } else if (message.user == "pajlada") {

@@ -63,7 +63,7 @@ Connection::handleRead(const boost::system::error_code &ec,
 
     auto bufs = this->inputBuffer.data();
     std::string rawMessage(boost::asio::buffers_begin(bufs),
-                     boost::asio::buffers_begin(bufs) + bytesTransferred);
+                           boost::asio::buffers_begin(bufs) + bytesTransferred);
     this->inputBuffer.consume(bytesTransferred);
 
     auto ircMessage = Parser::parseMessage(rawMessage);

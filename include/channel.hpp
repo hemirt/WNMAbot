@@ -1,12 +1,12 @@
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
+#include "commandshandler.hpp"
 #include "connection.hpp"
 #include "credentials.hpp"
 #include "eventqueue.hpp"
 #include "messagehandler.hpp"
 #include "network.hpp"
-#include "commandshandler.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -76,7 +76,7 @@ private:
     ConnectionHandler *owner;
 
     Credentials credentials;
-    
+
     CommandsHandler commandHandler;
 };
 
