@@ -1,6 +1,5 @@
 #include "channel.hpp"
 #include "connectionhandler.hpp"
-#include "commandshandler.hpp"
 
 #include <iostream>
 #include <string>
@@ -76,7 +75,17 @@ Channel::handleMessage(const IRCMessage &message)
 
             // TODO: Implement command handler here
             
-            if(message.params.find("ZULUL") != std::string::npos) {
+            //CommandsHandler* x = new CommandsHandler();
+            
+            auto response = this->cmdsHandler.handle(message);
+            
+            
+            if(response.valid)
+                this->say(response.message);
+            
+            //delete x;
+            
+            if(message.params.find("ZULULending") != std::string::npos && message.user == "hemirt") {
                 this->say("Shutting down FeelsBadMan");
                 this->owner->shutdown();
             } else if (message.user == "pajlada") {

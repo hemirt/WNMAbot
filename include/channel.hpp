@@ -6,6 +6,7 @@
 #include "eventqueue.hpp"
 #include "messagehandler.hpp"
 #include "network.hpp"
+#include "commandshandler.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -75,6 +76,8 @@ private:
     ConnectionHandler *owner;
 
     Credentials credentials;
+    
+    CommandsHandler cmdsHandler;
 };
 
 #endif

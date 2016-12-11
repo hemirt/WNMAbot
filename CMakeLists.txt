@@ -8,7 +8,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-set(CMAKE_CXX_FLAGS "-pthread -std=c++14 ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-pthread -std=c++14 -lhiredis ${CMAKE_CXX_FLAGS}")
 
 set(SOURCE
     ${SOURCE}

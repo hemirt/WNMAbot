@@ -3,30 +3,43 @@
 
 #include "ircmessage.hpp"
 
+#include "hiredis/hiredis.h"
+
 #include <string>
+#include <iostream>
 
 class Response
 {
 public:
-    Response::Response();
+    Response() = default;
     
     bool isValid() const {
         return this->valid;
     }
     
+    bool valid = false;
+    
     std::string message;
     
 private:
-    bool valid = false;
 };
 
 class CommandsHandler
 {
 public:
     CommandsHandler();
+    ~CommandsHandler();
     
-    Response handle(const IRCMessage &message)
+    Response handle(const IRCMessage &message);
 
+private:
+    void reconnect();
+    void isAlive();
+    bool isAdmin(const std::string& user);
+    redisContext * redisC;
+    Response addCommand();
+    Response editCommand();
+    Response deleteCommand();
 };
 
 #endif
