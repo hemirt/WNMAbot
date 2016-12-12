@@ -10,3 +10,5 @@ black
 хуй
 ▒
 !give
+roulete
+roulette

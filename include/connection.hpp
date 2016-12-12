@@ -5,6 +5,7 @@
 #include "messagehandler.hpp"
 #include "network.hpp"
 
+#include <iostream>
 #include <memory>
 
 class Connection : public std::enable_shared_from_this<Connection>
