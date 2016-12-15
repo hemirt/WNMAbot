@@ -2,8 +2,7 @@
 #define COMMANDSHANDLER_HPP
 
 #include "ircmessage.hpp"
-
-#include <hiredis/hiredis.h>
+#include "redisclient.hpp"
 
 #include <iostream>
 #include <string>
@@ -29,10 +28,8 @@ public:
     Response handle(const IRCMessage &message);
 
 private:
-    void reconnect();
-    void isAlive();
     bool isAdmin(const std::string &user);
-    redisContext *redisC;
+    RedisClient redisClient;
     Response addCommand();
     Response editCommand();
     Response deleteCommand();
