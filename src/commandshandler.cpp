@@ -5,7 +5,6 @@
 
 CommandsHandler::CommandsHandler()
 {
-
 }
 
 CommandsHandler::~CommandsHandler()
@@ -24,38 +23,39 @@ CommandsHandler::handle(const IRCMessage &message)
 
     // std::string s = "HGETALL WNMA:hemirt:" + vector[0];
     // redisReply *reply =
-        // static_cast<redisReply *>(redisCommand(this->redisC, s.c_str()));
+    // static_cast<redisReply *>(redisCommand(this->redisC, s.c_str()));
 
     // if (!reply) {
-        // return Response();
+    // return Response();
     // }
 
     // if (reply->type != REDIS_REPLY_ARRAY) {
-        // freeReplyObject(reply);
-        // return Response();
+    // freeReplyObject(reply);
+    // return Response();
     // }
 
     // for (int j = 0; j < reply->elements; j++) {
-        // std::cout << "\"" << reply->element[j]->str << "\"" << std::endl;
-        // if (strncmp(reply->element[j]->str, "response",
-                    // strlen(reply->element[j]->str)) == 0 &&
-            // j + 1 < reply->elements) {
-            // std::cout << "dsaijdsaji" << reply->element[j + 1]->str
-                      // << std::endl;
-            // response.message = reply->element[j + 1]->str;
-            // response.valid = true;
-        // }
+    // std::cout << "\"" << reply->element[j]->str << "\"" << std::endl;
+    // if (strncmp(reply->element[j]->str, "response",
+    // strlen(reply->element[j]->str)) == 0 &&
+    // j + 1 < reply->elements) {
+    // std::cout << "dsaijdsaji" << reply->element[j + 1]->str
+    // << std::endl;
+    // response.message = reply->element[j + 1]->str;
+    // response.valid = true;
+    // }
     // }
     redisClient.addCommand(message.channel, "default", "!eleldeg", "");
     auto map = redisClient.getCommand(message.channel, message.user, vector[0]);
-    std::cout << "our channel: " << message.channel << " " << vector[0] << std::endl;
-    std::cout << "middle: " << message.middle << std::endl << "host: " << message.host << std::endl;
-    for(auto i : map)
-    {
+    std::cout << "our channel: " << message.channel << " " << vector[0]
+              << std::endl;
+    std::cout << "middle: " << message.middle << std::endl
+              << "host: " << message.host << std::endl;
+    for (auto i : map) {
         std::cout << i.first << " " << i.second << std::endl;
     }
     response.message = map["response"];
-    response.valid = true; //temp
+    response.valid = true;  // temp
     return response;
     // lookup command in db
 
@@ -84,24 +84,24 @@ bool
 CommandsHandler::isAdmin(const std::string &user)
 {
     // redisReply *reply = static_cast<redisReply *>(
-        // redisCommand(this->redisC, "SISMEMBER WNMA:admins %s", user.c_str()));
+    // redisCommand(this->redisC, "SISMEMBER WNMA:admins %s", user.c_str()));
     // if (!reply) {
-        // return false;
+    // return false;
     // }
 
     // if (reply->type != REDIS_REPLY_INTEGER) {
-        // freeReplyObject(reply);
-        // return false;
+    // freeReplyObject(reply);
+    // return false;
     // }
 
     // if (reply->integer == 1) {
-        // freeReplyObject(reply);
-        // return true;
+    // freeReplyObject(reply);
+    // return true;
     // }
 
     // else {
-        // freeReplyObject(reply);
-        // return false;
+    // freeReplyObject(reply);
+    // return false;
     // }
-    return false; //temp
+    return false;  // temp
 }

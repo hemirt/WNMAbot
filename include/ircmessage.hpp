@@ -59,8 +59,8 @@ public:
 
         if (mm.command == "PRIVMSG") {
             this->type = Type::PRIVMSG;
-            //middle "#channelname"
-            //channel:
+            // middle "#channelname"
+            // channel:
             this->channel = mm.middle.substr(1, std::string::npos);
         } else if (mm.command == "PING") {
             this->type = Type::PING;
@@ -70,7 +70,6 @@ public:
 
         this->middle = mm.middle;
         this->params = mm.params;
-        
     }
 
     std::string server;
