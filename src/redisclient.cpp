@@ -87,7 +87,7 @@ RedisClient::addCommand(const std::string &channel, const std::string &user,
     std::string commandJson = ss.str();
 
     redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HSET WNMA:%s:commands %s:%s %b",
-                     channel.c_str(), command.c_str(), user.c_str(),
+        redisCommand(this->context, "HSET WNMA:%s:commands %b:%s %b",
+                     channel.c_str(), command.c_str(), command.size(), user.c_str(),
                      commandJson.c_str(), commandJson.size()));
 }
