@@ -4,7 +4,7 @@
 #include <hiredis/hiredis.h>
 #include <iostream>
 #include <string>
-#include <unordered_map>
+#include <map>
 
 class RedisClient
 {
@@ -14,7 +14,7 @@ public:
 
     void reconnect();
 
-    std::unordered_map<std::string, std::string> getCommand(
+    std::map<std::string, std::string> getCommand(
         const std::string &channel, const std::string &user,
         const std::string &command);
 

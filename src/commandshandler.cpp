@@ -21,31 +21,7 @@ CommandsHandler::handle(const IRCMessage &message)
                             boost::algorithm::is_space(),
                             boost::token_compress_on);
 
-    // std::string s = "HGETALL WNMA:hemirt:" + vector[0];
-    // redisReply *reply =
-    // static_cast<redisReply *>(redisCommand(this->redisC, s.c_str()));
-
-    // if (!reply) {
-    // return Response();
-    // }
-
-    // if (reply->type != REDIS_REPLY_ARRAY) {
-    // freeReplyObject(reply);
-    // return Response();
-    // }
-
-    // for (int j = 0; j < reply->elements; j++) {
-    // std::cout << "\"" << reply->element[j]->str << "\"" << std::endl;
-    // if (strncmp(reply->element[j]->str, "response",
-    // strlen(reply->element[j]->str)) == 0 &&
-    // j + 1 < reply->elements) {
-    // std::cout << "dsaijdsaji" << reply->element[j + 1]->str
-    // << std::endl;
-    // response.message = reply->element[j + 1]->str;
-    // response.valid = true;
-    // }
-    // }
-    redisClient.addCommand(message.channel, "default", "!eleldeg", "");
+    //redisClient.addCommand(message.channel, "default", "!eleldeg", "");
     auto map = redisClient.getCommand(message.channel, message.user, vector[0]);
     std::cout << "our channel: " << message.channel << " " << vector[0]
               << std::endl;

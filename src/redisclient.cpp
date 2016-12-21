@@ -51,25 +51,47 @@ RedisClient::reconnect()
     }
 }
 
-std::unordered_map<std::string, std::string>
+std::map<std::string, std::string>
 RedisClient::getCommand(const std::string &channel, const std::string &user,
                         const std::string &command)
 {
     std::unordered_map<std::string, std::string> commandMap;
+    
     // command + ":" + user
     // command + ":default"
     // command + ":admin"
-    // WNMA:channel:commands cmd1:default { cmd } cmd1:hemirt { cmd}
-    std::string redisString = "HMGET WNMA:" + channel + ":commands " + command +
-                              ":" + user + " " + command + ":default";
-    // std::cout << "redisstring: " << redisString << std::endl;
-    redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, redisString.c_str()));
+    // WNMA:channel:commands cmd1:default { cmd } cmd1:hemirt { cmd }
+    //                       cmd1:default:admin { cmd }
+    
+    // todo
+    // check admins, admin commands first
+    
+    redisReply *reply;
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HGET WNMA:%s:commands %b:%s", channel.c_str(), command.c_str(), command.size(), user.c_str()));
+    // stuff
+    // return commandMap on match
+    // if(!nil) process, free and return;
 
-    // for (int i = 0; i < reply->elements; i = i + 2) {
-    //    commandMap.insert({reply->element[i]->str, reply->element[i+1]->str});
-    //}
-
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HGET WNMA:%s:commands %b:default", channel.c_str(), command.c_str(), command.size()));
+    // stuff
+    // return commandMap on match
+    // if(!nil) process, free and return;
+    
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HGET WNMA:global:commands %b:%s", command.c_str(), command.size(), user.c_str()));
+    // stuff
+    // return commandMap on match
+    // if(!nil) process, free and return;
+    
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HGET WNMA:global:commands %b:default", command.c_str(), command.size()));
+    // stuff
+    // return commandMap on match
+    // if(!nil) process, free and return;
+    
+    // return default value, no command
     return commandMap;
 }
 
