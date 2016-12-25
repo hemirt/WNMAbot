@@ -15,15 +15,12 @@ RedisClient::RedisClient()
             std::cerr << "RedisClient can't allocate redis context"
                       << std::endl;
         }
-        this->valid = false;
-    } else {
-        this->valid = true;
     }
 }
 
 RedisClient::~RedisClient()
 {
-    if (!this->valid)
+    if (!this->context)
         return;
     redisFree(this->context);
 }
@@ -31,7 +28,7 @@ RedisClient::~RedisClient()
 void
 RedisClient::reconnect()
 {
-    if (this->valid) {
+    if (this->context) {
         redisFree(this->context);
     }
 
@@ -45,9 +42,6 @@ RedisClient::reconnect()
             std::cerr << "RedisClient can't allocate redis context"
                       << std::endl;
         }
-        this->valid = false;
-    } else {
-        this->valid = true;
     }
 }
 
@@ -113,3 +107,30 @@ RedisClient::addCommand(const std::string &channel, const std::string &user,
                      channel.c_str(), command.c_str(), command.size(), user.c_str(),
                      commandJson.c_str(), commandJson.size()));
 }
+
+std::map<std::string, std::string> 
+RedisClient::getCommandMap(int commandNumber)
+{
+    std::map<std::string, std::string> commandMap;
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HGET WNMA:commands:%s", std::to_string(commandNumber)));
+        
+    if(reply == NULL && this->context->err){
+        std::cerr << "RedisClient error: " << this->context->errstr << std::endl;
+        this->reconnect();
+        return commandMap;
+    }
+    
+    if(reply->type != REDIS_REPLY_STRING){
+        return commandMap;
+    }
+    
+    std::string jsonString(reply->str, reply->len);
+    std::stringstream ss(jsonString);
+    
+    pt:ptree tree;
+    pt::read_json(ss, tree);
+    
+    
+}
+

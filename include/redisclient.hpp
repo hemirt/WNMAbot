@@ -21,15 +21,9 @@ public:
     void addCommand(const std::string &channel, const std::string &user,
                     const std::string &command, const std::string &rest);
 
-    bool
-    isValid()
-    {
-        return this->valid;
-    }
-
 private:
     redisContext *context;
-    bool valid;
+    std::map<std::string, std::string> getCommandMap(int commandNumber);
 };
 
 #endif
