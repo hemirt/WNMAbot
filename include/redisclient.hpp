@@ -3,8 +3,11 @@
 
 #include <hiredis/hiredis.h>
 #include <iostream>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
+
+#include <boost/property_tree/ptree.hpp>
 
 class RedisClient
 {
@@ -14,16 +17,12 @@ public:
 
     void reconnect();
 
-    std::map<std::string, std::string> getCommand(
-        const std::string &channel, const std::string &user,
-        const std::string &command);
+    boost::property_tree::ptree getCommandTree(const std::string &trigger);
 
-    void addCommand(const std::string &channel, const std::string &user,
-                    const std::string &command, const std::string &rest);
+    void addCommand(const std::vector<std::string> &message);
 
 private:
     redisContext *context;
-    std::map<std::string, std::string> getCommandMap(int commandNumber);
 };
 
 #endif

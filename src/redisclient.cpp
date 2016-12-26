@@ -3,6 +3,8 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+namespace pt = boost::property_tree;
+
 RedisClient::RedisClient()
 {
     this->context = redisConnect("127.0.0.1", 6379);
@@ -45,92 +47,52 @@ RedisClient::reconnect()
     }
 }
 
-std::map<std::string, std::string>
-RedisClient::getCommand(const std::string &channel, const std::string &user,
-                        const std::string &command)
-{
-    std::unordered_map<std::string, std::string> commandMap;
-    
-    // command + ":" + user
-    // command + ":default"
-    // command + ":admin"
-    // WNMA:channel:commands cmd1:default { cmd } cmd1:hemirt { cmd }
-    //                       cmd1:default:admin { cmd }
-    
-    // todo
-    // check admins, admin commands first
-    
-    redisReply *reply;
-    reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HGET WNMA:%s:commands %b:%s", channel.c_str(), command.c_str(), command.size(), user.c_str()));
-    // stuff
-    // return commandMap on match
-    // if(!nil) process, free and return;
-
-    reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HGET WNMA:%s:commands %b:default", channel.c_str(), command.c_str(), command.size()));
-    // stuff
-    // return commandMap on match
-    // if(!nil) process, free and return;
-    
-    reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HGET WNMA:global:commands %b:%s", command.c_str(), command.size(), user.c_str()));
-    // stuff
-    // return commandMap on match
-    // if(!nil) process, free and return;
-    
-    reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HGET WNMA:global:commands %b:default", command.c_str(), command.size()));
-    // stuff
-    // return commandMap on match
-    // if(!nil) process, free and return;
-    
-    // return default value, no command
-    return commandMap;
-}
-
 void
-RedisClient::addCommand(const std::string &channel, const std::string &user,
-                        const std::string &command, const std::string &rest)
+RedisClient::addCommand(const std::vector<std::string> &message)
 {
-    namespace pt = boost::property_tree;
     pt::ptree tree;
-    tree.put("response", "ZULUL TriEasy");
+    tree.put("default.response", "ZULUL TriEasy");
 
     std::stringstream ss;
     pt::write_json(ss, tree, false);
 
     std::string commandJson = ss.str();
 
+    std::cout << "commandjson: " << commandJson << std::endl;
+
+    // redisReply *reply = static_cast<redisReply *>(
+    //    redisCommand(this->context, "HSET WNMA:commands:%b %b",
+    //                 message[0].c_str(), message[0].size(),
+    //                 commandJson.c_str(), commandJson.size()));
+
     redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HSET WNMA:%s:commands %b:%s %b",
-                     channel.c_str(), command.c_str(), command.size(), user.c_str(),
+        redisCommand(this->context, "SET WNMA:commands:%s %b", "ZULUL",
                      commandJson.c_str(), commandJson.size()));
 }
 
-std::map<std::string, std::string> 
-RedisClient::getCommandMap(int commandNumber)
+boost::property_tree::ptree
+RedisClient::getCommandTree(const std::string &trigger)
 {
-    std::map<std::string, std::string> commandMap;
+    pt::ptree tree;
     redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HGET WNMA:commands:%s", std::to_string(commandNumber)));
-        
-    if(reply == NULL && this->context->err){
-        std::cerr << "RedisClient error: " << this->context->errstr << std::endl;
+        redisCommand(this->context, "GET WNMA:commands:%b", trigger.c_str(),
+                     trigger.size()));
+
+    if (reply == NULL && this->context->err) {
+        std::cerr << "RedisClient error: " << this->context->errstr
+                  << std::endl;
         this->reconnect();
-        return commandMap;
+        return tree;
     }
-    
-    if(reply->type != REDIS_REPLY_STRING){
-        return commandMap;
+
+    if (reply->type != REDIS_REPLY_STRING) {
+        return tree;
     }
-    
+
     std::string jsonString(reply->str, reply->len);
     std::stringstream ss(jsonString);
-    
-    pt:ptree tree;
-    pt::read_json(ss, tree);
-    
-    
-}
 
+    pt::read_json(ss, tree);
+
+    return tree;
+}

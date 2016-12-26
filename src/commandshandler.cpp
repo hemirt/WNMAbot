@@ -21,34 +21,17 @@ CommandsHandler::handle(const IRCMessage &message)
                             boost::algorithm::is_space(),
                             boost::token_compress_on);
 
-    //redisClient.addCommand(message.channel, "default", "!eleldeg", "");
-    auto map = redisClient.getCommand(message.channel, message.user, vector[0]);
-    std::cout << "our channel: " << message.channel << " " << vector[0]
-              << std::endl;
-    std::cout << "middle: " << message.middle << std::endl
-              << "host: " << message.host << std::endl;
-    for (auto i : map) {
-        std::cout << i.first << " " << i.second << std::endl;
-    }
-    response.message = map["response"];
+    redisClient.addCommand(vector);
+    auto commandTree = redisClient.getCommandTree(vector[0]);
+
+    std::string responseString =
+        commandTree.get<std::string>("default.response", "NULL");
+    if (responseString == "NULL")
+        return response;
+
+    response.message = responseString;
     response.valid = true;  // temp
     return response;
-    // lookup command in db
-
-    // if no command return an empty Response (do nothing)
-
-    // check if message can be formatted into a response
-    // ex. if a command takes 2 parameters but only 1 was provided
-    // then return empty Response
-
-    // simple text command should end here
-
-    // command that does stuff (add commands, edits..)
-    // doStuff();
-    // return response
-
-    // once a commandshandler has returned a response back to the channel,
-    // channel will print out a response (send the msg)
 }
 
 Response
