@@ -30,8 +30,8 @@ public:
 private:
     bool isAdmin(const std::string &user);
     RedisClient redisClient;
-    Response addCommand();
-    Response editCommand();
+    Response addCommand(const IRCMessage &message, std::vector<std::string> &tokens);
+    Response editCommand(const IRCMessage &message, std::vector<std::string> &tokens);
     Response deleteCommand();
 };
 

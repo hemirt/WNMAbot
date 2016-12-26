@@ -48,26 +48,11 @@ RedisClient::reconnect()
 }
 
 void
-RedisClient::addCommand(const std::vector<std::string> &message)
+RedisClient::addCommand(const std::string &trigger, const std::string &json)
 {
-    pt::ptree tree;
-    tree.put("default.response", "ZULUL TriEasy");
-
-    std::stringstream ss;
-    pt::write_json(ss, tree, false);
-
-    std::string commandJson = ss.str();
-
-    std::cout << "commandjson: " << commandJson << std::endl;
-
-    // redisReply *reply = static_cast<redisReply *>(
-    //    redisCommand(this->context, "HSET WNMA:commands:%b %b",
-    //                 message[0].c_str(), message[0].size(),
-    //                 commandJson.c_str(), commandJson.size()));
-
     redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "SET WNMA:commands:%s %b", "ZULUL",
-                     commandJson.c_str(), commandJson.size()));
+        redisCommand(this->context, "SET WNMA:commands:%b %b", trigger.c_str(), trigger.size(),
+                     json.c_str(), json.size()));
 }
 
 boost::property_tree::ptree

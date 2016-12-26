@@ -19,7 +19,7 @@ public:
 
     boost::property_tree::ptree getCommandTree(const std::string &trigger);
 
-    void addCommand(const std::vector<std::string> &message);
+    void addCommand(const std::string &trigger, const std::string &json);
 
 private:
     redisContext *context;
