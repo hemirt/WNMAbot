@@ -27,7 +27,7 @@ CommandsHandler::handle(const IRCMessage &message)
                             boost::token_compress_on);
 
     
-    if(tokens[0] == "!editcmd") {
+    if(tokens[0] == "!editcomm") {
         return this->editCommand(message, tokens);
     }
     
@@ -76,7 +76,7 @@ CommandsHandler::editCommand(const IRCMessage &message, std::vector<std::string>
     pt::ptree::path_type path(pathstring);    
     
     std::string responseString;
-    for(std::vector<std::string>::size_type i = 4; i < tokens.size(); ++i) {
+    for(size_t i = 4; i < tokens.size(); ++i) {
         responseString += tokens[i] + ' ';
     }
     responseString.pop_back();
