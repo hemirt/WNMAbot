@@ -3,6 +3,7 @@
 
 #include "network.hpp"
 #include "utilities.hpp"
+#include "redisauth.hpp"
 
 #include <boost/asio/steady_timer.hpp>
 #include <boost/bind.hpp>
@@ -17,6 +18,7 @@ class Channel;
 class ConnectionHandler
 {
 public:
+    ConnectionHandler();
     ConnectionHandler(const std::string &_pass, const std::string &_nick);
     ~ConnectionHandler();
 
@@ -61,6 +63,8 @@ private:
 
     // steady_timer handler which decreases the messageCount on all Channels
     void MsgDecreaseHandler(const boost::system::error_code &ec);
+    
+    RedisAuth authFromRedis;
 };
 
 #endif

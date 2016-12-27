@@ -53,6 +53,7 @@ RedisClient::addCommand(const std::string &trigger, const std::string &json)
     redisReply *reply = static_cast<redisReply *>(
         redisCommand(this->context, "SET WNMA:commands:%b %b", trigger.c_str(), trigger.size(),
                      json.c_str(), json.size()));
+    freeReplyObject(reply);
 }
 
 boost::property_tree::ptree
@@ -66,11 +67,13 @@ RedisClient::getCommandTree(const std::string &trigger)
     if (reply == NULL && this->context->err) {
         std::cerr << "RedisClient error: " << this->context->errstr
                   << std::endl;
+        freeReplyObject(reply);
         this->reconnect();
         return tree;
     }
 
     if (reply->type != REDIS_REPLY_STRING) {
+        freeReplyObject(reply);
         return tree;
     }
 
@@ -78,6 +81,7 @@ RedisClient::getCommandTree(const std::string &trigger)
     std::stringstream ss(jsonString);
 
     pt::read_json(ss, tree);
-
+    
+    freeReplyObject(reply);
     return tree;
 }
