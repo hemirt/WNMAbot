@@ -1,7 +1,6 @@
 #ifndef CONNHANDLER_HPP
 #define CONNHANDLER_HPP
 
-#include "eventqueue.hpp"
 #include "network.hpp"
 #include "utilities.hpp"
 
@@ -10,6 +9,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 
 class Channel;
@@ -27,8 +27,6 @@ public:
     // It's not a map of channel sockets, it's a map of channels.
     // I would just rename this to channels
     std::map<std::string, Channel> channels;
-
-    BotEventQueue eventQueue;
 
     // Login details
     std::string pass;

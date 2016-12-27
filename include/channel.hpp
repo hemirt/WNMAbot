@@ -4,7 +4,6 @@
 #include "commandshandler.hpp"
 #include "connection.hpp"
 #include "credentials.hpp"
-#include "eventqueue.hpp"
 #include "messagehandler.hpp"
 #include "network.hpp"
 
@@ -32,9 +31,6 @@ public:
 
     // Channel name (i.e. "pajlada" or "forsenlol)
     std::string channelName;
-
-    // Set to true if the channel should stop reading new messages
-    std::atomic<bool> quit;
 
     // right now public, connhandler is using it
     std::atomic<unsigned int> messageCount;

@@ -8,7 +8,6 @@ Channel::Channel(const std::string &_channelName,
                  boost::asio::io_service &_ioService, ConnectionHandler *_owner)
     : channelName(_channelName)
     , pingReplied(false)
-    , quit(false)
     , owner(_owner)
     , ioService(_ioService)
     , credentials(owner->nick, owner->pass)
@@ -20,7 +19,6 @@ Channel::Channel(const std::string &_channelName,
 
 Channel::~Channel()
 {
-    quit = true;
 }
 
 void
