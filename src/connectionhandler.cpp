@@ -66,7 +66,7 @@ ConnectionHandler::joinChannel(const std::string &channelName)
 
     this->channels.emplace(
         std::piecewise_construct, std::forward_as_tuple(channelName),
-        std::forward_as_tuple(channelName, eventQueue, this->ioService, this));
+        std::forward_as_tuple(channelName, this->ioService, this));
 
     return true;
 }

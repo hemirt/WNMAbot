@@ -20,7 +20,7 @@ class ConnectionHandler;
 class Channel : public MessageHandler
 {
 public:
-    Channel(const std::string &_channelName, BotEventQueue &_eventQueue,
+    Channel(const std::string &_channelName, 
             boost::asio::io_service &_ioService, ConnectionHandler *_owner);
     ~Channel();
 
@@ -32,9 +32,6 @@ public:
 
     // Channel name (i.e. "pajlada" or "forsenlol)
     std::string channelName;
-
-    // What does the event queue do?
-    BotEventQueue &eventQueue;
 
     // Set to true if the channel should stop reading new messages
     std::atomic<bool> quit;

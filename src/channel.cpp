@@ -4,10 +4,9 @@
 #include <iostream>
 #include <string>
 
-Channel::Channel(const std::string &_channelName, BotEventQueue &_eventQueue,
+Channel::Channel(const std::string &_channelName,
                  boost::asio::io_service &_ioService, ConnectionHandler *_owner)
     : channelName(_channelName)
-    , eventQueue(_eventQueue)
     , pingReplied(false)
     , quit(false)
     , owner(_owner)
