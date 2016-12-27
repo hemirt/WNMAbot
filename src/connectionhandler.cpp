@@ -16,12 +16,12 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
               .resolve(BoostConnection::resolver::query(IRC_HOST, IRC_PORT))
               ->endpoint())
 {
-    if(!this->authFromRedis.isValid()) {
+    if (!this->authFromRedis.isValid()) {
         throw std::runtime_error("Redis connection error, see std::cerr");
     }
     this->authFromRedis.setOauth(this->pass);
     this->authFromRedis.setName(this->nick);
-    
+
     auto timer = new boost::asio::steady_timer(this->ioService);
     timer->expires_from_now(std::chrono::seconds(2));
     timer->async_wait(
@@ -37,15 +37,13 @@ ConnectionHandler::ConnectionHandler()
               .resolve(BoostConnection::resolver::query(IRC_HOST, IRC_PORT))
               ->endpoint())
 {
-    if(this->authFromRedis.isValid() && this->authFromRedis.hasAuth()) {
+    if (this->authFromRedis.isValid() && this->authFromRedis.hasAuth()) {
         this->pass = this->authFromRedis.getOauth();
         this->nick = this->authFromRedis.getName();
-    }
-    else {
+    } else {
         throw std::runtime_error("No authentication provided");
     }
-    
-    
+
     auto timer = new boost::asio::steady_timer(this->ioService);
     timer->expires_from_now(std::chrono::seconds(2));
     timer->async_wait(

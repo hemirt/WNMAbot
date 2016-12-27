@@ -2,8 +2,8 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <vector>
 
 namespace pt = boost::property_tree;
@@ -26,11 +26,10 @@ CommandsHandler::handle(const IRCMessage &message)
                             boost::algorithm::is_space(),
                             boost::token_compress_on);
 
-    
-    if(tokens[0] == "!editcomm") {
+    if (tokens[0] == "!editcomm") {
         return this->editCommand(message, tokens);
     }
-    
+
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
 
     std::string responseString =
@@ -44,23 +43,25 @@ CommandsHandler::handle(const IRCMessage &message)
 }
 
 Response
-CommandsHandler::addCommand(const IRCMessage &message, std::vector<std::string> &tokens)
+CommandsHandler::addCommand(const IRCMessage &message,
+                            std::vector<std::string> &tokens)
 {
     Response response;
-    if(!this->isAdmin(message.user)){
+    if (!this->isAdmin(message.user)) {
         return response;
     }
-    //!editcomm trigger default response 
+    //! editcomm trigger default response
 }
 
 Response
-CommandsHandler::editCommand(const IRCMessage &message, std::vector<std::string> &tokens)
+CommandsHandler::editCommand(const IRCMessage &message,
+                             std::vector<std::string> &tokens)
 {
     Response response;
-    if(!this->isAdmin(message.user)){
+    if (!this->isAdmin(message.user)) {
         return response;
     }
-    if(tokens.size() < 4) {
+    if (tokens.size() < 4) {
         return response;
     }
     // toke[0]   toke[1] toke[2] toke[3]
@@ -68,28 +69,29 @@ CommandsHandler::editCommand(const IRCMessage &message, std::vector<std::string>
     // !editcmd trigger default parameters 0
     // !editcmd trigger default cooldown 4
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
-    if(tokens[1].find('.') != std::string::npos || tokens[2].find('.') != std::string::npos)
-    {
+    if (tokens[1].find('.') != std::string::npos ||
+        tokens[2].find('.') != std::string::npos) {
         return response;
     }
     std::string pathstring = tokens[2] + '.' + tokens[3];
-    pt::ptree::path_type path(pathstring);    
-    
+    pt::ptree::path_type path(pathstring);
+
     std::string responseString;
-    for(size_t i = 4; i < tokens.size(); ++i) {
+    for (size_t i = 4; i < tokens.size(); ++i) {
         responseString += tokens[i] + ' ';
     }
     responseString.pop_back();
-    
+
     commandTree.put(path, responseString);
-    
+
     std::stringstream ss;
-    
+
     pt::write_json(ss, commandTree, false);
-    
+
     redisClient.addCommand(tokens[1], ss.str());
-    
-    response.message = message.user + " edited " + tokens[1] + " command SeemsGood";
+
+    response.message =
+        message.user + " edited " + tokens[1] + " command SeemsGood";
     response.valid = true;
     return response;
 }
@@ -117,6 +119,7 @@ CommandsHandler::isAdmin(const std::string &user)
     // freeReplyObject(reply);
     // return false;
     // }
-    if(user == "hemirt") return true;
+    if (user == "hemirt")
+        return true;
     return false;  // temp
 }

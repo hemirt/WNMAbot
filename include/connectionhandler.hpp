@@ -2,8 +2,8 @@
 #define CONNHANDLER_HPP
 
 #include "network.hpp"
-#include "utilities.hpp"
 #include "redisauth.hpp"
+#include "utilities.hpp"
 
 #include <boost/asio/steady_timer.hpp>
 #include <boost/bind.hpp>
@@ -63,7 +63,7 @@ private:
 
     // steady_timer handler which decreases the messageCount on all Channels
     void MsgDecreaseHandler(const boost::system::error_code &ec);
-    
+
     RedisAuth authFromRedis;
 };
 

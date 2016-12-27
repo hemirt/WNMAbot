@@ -19,7 +19,7 @@ class ConnectionHandler;
 class Channel : public MessageHandler
 {
 public:
-    Channel(const std::string &_channelName, 
+    Channel(const std::string &_channelName,
             boost::asio::io_service &_ioService, ConnectionHandler *_owner);
     ~Channel();
 
