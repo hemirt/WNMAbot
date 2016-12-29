@@ -48,7 +48,7 @@ RedisClient::reconnect()
 }
 
 void
-RedisClient::addCommand(const std::string &trigger, const std::string &json)
+RedisClient::setCommandTree(const std::string &trigger, const std::string &json)
 {
     redisReply *reply = static_cast<redisReply *>(
         redisCommand(this->context, "SET WNMA:commands:%b %b", trigger.c_str(),
