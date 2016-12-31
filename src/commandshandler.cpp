@@ -1,4 +1,5 @@
 #include "commandshandler.hpp"
+#include "utilities.hpp"
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -26,6 +27,8 @@ CommandsHandler::handle(const IRCMessage &message)
     boost::algorithm::split(tokens, message.params,
                             boost::algorithm::is_space(),
                             boost::token_compress_on);
+                            
+    changeToLower(tokens[0]);
 
     if (tokens[0] == "!raweditcmd") {
         return this->rawEditCommand(message, tokens);
@@ -55,8 +58,19 @@ CommandsHandler::addCommand(const IRCMessage &message,
 {
     Response response;
     if (!this->isAdmin(message.user)) {
+        response.message = message.user + ", you are not an admin NaM";
+        response.valid = true;
         return response;
     }
+    if(tokens.size() < 4)
+    {
+        response.message = "Invalid use of command NaM";
+        response.valid = true;
+        return response;
+    }
+    
+    changeToLower(tokens[1]);
+    changeToLower(tokens[2]);
     
     // toke[0] toke[1] toke[2] toke[3]
     // !addcmd trigger default fkfkfkfkfk kfs kfosd kfods kfods
@@ -112,6 +126,16 @@ CommandsHandler::editCommand(const IRCMessage &message,
         return response;
     }
     
+    if(tokens.size() < 4)
+    {
+        response.message = "Invalid use of command NaM";
+        response.valid = true;
+        return response;
+    }
+    
+    changeToLower(tokens[1]);
+    changeToLower(tokens[2]);
+    
     // toke[0] toke[1] toke[2] toke[3]
     // !editcmd trigger default fkfkfkfkfk kfs kfosd kfods kfods
     
@@ -123,7 +147,6 @@ CommandsHandler::editCommand(const IRCMessage &message,
     valueString.pop_back();
     
     pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
-    
     boost::optional<pt::ptree&> child = commandTree.get_child_optional(tokens[2]);
     if(!child) {
         response.message = "Command " + tokens[1] + " at " + tokens[2] + " doesn\'t exists.";
@@ -163,9 +186,14 @@ CommandsHandler::rawEditCommand(const IRCMessage &message,
     if (!this->isAdmin(message.user)) {
         return response;
     }
-    if (tokens.size() < 4) {
+    if(tokens.size() < 5)
+    {
+        response.message = "Invalid use of command NaM";
+        response.valid = true;
         return response;
     }
+    changeToLower(tokens[1]);
+    changeToLower(tokens[2]);
     // toke[0]   toke[1] toke[2] toke[3]
     // !editcmd trigger default response fkfkfkfkfk kfs kfosd kfods kfods
     // !editcmd trigger default parameters 0
