@@ -85,7 +85,7 @@ Channel::handleMessage(const IRCMessage &message)
                 message.user == "hemirt") {
                 this->say("Shutting down FeelsBadMan");
                 this->owner->shutdown();
-            } 
+            }
             return true;
         } break;
 

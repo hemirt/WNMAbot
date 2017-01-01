@@ -35,7 +35,7 @@ private:
     Response editCommand(const IRCMessage &message,
                          std::vector<std::string> &tokens);
     Response rawEditCommand(const IRCMessage &message,
-                         std::vector<std::string> &tokens);
+                            std::vector<std::string> &tokens);
     Response deleteCommand();
 };
 
