@@ -42,13 +42,44 @@ CommandsHandler::handle(const IRCMessage &message)
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
 
+    
+    // channel user command
     boost::optional<std::string> responseString =
-        commandTree.get_optional<std::string>("default.response");
-    if (!responseString)
+        commandTree.get_optional<std::string>("channels." + message.channel + "." + message.user + ".response");
+    if (responseString) {
+        response.message = *responseString;
+        response.valid = true;
         return response;
-
-    response.message = *responseString;
-    response.valid = true;  // temp
+    }
+    
+    // global user command
+    responseString =
+        commandTree.get_optional<std::string>(message.user + ".response");
+    if (responseString) {
+        response.message = *responseString;
+        response.valid = true;
+        return response;
+    }
+    
+    // default channel command
+    responseString =
+        commandTree.get_optional<std::string>("channels." + message.channel + ".default.response");
+    if (responseString) {
+        response.message = *responseString;
+        response.valid = true;
+        return response;
+    }
+    
+    // default global command
+    responseString =
+        commandTree.get_optional<std::string>("default.response");
+    if (responseString) {
+        response.message = *responseString;
+        response.valid = true;
+        return response;
+    }
+    
+    std::cout << "no command" << std::endl;
     return response;
 }
 
