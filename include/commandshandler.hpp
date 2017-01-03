@@ -3,6 +3,7 @@
 
 #include "ircmessage.hpp"
 #include "redisclient.hpp"
+#include "network.hpp"
 
 #include <iostream>
 #include <string>
@@ -22,7 +23,7 @@ private:
 class CommandsHandler
 {
 public:
-    CommandsHandler();
+    CommandsHandler(boost::asio::io_service &_ioService);
     ~CommandsHandler();
 
     Response handle(const IRCMessage &message);
@@ -37,6 +38,8 @@ private:
     Response rawEditCommand(const IRCMessage &message,
                             std::vector<std::string> &tokens);
     Response deleteCommand();
+    
+    boost::asio::io_service &ioService;
 };
 
 #endif

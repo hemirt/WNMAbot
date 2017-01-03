@@ -12,6 +12,7 @@ Channel::Channel(const std::string &_channelName,
     , ioService(_ioService)
     , credentials(owner->nick, owner->pass)
     , messageCount(0)
+    , commandsHandler(_ioService)
 {
     // Create initial connection
     this->createConnection();
@@ -70,16 +71,10 @@ Channel::handleMessage(const IRCMessage &message)
         case IRCMessage::Type::PRIVMSG: {
             std::cout << message.user << ": " << message.params << std::endl;
 
-            // TODO: Implement command handler here
-
-            // CommandsHandler* x = new CommandsHandler();
-
-            const auto response = this->commandHandler.handle(message);
+            const auto response = this->commandsHandler.handle(message);
 
             if (response.valid)
                 this->say(response.message);
-
-            // delete x;
 
             if (message.params.find("ZULULending") != std::string::npos &&
                 message.user == "hemirt") {

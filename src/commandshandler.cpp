@@ -13,7 +13,8 @@
 
 namespace pt = boost::property_tree;
 
-CommandsHandler::CommandsHandler()
+CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService)
+    : ioService(_ioService)
 {
 }
 
