@@ -20,9 +20,12 @@ public:
     boost::property_tree::ptree getCommandTree(const std::string &trigger);
 
     void setCommandTree(const std::string &trigger, const std::string &json);
+    
+    void deleteFullCommand(const std::string &trigger);
 
 private:
     redisContext *context;
+    void deleteRedisKey(const std::string &key);
 };
 
 #endif

@@ -56,6 +56,20 @@ RedisClient::setCommandTree(const std::string &trigger, const std::string &json)
     freeReplyObject(reply);
 }
 
+void 
+RedisClient::deleteFullCommand(const std::string &trigger)
+{
+    this->deleteRedisKey("WNMA:commands:" + trigger);
+}
+
+void
+RedisClient::deleteRedisKey(const std::string &key)
+{
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "DEL %b", key.c_str(), key.size()));
+    freeReplyObject(reply);
+}
+
 boost::property_tree::ptree
 RedisClient::getCommandTree(const std::string &trigger)
 {

@@ -3,6 +3,7 @@
 #include <boost/algorithm/string/regex.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -37,19 +38,43 @@ CommandsHandler::handle(const IRCMessage &message)
     if (tokens[0] == "!raweditcmd") {
         return this->rawEditCommand(message, tokens);
     }
-    if (tokens[0] == "!addcmd") {
+    else if (tokens[0] == "!addcmd") {
         return this->addCommand(message, tokens);
     }
-    if (tokens[0] == "!editcmd") {
+    else if (tokens[0] == "!editcmd") {
         return this->editCommand(message, tokens);
+    }
+    else if (tokens[0] == "!deletecmd") {
+        return this->deleteCommand(message, tokens);
+    }
+    else if (tokens[0] == "!deletefullcommand") {
+        return this->deleteFullCommand(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
-
+    {
+        std::stringstream ss2;
+        pt::write_json(ss2, commandTree, true);
+        std::cout << ss2.str();
+    }
+    
     // formats the response according to parameters
-    auto makeResponse = [&response, &commandTree, &tokens, &message](
+    auto makeResponse = [&response, &commandTree, &tokens, &message, this](
         std::string &responseString, const std::string &path) -> void {
-        // TODO: cooldown
+        boost::optional<int> cooldown = 
+            commandTree.get_optional<int>(path + ".cooldown");
+        if(cooldown || *cooldown != 0) {
+            auto it = this->cooldownsMap.find(path);
+            auto now = std::chrono::steady_clock::now();
+            if(it != cooldownsMap.end()) {
+                if(std::chrono::duration_cast<std::chrono::seconds>(now - it->second).count() < *cooldown)
+                {
+                    return;
+                }
+            }
+            cooldownsMap[path] = now;
+        }
+        
         boost::optional<int> numParams =
             commandTree.get_optional<int>(path + ".numParams");
         if (numParams) {
@@ -261,6 +286,7 @@ CommandsHandler::rawEditCommand(const IRCMessage &message,
     }
     changeToLower(tokens[1]);
     changeToLower(tokens[2]);
+    changeToLower(tokens[3]);
     // toke[0]   toke[1] toke[2] toke[3]
     // !editcmd trigger default response fkfkfkfkfk kfs kfosd kfods kfods
     // !editcmd trigger default parameters 0
@@ -271,7 +297,7 @@ CommandsHandler::rawEditCommand(const IRCMessage &message,
     }
     std::string pathstring = tokens[2] + '.' + tokens[3];
     pt::ptree::path_type path(pathstring);
-    pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
+    pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
 
     std::string valueString;
     for (size_t i = 4; i < tokens.size(); ++i) {
@@ -289,6 +315,88 @@ CommandsHandler::rawEditCommand(const IRCMessage &message,
 
     response.message =
         message.user + " edited " + tokens[1] + " command SeemsGood";
+    response.valid = true;
+    return response;
+}
+
+Response
+CommandsHandler::deleteCommand(const IRCMessage &message,
+                                std::vector<std::string> &tokens)
+{
+    Response response;
+    if (!this->isAdmin(message.user)) {
+        response.message = message.user + ", you are not an admin NaM";
+        response.valid = true;
+        return response;
+    }
+    if (tokens.size() < 3) {
+        response.message = "Invalid use of command NaM";
+        response.valid = true;
+        return response;
+    }
+    changeToLower(tokens[1]);
+    changeToLower(tokens[2]);
+    //tokens[0]     1       2
+    //!deletecmd trigger default
+    
+    pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
+    
+    boost::optional<pt::ptree&> child = commandTree.get_child_optional(tokens[2]);
+    if(child) {
+        child->clear();
+        std::vector<std::string> pathtokens;
+        boost::algorithm::split(pathtokens, tokens[2],
+                                boost::algorithm::is_any_of("."),
+                                boost::token_compress_on);
+        std::string last;
+        while(pathtokens.size()) {
+            last = pathtokens.back();
+            pathtokens.pop_back();
+            auto &node = commandTree.get_child(boost::algorithm::join(pathtokens, "."));
+            node.erase(last);
+            
+            if(!node.empty()) {
+                break;
+            }
+        }
+    }
+    
+    if(commandTree.empty()) {
+        redisClient.deleteFullCommand(tokens[1]);
+    }
+    else {
+        std::stringstream ss;
+        pt::write_json(ss, commandTree, false);
+        redisClient.setCommandTree(tokens[1], ss.str());;
+    }
+
+    response.message =
+        message.user + " deleted " + tokens[1] + " command at " + tokens[2] + " FeelsBadMan";
+    response.valid = true;
+    return response;
+}
+
+Response
+CommandsHandler::deleteFullCommand(const IRCMessage &message,
+                                std::vector<std::string> &tokens)
+{
+    Response response;
+    if (!this->isAdmin(message.user)) {
+        response.message = message.user + ", you are not an admin NaM";
+        response.valid = true;
+        return response;
+    }
+    if (tokens.size() < 2) {
+        response.message = "Invalid use of command NaM";
+        response.valid = true;
+        return response;
+    }
+    //tokens[0]          tokens[1]
+    //!deletefullcommand trigger
+    changeToLower(tokens[1]);
+    
+    redisClient.deleteFullCommand(tokens[1]);
+    response.message = message.user + " deleted everything related to the " + tokens[1] + " command BibleThump";
     response.valid = true;
     return response;
 }

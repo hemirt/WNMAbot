@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include <string>
+#include <unordered_map>
+#include <chrono>
 
 class Response
 {
@@ -29,17 +31,23 @@ public:
     Response handle(const IRCMessage &message);
 
 private:
-    bool isAdmin(const std::string &user);
     RedisClient redisClient;
+    
+    bool isAdmin(const std::string &user);
     Response addCommand(const IRCMessage &message,
                         std::vector<std::string> &tokens);
     Response editCommand(const IRCMessage &message,
                          std::vector<std::string> &tokens);
+    Response deleteCommand(const IRCMessage &message,
+                           std::vector<std::string> &tokens);
     Response rawEditCommand(const IRCMessage &message,
                             std::vector<std::string> &tokens);
-    Response deleteCommand();
+    Response deleteFullCommand(const IRCMessage &message,
+                            std::vector<std::string> &tokens);
     
     boost::asio::io_service &ioService;
+    
+    std::unordered_map<std::string, std::chrono::steady_clock::time_point> cooldownsMap;
 };
 
 #endif
