@@ -52,11 +52,6 @@ CommandsHandler::handle(const IRCMessage &message)
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
-    {
-        std::stringstream ss2;
-        pt::write_json(ss2, commandTree, true);
-        std::cout << ss2.str();
-    }
     
     // formats the response according to parameters
     auto makeResponse = [&response, &commandTree, &tokens, &message, this](

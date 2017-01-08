@@ -32,21 +32,6 @@ Channel::createConnection()
 bool
 Channel::say(const std::string &message)
 {
-    auto timeNow = std::chrono::high_resolution_clock::now();
-    auto msSinceLastMessage =
-        std::chrono::duration_cast<std::chrono::milliseconds>(timeNow -
-                                                              lastMessageTime);
-
-    if (messageCount >= 19) {
-        // Too many messages sent recently
-        return false;
-    }
-
-    if (msSinceLastMessage.count() <= 1500) {
-        // Last message was sent less than 1.5 seconds ago
-        return false;
-    }
-
     std::string rawMessage = "PRIVMSG #" + this->channelName + " :";
 
     // Message length at most 350 characters
@@ -59,28 +44,49 @@ Channel::say(const std::string &message)
     this->sendToOne(rawMessage);
 
     messageCount++;
-    lastMessageTime = timeNow;
 
     return true;
 }
+
+
 
 bool
 Channel::handleMessage(const IRCMessage &message)
 {
     switch (message.type) {
         case IRCMessage::Type::PRIVMSG: {
-            std::cout << message.user << ": " << message.params << std::endl;
-
+            //std::cout << '#' << message.channel << ": " << message.user << ": " << message.params << std::endl;
+            
+            if (messageCount >= 19) {
+                // Too many messages sent recently
+                return false;
+            }
+            
+            auto timeNow = std::chrono::high_resolution_clock::now();
+            auto msSinceLastMessage =
+                std::chrono::duration_cast<std::chrono::milliseconds>(timeNow -
+                                                                      lastMessageTime);
+            if (msSinceLastMessage.count() <= 1500) {
+                // Last message was sent less than 1.5 seconds ago
+                return false;
+            }
+            
+            bool sent = false;
             const auto response = this->commandsHandler.handle(message);
 
             if (response.valid)
-                this->say(response.message);
+                sent = this->say(response.message);
 
             if (message.params.find("ZULULending") != std::string::npos &&
                 message.user == "hemirt") {
-                this->say("Shutting down FeelsBadMan");
+                sent = this->say("Shutting down FeelsBadMan");
                 this->owner->shutdown();
             }
+            
+            if(sent) {
+                lastMessageTime = timeNow;
+            }
+            
             return true;
         } break;
 
