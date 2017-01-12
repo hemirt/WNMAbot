@@ -16,7 +16,7 @@ main(int argc, char *argv[])
 
     irc->joinChannel("pajlada");
     irc->joinChannel("hemirt");
-    // irc.joinChannel("forsenlol");
+    irc->joinChannel("forsenlol");
 
     std::cout << "added all" << std::endl;
     irc->run();

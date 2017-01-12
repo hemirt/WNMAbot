@@ -56,7 +56,6 @@ Channel::handleMessage(const IRCMessage &message)
     switch (message.type) {
         case IRCMessage::Type::PRIVMSG: {
             //std::cout << '#' << message.channel << ": " << message.user << ": " << message.params << std::endl;
-            
             if (messageCount >= 19) {
                 // Too many messages sent recently
                 return false;
@@ -81,6 +80,38 @@ Channel::handleMessage(const IRCMessage &message)
                 message.user == "hemirt") {
                 sent = this->say("Shutting down FeelsBadMan");
                 this->owner->shutdown();
+            }
+            
+            if (message.params.find("!joinchn") != std::string::npos &&
+                message.user == "hemirt") {
+                std::string msg = message.params;
+                msg.erase(0, strlen("!joinchn "));
+                if(msg.find(' ') == std::string::npos) {
+                    this->owner->joinChannel(msg);
+                    sent = this->say("Joined the " + msg + " channel."); 
+                }
+            }
+            
+            if (message.params.find("!leavechn") != std::string::npos &&
+                message.user == "hemirt") {
+                std::string msg = message.params;
+                msg.erase(0, strlen("!leavechn "));
+                if(msg.find(' ') == std::string::npos) {
+                    this->owner->leaveChannel(msg);
+                    sent = this->say("Left the " + msg + " channel."); 
+                }
+            }
+            
+            if (message.params.find("!chns") != std::string::npos &&
+                message.user == "hemirt") {
+                std::string channels;
+                for(const auto& i : owner->channels)
+                {
+                    channels += i.first + ", ";
+                }
+                channels.pop_back();
+                channels.pop_back();
+                sent = this->say("Currently active in channels " + channels + "."); 
             }
             
             if(sent) {
