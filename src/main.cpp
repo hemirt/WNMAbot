@@ -19,8 +19,9 @@ main(int argc, char *argv[])
     irc->joinChannel("forsenlol");
 
     std::cout << "added all" << std::endl;
+    
     irc->run();
-
+    
     std::cout << "ended running" << std::endl;
     delete irc;
 

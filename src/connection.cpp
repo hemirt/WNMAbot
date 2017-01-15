@@ -109,6 +109,7 @@ void
 Connection::handleError(const boost::system::error_code &ec)
 {
     std::cerr << "Handle error " << ec << std::endl;
+    this->startConnect();
 }
 
 void

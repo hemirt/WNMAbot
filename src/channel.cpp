@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 
 Channel::Channel(const std::string &_channelName,
                  boost::asio::io_service &_ioService, ConnectionHandler *_owner)
@@ -33,18 +34,14 @@ bool
 Channel::say(const std::string &message)
 {
     std::string rawMessage = "PRIVMSG #" + this->channelName + " :";
-
     // Message length at most 350 characters
     if (message.length() >= 350) {
         rawMessage += message.substr(0, 350);
     } else {
         rawMessage += message;
     }
-
     this->sendToOne(rawMessage);
-
     messageCount++;
-
     return true;
 }
 
@@ -114,7 +111,64 @@ Channel::handleMessage(const IRCMessage &message)
                 sent = this->say("Currently active in channels " + channels + "."); 
             }
             
-            if(sent) {
+            if (message.params.find("!peng") != std::string::npos) {
+                auto now = std::chrono::steady_clock::now();
+                auto runT = std::chrono::duration_cast<std::chrono::seconds>(now - owner->runTime);
+                auto conT = std::chrono::duration_cast<std::chrono::seconds>(now - connectedTime);
+                
+                auto convert = [](std::chrono::seconds T) -> std::string {
+                    std::string str;
+                    int seconds = T.count() % 60;
+                    int minutes = T.count() / 60;
+                    int hours = minutes / 60;
+                    minutes %= 60;
+                    int days = hours / 24;
+                    hours %= 24;
+                    std::stringstream ss;
+                    ss << " ";
+                    if (days != 0) {
+                        ss << days;
+                        if (days == 1) {
+                            ss << " day ";
+                        } else {
+                            ss << " days ";
+                        }
+                    }
+                    if (hours != 0) {
+                        ss << hours;
+                        if (hours == 1) {
+                            ss << " hour ";
+                        } else {
+                            ss << " hours ";
+                        }
+                    }
+                    if (minutes != 0) {
+                        ss << minutes;
+                        if (minutes == 1) {
+                            ss << " minute ";
+                        } else {
+                            ss << " minutes ";
+                        }
+                    }
+                    if (seconds != 0) {
+                        ss << seconds;
+                        if (seconds == 1) {
+                            ss << " second ";
+                        } else {
+                            ss << " seconds ";
+                        }
+                    }
+                    str = ss.str();
+                    str.pop_back();
+                    return str;
+                };
+                
+                auto running = convert(runT);
+                auto connected = convert(conT);
+                sent = this->say("Running for" + running + ". Connected to this channel for" + connected + ".");
+            }
+            
+            if (sent) {
                 lastMessageTime = timeNow;
             }
             

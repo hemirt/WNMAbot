@@ -117,12 +117,16 @@ ConnectionHandler::leaveChannel(const std::string &channelName)
 void
 ConnectionHandler::run()
 {
+    boost::system::error_code ec;
     try {
-        this->ioService.run();
+        
+        this->ioService.run(ec);
+         std::cout << "ec: " << ec <<std::endl;
     } catch (const std::exception &ex) {
         std::cerr << "Exception caught in ConnectionHandler::run(): "
-                  << ex.what() << std::endl;
+                  << ex.what() << "ec: " << ec << std::endl;
     }
+   
 }
 
 void

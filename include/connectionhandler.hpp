@@ -12,6 +12,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <chrono>
 
 class Channel;
 
@@ -41,6 +42,8 @@ public:
     }
 
     void shutdown();
+    
+    std::chrono::steady_clock::time_point runTime = std::chrono::steady_clock::now();
 
 private:
     // What does this mutex do?
