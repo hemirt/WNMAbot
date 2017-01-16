@@ -20,6 +20,9 @@ Connection::Connection(boost::asio::io_service &ioService,
 
 Connection::~Connection()
 {
+    quit = true;
+    this->socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+    this->socket.close();
 }
 
 void
@@ -109,7 +112,10 @@ void
 Connection::handleError(const boost::system::error_code &ec)
 {
     std::cerr << "Handle error " << ec << std::endl;
-    this->startConnect();
+    if(!quit) {
+        this->socket.close();
+        this->startConnect();
+    }
 }
 
 void

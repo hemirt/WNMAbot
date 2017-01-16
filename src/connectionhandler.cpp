@@ -26,6 +26,8 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
     timer->expires_from_now(std::chrono::seconds(2));
     timer->async_wait(
         boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
+
+    joinChannel(nick);
 }
 
 ConnectionHandler::ConnectionHandler()
@@ -48,11 +50,15 @@ ConnectionHandler::ConnectionHandler()
     timer->expires_from_now(std::chrono::seconds(2));
     timer->async_wait(
         boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
+
+    joinChannel(nick);
 }
 
 void
 ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
 {
+    this->joinChannel(nick);
+    
     if (ec) {
         std::cerr << "MsgDecreaseHandler error " << ec << std::endl;
         return;
