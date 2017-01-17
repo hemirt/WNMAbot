@@ -5,6 +5,7 @@
 #include "network.hpp"
 #include "redisclient.hpp"
 
+#include <boost/property_tree/ptree.hpp>
 #include <chrono>
 #include <iostream>
 #include <string>
@@ -50,6 +51,11 @@ private:
                             std::vector<std::string> &tokens);
     Response deleteFullCommand(const IRCMessage &message,
                                std::vector<std::string> &tokens);
+    Response makeResponse(const IRCMessage &message,
+                          std::string &responseString,
+                          std::vector<std::string> &tokens,
+                          const boost::property_tree::ptree &commandTree,
+                          const std::string &path);
 
     boost::asio::io_service &ioService;
 

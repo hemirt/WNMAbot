@@ -26,8 +26,6 @@ CommandsHandler::~CommandsHandler()
 Response
 CommandsHandler::handle(const IRCMessage &message)
 {
-    Response response;
-
     std::vector<std::string> tokens;
     boost::algorithm::split(tokens, message.params,
                             boost::algorithm::is_space(),
@@ -49,85 +47,87 @@ CommandsHandler::handle(const IRCMessage &message)
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
 
-    // formats the response according to parameters
-    auto makeResponse = [&response, &commandTree, &tokens, &message, this](
-        std::string &responseString, const std::string &path) -> void {
-        boost::optional<int> cooldown =
-            commandTree.get_optional<int>(path + ".cooldown");
-        if (cooldown || *cooldown != 0) {
-            auto it = this->cooldownsMap.find(path);
-            auto now = std::chrono::steady_clock::now();
-            if (it != cooldownsMap.end()) {
-                if (std::chrono::duration_cast<std::chrono::seconds>(now -
-                                                                     it->second)
-                        .count() < *cooldown) {
-                    return;
-                }
-            }
-            cooldownsMap[path] = now;
-        }
-
-        boost::optional<int> numParams =
-            commandTree.get_optional<int>(path + ".numParams");
-        if (numParams) {
-            if (tokens.size() <= *numParams) {
-                return;
-            }
-
-            std::stringstream ss;
-            for (int i = 1; i <= *numParams; ++i) {
-                ss.str(std::string());
-                ss.clear();
-                ss << '{' << i << '}';
-                if (boost::algorithm::find_regex(
-                        tokens[i], boost::regex("{[0-9]+}|{user}|{channel}"))) {
-                    return;
-                }
-                boost::algorithm::replace_all(responseString, ss.str(),
-                                              tokens[i]);
-            }
-        }
-        boost::algorithm::replace_all(responseString, "{user}", message.user);
-        boost::algorithm::replace_all(responseString, "{channel}",
-                                      message.channel);
-        response.message = responseString;
-        response.type = Response::Type::MESSAGE;
-    };
-
     // channel user command
     boost::optional<std::string> responseString =
         commandTree.get_optional<std::string>("channels." + message.channel +
                                               "." + message.user + ".response");
     if (responseString) {
-        makeResponse(*responseString,
+        return this->makeResponse(message, *responseString, tokens, commandTree,
                      "channels." + message.channel + "." + message.user);
-        return response;
     }
 
     // global user command
     responseString =
         commandTree.get_optional<std::string>(message.user + ".response");
     if (responseString) {
-        makeResponse(*responseString, message.user);
-        return response;
+        return this->makeResponse(message, *responseString, tokens, commandTree, message.user);
     }
 
     // default channel command
     responseString = commandTree.get_optional<std::string>(
         "channels." + message.channel + ".default.response");
     if (responseString) {
-        makeResponse(*responseString,
+        return this->makeResponse(message, *responseString, tokens, commandTree, 
                      "channels." + message.channel + ".default");
-        return response;
     }
 
     // default global command
     responseString = commandTree.get_optional<std::string>("default.response");
     if (responseString) {
-        makeResponse(*responseString, "default");
-        return response;
+        return this->makeResponse(message, *responseString, tokens, commandTree, "default");
     }
 
+    return Response();
+}
+
+Response
+CommandsHandler::makeResponse(const IRCMessage &message,
+                              std::string &responseString,
+                              std::vector<std::string> &tokens,
+                              const boost::property_tree::ptree &commandTree,
+                              const std::string &path)
+{
+    Response response;
+    boost::optional<int> cooldown =
+        commandTree.get_optional<int>(path + ".cooldown");
+    if (cooldown || *cooldown != 0) {
+        auto it = this->cooldownsMap.find(path);
+        auto now = std::chrono::steady_clock::now();
+        if (it != cooldownsMap.end()) {
+            if (std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                                 it->second)
+                    .count() < *cooldown) {
+                return response;
+            }
+        }
+        cooldownsMap[path] = now;
+    }
+
+    boost::optional<int> numParams =
+        commandTree.get_optional<int>(path + ".numParams");
+    if (numParams) {
+        if (tokens.size() <= *numParams) {
+            return response;
+        }
+
+        std::stringstream ss;
+        for (int i = 1; i <= *numParams; ++i) {
+            ss.str(std::string());
+            ss.clear();
+            ss << '{' << i << '}';
+            if (boost::algorithm::find_regex(
+                    tokens[i], boost::regex("{[0-9]+}|{user}|{channel}"))) {
+                return response;
+            }
+            boost::algorithm::replace_all(responseString, ss.str(),
+                                          tokens[i]);
+        }
+    }
+    boost::algorithm::replace_all(responseString, "{user}", message.user);
+    boost::algorithm::replace_all(responseString, "{channel}",
+                                  message.channel);
+    response.message = responseString;
+    response.type = Response::Type::MESSAGE;
     return response;
 }
 
