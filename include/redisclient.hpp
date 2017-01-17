@@ -26,6 +26,8 @@ public:
     bool addReminder(int timestamp, const std::string &user, int seconds,
                      const std::string &reminder = "");
 
+    bool isAdmin(const std::string &user);
+
 private:
     redisContext *context;
     void deleteRedisKey(const std::string &key);

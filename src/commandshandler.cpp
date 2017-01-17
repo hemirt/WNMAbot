@@ -399,27 +399,5 @@ CommandsHandler::deleteFullCommand(const IRCMessage &message,
 bool
 CommandsHandler::isAdmin(const std::string &user)
 {
-    // redisReply *reply = static_cast<redisReply *>(
-    // redisCommand(this->redisC, "SISMEMBER WNMA:admins %s", user.c_str()));
-    // if (!reply) {
-    // return false;
-    // }
-
-    // if (reply->type != REDIS_REPLY_INTEGER) {
-    // freeReplyObject(reply);
-    // return false;
-    // }
-
-    // if (reply->integer == 1) {
-    // freeReplyObject(reply);
-    // return true;
-    // }
-
-    // else {
-    // freeReplyObject(reply);
-    // return false;
-    // }
-    if (user == "hemirt")
-        return true;
-    return false;  // temp
+    return this->redisClient.isAdmin(user);
 }

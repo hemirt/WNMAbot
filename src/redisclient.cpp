@@ -147,3 +147,29 @@ RedisClient::addReminder(int timestamp, const std::string &user, int seconds,
     freeReplyObject(reply);
     return true;
 }
+
+bool
+RedisClient::isAdmin(const std::string &user)
+{
+    redisReply *reply = static_cast<redisReply *>(redisCommand(
+        this->context, "SISMEMBER WNMA:admins %b", user.c_str(), user.size()));
+    if (reply == NULL && this->context->err) {
+        std::cerr << "RedisClient error: " << this->context->errstr
+                  << std::endl;
+        freeReplyObject(reply);
+        this->reconnect();
+    }
+
+    if (reply->type != REDIS_REPLY_INTEGER) {
+        freeReplyObject(reply);
+        return false;
+    }
+
+    if (reply->integer == 1) {
+        freeReplyObject(reply);
+        return true;
+    } else {
+        freeReplyObject(reply);
+        return false;
+    }
+}
