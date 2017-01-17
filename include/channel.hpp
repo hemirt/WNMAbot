@@ -72,8 +72,9 @@ private:
     Credentials credentials;
 
     CommandsHandler commandsHandler;
-    
-    std::chrono::steady_clock::time_point connectedTime = std::chrono::steady_clock::now();
+
+    std::chrono::steady_clock::time_point connectedTime =
+        std::chrono::steady_clock::now();
 };
 
 #endif

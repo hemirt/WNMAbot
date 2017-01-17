@@ -58,7 +58,7 @@ void
 ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
 {
     this->joinChannel(nick);
-    
+
     if (ec) {
         std::cerr << "MsgDecreaseHandler error " << ec << std::endl;
         return;
@@ -125,14 +125,12 @@ ConnectionHandler::run()
 {
     boost::system::error_code ec;
     try {
-        
         this->ioService.run(ec);
-         std::cout << "ec: " << ec <<std::endl;
+        std::cout << "ec: " << ec << std::endl;
     } catch (const std::exception &ex) {
         std::cerr << "Exception caught in ConnectionHandler::run(): "
                   << ex.what() << "ec: " << ec << std::endl;
     }
-   
 }
 
 void

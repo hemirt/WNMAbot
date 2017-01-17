@@ -2,15 +2,13 @@
 #define COMMANDSHANDLER_HPP
 
 #include "ircmessage.hpp"
-#include "redisclient.hpp"
 #include "network.hpp"
+#include "redisclient.hpp"
 
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <chrono>
-
-
 
 class Response
 {
@@ -19,10 +17,10 @@ public:
         UNKNOWN,
         MESSAGE,
         FUNCTION,
-        
+
         NUM_TYPES,
     } type = Type::UNKNOWN;
-    
+
     Response() = default;
 
     std::string message;
@@ -40,7 +38,7 @@ public:
 
 private:
     RedisClient redisClient;
-    
+
     bool isAdmin(const std::string &user);
     Response addCommand(const IRCMessage &message,
                         std::vector<std::string> &tokens);
@@ -51,11 +49,12 @@ private:
     Response rawEditCommand(const IRCMessage &message,
                             std::vector<std::string> &tokens);
     Response deleteFullCommand(const IRCMessage &message,
-                            std::vector<std::string> &tokens);
-    
+                               std::vector<std::string> &tokens);
+
     boost::asio::io_service &ioService;
-    
-    std::unordered_map<std::string, std::chrono::steady_clock::time_point> cooldownsMap;
+
+    std::unordered_map<std::string, std::chrono::steady_clock::time_point>
+        cooldownsMap;
 };
 
 #endif

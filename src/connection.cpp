@@ -112,7 +112,7 @@ void
 Connection::handleError(const boost::system::error_code &ec)
 {
     std::cerr << "Handle error " << ec << std::endl;
-    if(!quit) {
+    if (!quit) {
         this->socket.close();
         this->startConnect();
     }

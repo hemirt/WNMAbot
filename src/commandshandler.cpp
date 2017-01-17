@@ -1,9 +1,9 @@
 #include "commandshandler.hpp"
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/regex.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/join.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -37,39 +37,36 @@ CommandsHandler::handle(const IRCMessage &message)
 
     if (tokens[0] == "!raweditcmd") {
         return this->rawEditCommand(message, tokens);
-    }
-    else if (tokens[0] == "!addcmd") {
+    } else if (tokens[0] == "!addcmd") {
         return this->addCommand(message, tokens);
-    }
-    else if (tokens[0] == "!editcmd") {
+    } else if (tokens[0] == "!editcmd") {
         return this->editCommand(message, tokens);
-    }
-    else if (tokens[0] == "!deletecmd") {
+    } else if (tokens[0] == "!deletecmd") {
         return this->deleteCommand(message, tokens);
-    }
-    else if (tokens[0] == "!deletefullcommand") {
+    } else if (tokens[0] == "!deletefullcommand") {
         return this->deleteFullCommand(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
-    
+
     // formats the response according to parameters
     auto makeResponse = [&response, &commandTree, &tokens, &message, this](
         std::string &responseString, const std::string &path) -> void {
-        boost::optional<int> cooldown = 
+        boost::optional<int> cooldown =
             commandTree.get_optional<int>(path + ".cooldown");
-        if(cooldown || *cooldown != 0) {
+        if (cooldown || *cooldown != 0) {
             auto it = this->cooldownsMap.find(path);
             auto now = std::chrono::steady_clock::now();
-            if(it != cooldownsMap.end()) {
-                if(std::chrono::duration_cast<std::chrono::seconds>(now - it->second).count() < *cooldown)
-                {
+            if (it != cooldownsMap.end()) {
+                if (std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                                     it->second)
+                        .count() < *cooldown) {
                     return;
                 }
             }
             cooldownsMap[path] = now;
         }
-        
+
         boost::optional<int> numParams =
             commandTree.get_optional<int>(path + ".numParams");
         if (numParams) {
@@ -316,7 +313,7 @@ CommandsHandler::rawEditCommand(const IRCMessage &message,
 
 Response
 CommandsHandler::deleteCommand(const IRCMessage &message,
-                                std::vector<std::string> &tokens)
+                               std::vector<std::string> &tokens)
 {
     Response response;
     if (!this->isAdmin(message.user)) {
@@ -331,49 +328,51 @@ CommandsHandler::deleteCommand(const IRCMessage &message,
     }
     changeToLower(tokens[1]);
     changeToLower(tokens[2]);
-    //tokens[0]     1       2
-    //!deletecmd trigger default
-    
+    // tokens[0]     1       2
+    //! deletecmd trigger default
+
     pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
-    
-    boost::optional<pt::ptree&> child = commandTree.get_child_optional(tokens[2]);
-    if(child) {
+
+    boost::optional<pt::ptree &> child =
+        commandTree.get_child_optional(tokens[2]);
+    if (child) {
         child->clear();
         std::vector<std::string> pathtokens;
         boost::algorithm::split(pathtokens, tokens[2],
                                 boost::algorithm::is_any_of("."),
                                 boost::token_compress_on);
         std::string last;
-        while(pathtokens.size()) {
+        while (pathtokens.size()) {
             last = pathtokens.back();
             pathtokens.pop_back();
-            auto &node = commandTree.get_child(boost::algorithm::join(pathtokens, "."));
+            auto &node =
+                commandTree.get_child(boost::algorithm::join(pathtokens, "."));
             node.erase(last);
-            
-            if(!node.empty()) {
+
+            if (!node.empty()) {
                 break;
             }
         }
     }
-    
-    if(commandTree.empty()) {
+
+    if (commandTree.empty()) {
         redisClient.deleteFullCommand(tokens[1]);
-    }
-    else {
+    } else {
         std::stringstream ss;
         pt::write_json(ss, commandTree, false);
-        redisClient.setCommandTree(tokens[1], ss.str());;
+        redisClient.setCommandTree(tokens[1], ss.str());
+        ;
     }
 
-    response.message =
-        message.user + " deleted " + tokens[1] + " command at " + tokens[2] + " FeelsBadMan";
+    response.message = message.user + " deleted " + tokens[1] + " command at " +
+                       tokens[2] + " FeelsBadMan";
     response.type = Response::Type::MESSAGE;
     return response;
 }
 
 Response
 CommandsHandler::deleteFullCommand(const IRCMessage &message,
-                                std::vector<std::string> &tokens)
+                                   std::vector<std::string> &tokens)
 {
     Response response;
     if (!this->isAdmin(message.user)) {
@@ -386,12 +385,13 @@ CommandsHandler::deleteFullCommand(const IRCMessage &message,
         response.type = Response::Type::MESSAGE;
         return response;
     }
-    //tokens[0]          tokens[1]
-    //!deletefullcommand trigger
+    // tokens[0]          tokens[1]
+    //! deletefullcommand trigger
     changeToLower(tokens[1]);
-    
+
     redisClient.deleteFullCommand(tokens[1]);
-    response.message = message.user + " deleted everything related to the " + tokens[1] + " command BibleThump";
+    response.message = message.user + " deleted everything related to the " +
+                       tokens[1] + " command BibleThump";
     response.type = Response::Type::MESSAGE;
     return response;
 }
