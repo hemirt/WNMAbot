@@ -21,7 +21,7 @@ Channel::Channel(const std::string &_channelName,
     , ioService(_ioService)
     , credentials(owner->nick, owner->pass)
     , messageCount(0)
-    , commandsHandler(_ioService)
+    , commandsHandler(_ioService, this)
 {
     // Create initial connection
     this->createConnection();
@@ -106,31 +106,6 @@ Channel::handleMessage(const IRCMessage &message)
                 if (tokens[0] == "zululending" && message.user == "hemirt") {
                     sent = this->say("Shutting down FeelsBadMan");
                     this->owner->shutdown();
-                } else if (tokens[0] == "!joinchn" &&
-                           message.user == "hemirt") {
-                    std::string msg = message.params;
-                    msg.erase(0, strlen("!joinchn "));
-                    if (msg.find(' ') == std::string::npos) {
-                        this->owner->joinChannel(msg);
-                        sent = this->say("Joined the " + msg + " channel.");
-                    }
-                } else if (tokens[0] == "!leavechn" &&
-                           message.user == "hemirt") {
-                    std::string msg = message.params;
-                    msg.erase(0, strlen("!leavechn "));
-                    if (msg.find(' ') == std::string::npos) {
-                        this->owner->leaveChannel(msg);
-                        sent = this->say("Left the " + msg + " channel.");
-                    }
-                } else if (tokens[0] == "!chns" && message.user == "hemirt") {
-                    std::string channels;
-                    for (const auto &i : owner->channels) {
-                        channels += i.first + ", ";
-                    }
-                    channels.pop_back();
-                    channels.pop_back();
-                    sent = this->say("Currently active in channels " +
-                                     channels + ".");
                 } else if (tokens[0] == "!peng") {
                     auto now = std::chrono::steady_clock::now();
                     auto runT =

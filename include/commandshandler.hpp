@@ -11,6 +11,8 @@
 #include <string>
 #include <unordered_map>
 
+class Channel;
+
 class Response
 {
 public:
@@ -32,10 +34,13 @@ private:
 class CommandsHandler
 {
 public:
-    CommandsHandler(boost::asio::io_service &_ioService);
+    CommandsHandler(boost::asio::io_service &_ioService,
+                    Channel *_channelObject);
     ~CommandsHandler();
 
     Response handle(const IRCMessage &message);
+
+    Channel *channelObject;
 
 private:
     RedisClient redisClient;
@@ -56,6 +61,12 @@ private:
                           std::vector<std::string> &tokens,
                           const boost::property_tree::ptree &commandTree,
                           const std::string &path);
+    Response joinChannel(const IRCMessage &message,
+                         std::vector<std::string> &tokens);
+    Response leaveChannel(const IRCMessage &message,
+                          std::vector<std::string> &tokens);
+    Response printChannels(const IRCMessage &message,
+                           std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 

@@ -1,4 +1,10 @@
 #include "commandshandler.hpp"
+#include "channel.hpp"
+#include "connectionhandler.hpp"
+#include "utilities.hpp"
+
+#include <vector>
+
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/regex.hpp>
@@ -9,13 +15,13 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/regex.hpp>
-#include <vector>
-#include "utilities.hpp"
 
 namespace pt = boost::property_tree;
 
-CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService)
+CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService,
+                                 Channel *_channelObject)
     : ioService(_ioService)
+    , channelObject(_channelObject)
 {
 }
 
@@ -43,6 +49,12 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->deleteCommand(message, tokens);
     } else if (tokens[0] == "!deletefullcommand") {
         return this->deleteFullCommand(message, tokens);
+    } else if (tokens[0] == "!joinchn") {
+        return this->joinChannel(message, tokens);
+    } else if (tokens[0] == "!leavechn") {
+        return this->leaveChannel(message, tokens);
+    } else if (tokens[0] == "!chns") {
+        return this->printChannels(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -52,32 +64,96 @@ CommandsHandler::handle(const IRCMessage &message)
         commandTree.get_optional<std::string>("channels." + message.channel +
                                               "." + message.user + ".response");
     if (responseString) {
-        return this->makeResponse(message, *responseString, tokens, commandTree,
-                     "channels." + message.channel + "." + message.user);
+        return this->makeResponse(
+            message, *responseString, tokens, commandTree,
+            "channels." + message.channel + "." + message.user);
     }
 
     // global user command
     responseString =
         commandTree.get_optional<std::string>(message.user + ".response");
     if (responseString) {
-        return this->makeResponse(message, *responseString, tokens, commandTree, message.user);
+        return this->makeResponse(message, *responseString, tokens, commandTree,
+                                  message.user);
     }
 
     // default channel command
     responseString = commandTree.get_optional<std::string>(
         "channels." + message.channel + ".default.response");
     if (responseString) {
-        return this->makeResponse(message, *responseString, tokens, commandTree, 
-                     "channels." + message.channel + ".default");
+        return this->makeResponse(message, *responseString, tokens, commandTree,
+                                  "channels." + message.channel + ".default");
     }
 
     // default global command
     responseString = commandTree.get_optional<std::string>("default.response");
     if (responseString) {
-        return this->makeResponse(message, *responseString, tokens, commandTree, "default");
+        return this->makeResponse(message, *responseString, tokens, commandTree,
+                                  "default");
     }
 
     return Response();
+}
+
+Response
+CommandsHandler::joinChannel(const IRCMessage &message,
+                             std::vector<std::string> &tokens)
+{
+    Response response;
+    if (this->isAdmin(message.user) == false) {
+        this->channelObject->whisper("You are not an admin NaM", message.user);
+        return response;
+    }
+
+    if (tokens.size() < 2) {
+        this->channelObject->whisper("Usage: !joinchn <channel>", message.user);
+        return response;
+    }
+
+    this->channelObject->owner->joinChannel(tokens[1]);
+    response.message = "Joined the " + tokens[1] + " channel SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::leaveChannel(const IRCMessage &message,
+                              std::vector<std::string> &tokens)
+{
+    Response response;
+    if (this->isAdmin(message.user) == false) {
+        this->channelObject->whisper("You are not an admin NaM", message.user);
+        return response;
+    }
+
+    if (tokens.size() < 2) {
+        this->channelObject->whisper("Usage: !leavechn <channel>",
+                                     message.user);
+        return response;
+    }
+
+    this->channelObject->owner->leaveChannel(tokens[1]);
+    response.message = "Left the " + tokens[1] + " channel SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::printChannels(const IRCMessage &message,
+                               std::vector<std::string> &tokens)
+{
+    Response response;
+
+    std::string channels;
+    for (const auto &i : this->channelObject->owner->channels) {
+        channels += i.first + ", ";
+    }
+    channels.pop_back();
+    channels.pop_back();
+
+    response.message = "Currently active in channels " + channels;
+    response.type = Response::Type::MESSAGE;
+    return response;
 }
 
 Response
@@ -119,13 +195,11 @@ CommandsHandler::makeResponse(const IRCMessage &message,
                     tokens[i], boost::regex("{[0-9]+}|{user}|{channel}"))) {
                 return response;
             }
-            boost::algorithm::replace_all(responseString, ss.str(),
-                                          tokens[i]);
+            boost::algorithm::replace_all(responseString, ss.str(), tokens[i]);
         }
     }
     boost::algorithm::replace_all(responseString, "{user}", message.user);
-    boost::algorithm::replace_all(responseString, "{channel}",
-                                  message.channel);
+    boost::algorithm::replace_all(responseString, "{channel}", message.channel);
     response.message = responseString;
     response.type = Response::Type::MESSAGE;
     return response;

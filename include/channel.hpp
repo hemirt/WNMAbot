@@ -47,6 +47,10 @@ public:
         return channelName == r.channelName;
     }
 
+    // The ConnectionHandler managin this channel, should be only one in whole
+    // app
+    ConnectionHandler *owner;
+
 private:
     // Create a new connection add it to the connections vector
     void createConnection();
@@ -64,10 +68,6 @@ private:
     std::chrono::high_resolution_clock::time_point lastMessageTime;
 
     boost::asio::io_service &ioService;
-
-    // The ConnectionHandler managin this channel, should be only one in whole
-    // app
-    ConnectionHandler *owner;
 
     Credentials credentials;
 
