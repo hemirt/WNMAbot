@@ -94,7 +94,7 @@ CommandsHandler::handle(const IRCMessage &message)
         boost::algorithm::replace_all(responseString, "{channel}",
                                       message.channel);
         response.message = responseString;
-        response.valid = true;
+        response.type = Response::Type::MESSAGE;
     };
 
     // channel user command
@@ -141,12 +141,12 @@ CommandsHandler::addCommand(const IRCMessage &message,
     Response response;
     if (!this->isAdmin(message.user)) {
         response.message = message.user + ", you are not an admin NaM";
-        response.valid = true;
+        response.type = Response::Type::MESSAGE;
         return response;
     }
     if (tokens.size() < 4) {
         response.message = "Invalid use of command NaM";
-        response.valid = true;
+        response.type = Response::Type::MESSAGE;
         return response;
     }
 
@@ -169,7 +169,7 @@ CommandsHandler::addCommand(const IRCMessage &message,
     if (child) {
         response.message =
             "Command " + tokens[1] + " at " + tokens[2] + " already exists.";
-        response.valid = true;
+        response.type = Response::Type::MESSAGE;
         return response;
     }
 
@@ -197,7 +197,7 @@ CommandsHandler::addCommand(const IRCMessage &message,
 
     response.message = message.user + " added command " + tokens[1] + " at " +
                        tokens[2] + "  SeemsGood";
-    response.valid = true;
+    response.type = Response::Type::MESSAGE;
     return response;
 }
 
@@ -212,7 +212,7 @@ CommandsHandler::editCommand(const IRCMessage &message,
 
     if (tokens.size() < 4) {
         response.message = "Invalid use of command NaM";
-        response.valid = true;
+        response.type = Response::Type::MESSAGE;
         return response;
     }
 
@@ -235,7 +235,7 @@ CommandsHandler::editCommand(const IRCMessage &message,
     if (!child) {
         response.message =
             "Command " + tokens[1] + " at " + tokens[2] + " doesn\'t exists.";
-        response.valid = true;
+        response.type = Response::Type::MESSAGE;
         return response;
     }
 
@@ -262,7 +262,7 @@ CommandsHandler::editCommand(const IRCMessage &message,
 
     response.message = message.user + " edited command " + tokens[1] + " at " +
                        tokens[2] + "  SeemsGood";
-    response.valid = true;
+    response.type = Response::Type::MESSAGE;
     return response;
 }
 
@@ -276,7 +276,7 @@ CommandsHandler::rawEditCommand(const IRCMessage &message,
     }
     if (tokens.size() < 5) {
         response.message = "Invalid use of command NaM";
-        response.valid = true;
+        response.type = Response::Type::MESSAGE;
         return response;
     }
     changeToLower(tokens[1]);
@@ -310,7 +310,7 @@ CommandsHandler::rawEditCommand(const IRCMessage &message,
 
     response.message =
         message.user + " edited " + tokens[1] + " command SeemsGood";
-    response.valid = true;
+    response.type = Response::Type::MESSAGE;
     return response;
 }
 
@@ -321,12 +321,12 @@ CommandsHandler::deleteCommand(const IRCMessage &message,
     Response response;
     if (!this->isAdmin(message.user)) {
         response.message = message.user + ", you are not an admin NaM";
-        response.valid = true;
+        response.type = Response::Type::MESSAGE;
         return response;
     }
     if (tokens.size() < 3) {
         response.message = "Invalid use of command NaM";
-        response.valid = true;
+        response.type = Response::Type::MESSAGE;
         return response;
     }
     changeToLower(tokens[1]);
@@ -367,7 +367,7 @@ CommandsHandler::deleteCommand(const IRCMessage &message,
 
     response.message =
         message.user + " deleted " + tokens[1] + " command at " + tokens[2] + " FeelsBadMan";
-    response.valid = true;
+    response.type = Response::Type::MESSAGE;
     return response;
 }
 
@@ -378,12 +378,12 @@ CommandsHandler::deleteFullCommand(const IRCMessage &message,
     Response response;
     if (!this->isAdmin(message.user)) {
         response.message = message.user + ", you are not an admin NaM";
-        response.valid = true;
+        response.type = Response::Type::MESSAGE;
         return response;
     }
     if (tokens.size() < 2) {
         response.message = "Invalid use of command NaM";
-        response.valid = true;
+        response.type = Response::Type::MESSAGE;
         return response;
     }
     //tokens[0]          tokens[1]
@@ -392,7 +392,7 @@ CommandsHandler::deleteFullCommand(const IRCMessage &message,
     
     redisClient.deleteFullCommand(tokens[1]);
     response.message = message.user + " deleted everything related to the " + tokens[1] + " command BibleThump";
-    response.valid = true;
+    response.type = Response::Type::MESSAGE;
     return response;
 }
 

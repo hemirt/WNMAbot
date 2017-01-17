@@ -22,6 +22,8 @@ public:
     void setCommandTree(const std::string &trigger, const std::string &json);
     
     void deleteFullCommand(const std::string &trigger);
+    
+    bool addReminder(int timestamp, const std::string& user, int seconds, const std::string& reminder = "");
 
 private:
     redisContext *context;

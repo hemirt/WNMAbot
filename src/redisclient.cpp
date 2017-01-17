@@ -99,3 +99,47 @@ RedisClient::getCommandTree(const std::string &trigger)
     freeReplyObject(reply);
     return tree;
 }
+
+bool
+RedisClient::addReminder(int timestamp, const std::string& user, int seconds, const std::string& reminder)
+{
+    std::string timestring = std::to_string(timestamp);
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "SADD WNMA:reminderSet %b:%s", user.c_str(), user.size(), timestring.c_str()));
+    
+    if (reply == NULL && this->context->err) {
+        std::cerr << "RedisClient error: " << this->context->errstr
+                  << std::endl;
+        freeReplyObject(reply);
+        this->reconnect();
+        return false;
+    }
+    
+    freeReplyObject(reply);
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "SET WNMA:reminders:%b:%s %b", user.c_str(), user.size(), timestring.c_str(), reminder.c_str(), reminder.size()));
+    
+    if (reply == NULL && this->context->err) {
+        std::cerr << "RedisClient error: " << this->context->errstr
+                  << std::endl;
+        freeReplyObject(reply);
+        this->reconnect();
+        return false;
+    }
+    
+    freeReplyObject(reply);
+    std::string secondsString = std::to_string(seconds);
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "EXPIRE WNMA:reminders:%b:%s %s", user.c_str(), user.size(), timestring.c_str(), secondsString.c_str()));
+    
+    if (reply == NULL && this->context->err) {
+        std::cerr << "RedisClient error: " << this->context->errstr
+                  << std::endl;
+        freeReplyObject(reply);
+        this->reconnect();
+        return false;
+    }
+    
+    freeReplyObject(reply);
+    return true;
+}

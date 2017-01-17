@@ -93,7 +93,7 @@ Channel::handleMessage(const IRCMessage &message)
             bool sent = false;
             const auto response = this->commandsHandler.handle(message);
 
-            if (response.valid) {
+            if (response.type == Response::Type::MESSAGE) {
                 sent = this->say(response.message);
             }
             if(!sent) {

@@ -10,12 +10,20 @@
 #include <unordered_map>
 #include <chrono>
 
+
+
 class Response
 {
 public:
+    enum class Type {
+        UNKNOWN,
+        MESSAGE,
+        FUNCTION,
+        
+        NUM_TYPES,
+    } type = Type::UNKNOWN;
+    
     Response() = default;
-
-    bool valid = false;
 
     std::string message;
 
