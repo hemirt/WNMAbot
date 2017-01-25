@@ -2,6 +2,7 @@
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <chrono>
 
 namespace pt = boost::property_tree;
 
@@ -101,54 +102,6 @@ RedisClient::getCommandTree(const std::string &trigger)
 }
 
 bool
-RedisClient::addReminder(int timestamp, const std::string &user, int seconds,
-                         const std::string &reminder)
-{
-    std::string timestring = std::to_string(timestamp);
-    redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "SADD WNMA:reminderSet %b:%s", user.c_str(),
-                     user.size(), timestring.c_str()));
-
-    if (reply == NULL && this->context->err) {
-        std::cerr << "RedisClient error: " << this->context->errstr
-                  << std::endl;
-        freeReplyObject(reply);
-        this->reconnect();
-        return false;
-    }
-
-    freeReplyObject(reply);
-    reply = static_cast<redisReply *>(redisCommand(
-        this->context, "SET WNMA:reminders:%b:%s %b", user.c_str(), user.size(),
-        timestring.c_str(), reminder.c_str(), reminder.size()));
-
-    if (reply == NULL && this->context->err) {
-        std::cerr << "RedisClient error: " << this->context->errstr
-                  << std::endl;
-        freeReplyObject(reply);
-        this->reconnect();
-        return false;
-    }
-
-    freeReplyObject(reply);
-    std::string secondsString = std::to_string(seconds);
-    reply = static_cast<redisReply *>(redisCommand(
-        this->context, "EXPIRE WNMA:reminders:%b:%s %s", user.c_str(),
-        user.size(), timestring.c_str(), secondsString.c_str()));
-
-    if (reply == NULL && this->context->err) {
-        std::cerr << "RedisClient error: " << this->context->errstr
-                  << std::endl;
-        freeReplyObject(reply);
-        this->reconnect();
-        return false;
-    }
-
-    freeReplyObject(reply);
-    return true;
-}
-
-bool
 RedisClient::isAdmin(const std::string &user)
 {
     redisReply *reply = static_cast<redisReply *>(redisCommand(
@@ -158,6 +111,7 @@ RedisClient::isAdmin(const std::string &user)
                   << std::endl;
         freeReplyObject(reply);
         this->reconnect();
+        return false;
     }
 
     if (reply->type != REDIS_REPLY_INTEGER) {
@@ -172,4 +126,72 @@ RedisClient::isAdmin(const std::string &user)
         freeReplyObject(reply);
         return false;
     }
+}
+
+boost::property_tree::ptree
+RedisClient::getRemindersOfUser(const std::string &user)
+{
+    pt::ptree tree;
+    redisReply *reply = static_cast<redisReply *>(redisCommand(
+        this->context, "HGET WNMA:reminders %b", user.c_str(), user.size()));
+    if (reply == NULL && this->context->err) {
+        std::cerr << "RedisClient error getRemindersOfUser(" << user << "): " 
+                  << this->context->errstr << std::endl;
+        freeReplyObject(reply);
+        this->reconnect();
+        return tree;
+    }
+    
+    if (reply->type != REDIS_REPLY_STRING) {
+        freeReplyObject(reply);
+        return tree;
+    }
+
+    std::string jsonString(reply->str, reply->len);
+    std::stringstream ss(jsonString);
+
+    pt::read_json(ss, tree);
+
+    freeReplyObject(reply);
+    return tree;
+}
+
+std::string
+RedisClient::addReminder(const std::string &user, int seconds,
+                         const std::string &reminder)
+{
+    pt::ptree reminderTree = this->getRemindersOfUser(user);
+
+    auto now = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now());
+    
+    auto epoch = now.time_since_epoch();
+    
+    std::string duration = std::to_string(epoch.count());
+    
+    while(reminderTree.count(duration) != 0) {
+        duration = std::to_string((epoch - std::chrono::seconds{1}).count());
+    }
+    
+    std::chrono::seconds timeToAdd(seconds);
+    
+    decltype(now) when = now + std::chrono::seconds{seconds};
+
+    reminderTree.put(duration + ".when", std::to_string(when.time_since_epoch().count()));
+    reminderTree.put(duration + ".what", reminder);
+    
+    std::stringstream ss;
+    pt::write_json(ss, reminderTree, false);
+    
+    this->setReminder(user, ss.str());
+    
+    return duration;
+}
+
+void
+RedisClient::setReminder(const std::string &user, const std::string &json)
+{
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HSET WNMA:reminders %b %b", user.c_str(),
+                     user.size(), json.c_str(), json.size()));
+    freeReplyObject(reply);
 }
