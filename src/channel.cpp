@@ -11,6 +11,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/asio/steady_timer.hpp>
 
 Channel::Channel(const std::string &_channelName,
@@ -43,10 +44,11 @@ Channel::say(const std::string &message)
 {
     std::string rawMessage = "PRIVMSG #" + this->channelName + " :";
     // Message length at most 350 characters
-    if (message.length() >= 350) {
-        rawMessage += message.substr(0, 350);
+    auto msg = boost::algorithm::replace_all_copy(message, ".", ",");
+    if (msg.length() >= 350) {
+        rawMessage += msg.substr(0, 350);
     } else {
-        rawMessage += message;
+        rawMessage += msg;
     }
     this->sendToOne(rawMessage);
     messageCount++;
@@ -58,10 +60,11 @@ Channel::whisper(const std::string &message, const std::string &recipient)
 {
     std::string rawMessage = "PRIVMSG #jtv :/w " + recipient + " ";
     // Message length at most 350 characters
-    if (message.length() >= 350) {
-        rawMessage += message.substr(0, 350);
+    auto msg = boost::algorithm::replace_all_copy(message, ".", ",");
+    if (msg.length() >= 350) {
+        rawMessage += msg.substr(0, 350);
     } else {
-        rawMessage += message;
+        rawMessage += msg;
     }
     this->sendToOne(rawMessage);
     messageCount++;
