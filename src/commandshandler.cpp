@@ -115,9 +115,10 @@ CommandsHandler::joinChannel(const IRCMessage &message,
         return response;
     }
 
-    this->channelObject->owner->joinChannel(tokens[1]);
-    response.message = "Joined the " + tokens[1] + " channel SeemsGood";
-    response.type = Response::Type::MESSAGE;
+    if(this->channelObject->owner->joinChannel(tokens[1])) {
+        response.message = "Joined the " + tokens[1] + " channel SeemsGood";
+        response.type = Response::Type::MESSAGE;
+    }
     return response;
 }
 
