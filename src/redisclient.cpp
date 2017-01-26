@@ -160,31 +160,32 @@ std::string
 RedisClient::addReminder(const std::string &user, int seconds,
                          const std::string &reminder)
 {
+    std::string value;
     pt::ptree reminderTree = this->getRemindersOfUser(user);
 
     auto now = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now());
     
-    auto epoch = now.time_since_epoch();
-    
-    std::string duration = std::to_string(epoch.count());
-    
-    while(reminderTree.count(duration) != 0) {
-        duration = std::to_string((epoch - std::chrono::seconds{1}).count());
+    int i = 0;
+    do
+    {
+        value = std::to_string(i);
+        ++i;
     }
+    while(reminderTree.count(value) != 0);
     
     std::chrono::seconds timeToAdd(seconds);
     
     decltype(now) when = now + std::chrono::seconds{seconds};
 
-    reminderTree.put(duration + ".when", std::to_string(when.time_since_epoch().count()));
-    reminderTree.put(duration + ".what", reminder);
+    reminderTree.put(value + ".when", std::to_string(when.time_since_epoch().count()));
+    reminderTree.put(value + ".what", reminder);
     
     std::stringstream ss;
     pt::write_json(ss, reminderTree, false);
     
     this->setReminder(user, ss.str());
     
-    return duration;
+    return value;
 }
 
 void

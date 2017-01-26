@@ -94,6 +94,9 @@ Channel::handleMessage(const IRCMessage &message)
 
             if (response.type == Response::Type::MESSAGE) {
                 sent = this->say(response.message);
+            } else if (response.type == Response::Type::WHISPER)
+            {
+                this->whisper(response.message, response.whisperReceiver);
             }
             if (!sent) {
                 std::vector<std::string> tokens;
@@ -167,94 +170,6 @@ Channel::handleMessage(const IRCMessage &message)
                     sent = this->say("Running for" + running +
                                      ". Connected to this channel for" +
                                      connected + ".");
-                } else if (tokens[0] == "!remindme") {
-                    auto i = tokens.size();
-                    for (; i-- > 0;) {
-                        if (tokens[i] == "in" || tokens[i] == "IN" ||
-                            tokens[i] == "iN" || tokens[i] == "In") {
-                            break;
-                        }
-                    }
-                    if (i == 0 || i + 1 >= tokens.size()) {
-                        this->whisper("Usage \"!remindme [your message] in 20s "
-                                      "15h 10d 9m (the order does not matter, "
-                                      "the number must be immediately followed "
-                                      "by an identifier)\"",
-                                      message.user);
-                        return false;
-                    }
-                    int end = i;
-                    ++i;
-                    long long seconds = 0;
-                    for (; i < tokens.size(); i++) {
-                        if (tokens[i].back() == 'd') {
-                            seconds +=
-                                std::atoll(tokens[i].c_str()) * 24 * 3600;
-
-                        } else if (tokens[i].back() == 'h') {
-                            seconds += std::atoll(tokens[i].c_str()) * 3600;
-                        } else if (tokens[i].back() == 'm') {
-                            seconds += std::atoll(tokens[i].c_str()) * 60;
-                        } else if (tokens[i].back() == 's') {
-                            seconds += std::atoll(tokens[i].c_str());
-                        }
-                    }
-                    if (seconds == 0) {
-                        this->whisper("Usage \"!remindme [your message] in 20s "
-                                      "15h 10d 9m (the order does not matter, "
-                                      "the number must be immediately followed "
-                                      "by an identifier)\"",
-                                      message.user);
-                        return false;
-                    } else if (seconds > 604800) {
-                        this->whisper("Maximum amount of time is 7 days NaM",
-                                      message.user);
-                        return false;
-                    } else if (seconds < 0) {
-                        this->whisper("Negative amount of time "
-                                      "\xF0\x9F\xA4\x94, sorry I can't travel "
-                                      "back in time (yet)",
-                                      message.user);
-                        return false;
-                    }
-
-                    int j = 1;
-                    std::string str;
-                    for (; j < end; j++) {
-                        str += tokens[j] + " ";
-                    }
-                    if (str.back() == ' ')
-                        str.pop_back();
-                    std::string responsex = "Your message: " + str;
-                    if (str.empty()) {
-                        responsex = "You didnt set any message so here's your "
-                                    "anonymous reminder eShrug";
-                    }
-
-                    auto remindFunction =
-                        [ owner = this->owner, user = message.user,
-                          responsex ](const boost::system::error_code &er)
-                            ->void
-                    {
-                        if (owner->channels.empty()) {
-                            owner->joinChannel(owner->nick);
-                        }
-
-                        owner->channels.at(owner->nick)
-                            .whisper(responsex, user);
-                    };
-
-                    auto t = new boost::asio::steady_timer(
-                        ioService, std::chrono::seconds(seconds));
-                    t->async_wait(remindFunction);
-                    std::string msg = message.user + ", reminding you in " +
-                                      std::to_string(seconds) + " seconds";
-                    if (j != 1) {
-                        msg += " of " + str + " SeemsGood";
-                    } else {
-                        msg += " SeemsGood";
-                    }
-                    sent = this->say(msg);
                 }
             }
             if (sent) {

@@ -45,8 +45,6 @@ private:
     std::string channelName;
 
     MessageHandler *handler;
-
-    bool quit = false;
 };
 
 #endif  // CONNECTION_HPP

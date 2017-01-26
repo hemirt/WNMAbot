@@ -27,7 +27,7 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
     timer->async_wait(
         boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
 
-    joinChannel(nick);
+    joinChannel(this->nick);
 }
 
 ConnectionHandler::ConnectionHandler()
@@ -51,13 +51,13 @@ ConnectionHandler::ConnectionHandler()
     timer->async_wait(
         boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
 
-    joinChannel(nick);
+    joinChannel(this->nick);
 }
 
 void
 ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
 {
-    this->joinChannel(nick);
+    this->joinChannel(this->nick);
 
     if (ec) {
         std::cerr << "MsgDecreaseHandler error " << ec << std::endl;
@@ -93,10 +93,12 @@ bool
 ConnectionHandler::joinChannel(const std::string &channelName)
 {
     std::lock_guard<std::mutex> lk(mtx);
+    
 
     if (this->channels.count(channelName) == 1) {
         return false;
     }
+    std::cout << "joining: " << channelName << std::endl;
 
     this->channels.emplace(
         std::piecewise_construct, std::forward_as_tuple(channelName),
@@ -109,6 +111,7 @@ bool
 ConnectionHandler::leaveChannel(const std::string &channelName)
 {
     std::lock_guard<std::mutex> lk(mtx);
+    std::cout << "leaving: " << channelName << std::endl;
 
     if (this->channels.count(channelName) == 0) {
         // We are not connected to the given channel
@@ -129,7 +132,7 @@ ConnectionHandler::run()
         std::cout << "ec: " << ec << std::endl;
     } catch (const std::exception &ex) {
         std::cerr << "Exception caught in ConnectionHandler::run(): "
-                  << ex.what() << "ec: " << ec << std::endl;
+                  << ex.what() << "\nec: " << ec << std::endl;
     }
 }
 

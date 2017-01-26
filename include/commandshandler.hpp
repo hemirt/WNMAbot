@@ -19,6 +19,7 @@ public:
     enum class Type {
         UNKNOWN,
         MESSAGE,
+        WHISPER,
         FUNCTION,
 
         NUM_TYPES,
@@ -27,6 +28,7 @@ public:
     Response() = default;
 
     std::string message;
+    std::string whisperReceiver;
 
 private:
 };
@@ -67,6 +69,8 @@ private:
                           std::vector<std::string> &tokens);
     Response printChannels(const IRCMessage &message,
                            std::vector<std::string> &tokens);
+    Response remindMe(const IRCMessage &message,
+                      std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 

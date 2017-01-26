@@ -15,12 +15,12 @@ Connection::Connection(boost::asio::io_service &ioService,
     , handler(_handler)
 {
     // When the connection object is started, we start connecting
+    std::cout << "connection: " << this->channelName << std::endl;
     this->startConnect();
 }
 
 Connection::~Connection()
 {
-    quit = true;
     this->socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
     this->socket.close();
 }
@@ -111,11 +111,7 @@ Connection::handleConnect(const boost::system::error_code &ec)
 void
 Connection::handleError(const boost::system::error_code &ec)
 {
-    std::cerr << "Handle error " << ec << std::endl;
-    if (!quit) {
-        this->socket.close();
-        this->startConnect();
-    }
+    std::cerr << "Handle error: " << ec << std::endl;
 }
 
 void
