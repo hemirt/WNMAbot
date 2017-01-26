@@ -37,6 +37,9 @@ Connection::writeRawMessage(const std::string &message)
 void
 Connection::writeMessage(const std::string &message)
 {
+    if(!this->established) {
+        return;
+    }
     this->writeRawMessage(message + " \r\n");
 }
 
@@ -112,6 +115,12 @@ void
 Connection::handleError(const boost::system::error_code &ec)
 {
     std::cerr << "Handle error: " << ec << std::endl;
+    if(ec == boost::asio::error::eof)
+    {
+        this->socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+        this->socket.close();
+        this->startConnect();
+    }
 }
 
 void
@@ -123,4 +132,6 @@ Connection::onConnectionEstablished()
     this->writeRawMessage("NICK " + this->credentials.username + "\r\n");
     this->writeRawMessage("CAP REQ :twitch.tv/commands\r\n");
     this->writeRawMessage("JOIN #" + this->channelName + "\r\n");
+    
+    this->established = true;
 }

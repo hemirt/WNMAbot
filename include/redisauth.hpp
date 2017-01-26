@@ -6,34 +6,28 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "stdint.h"
+#include <map>
+
+struct Reminder
+{
+    std::string id;
+    int64_t timeStamp;
+    std::string message;
+};
 
 class RedisAuth
 {
 public:
     RedisAuth();
     ~RedisAuth();
-    std::string
-    getOauth()
-    {
-        return oauth;
-    }
-    std::string
-    getName()
-    {
-        return name;
-    }
+    std::string getOauth();
+    std::string getName();
     void setOauth(const std::string &oauth);
     void setName(const std::string &name);
-    bool
-    isValid()
-    {
-        return valid;
-    }
-    bool
-    hasAuth()
-    {
-        return auth;
-    }
+    bool isValid();
+    bool hasAuth();
+    std::map<std::string, std::vector<Reminder>> getAllReminders();
 
 private:
     bool valid;

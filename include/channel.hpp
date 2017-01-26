@@ -50,6 +50,8 @@ public:
     // The ConnectionHandler managin this channel, should be only one in whole
     // app
     ConnectionHandler *owner;
+    
+    CommandsHandler commandsHandler;
 
 private:
     // Create a new connection add it to the connections vector
@@ -70,8 +72,6 @@ private:
     boost::asio::io_service &ioService;
 
     Credentials credentials;
-
-    CommandsHandler commandsHandler;
 
     std::chrono::steady_clock::time_point connectedTime =
         std::chrono::steady_clock::now();

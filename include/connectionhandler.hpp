@@ -6,6 +6,7 @@
 #include "utilities.hpp"
 
 #include <boost/asio/steady_timer.hpp>
+#include <boost/asio/basic_waitable_timer.hpp>
 #include <boost/bind.hpp>
 
 #include <chrono>
@@ -69,6 +70,9 @@ private:
     void MsgDecreaseHandler(const boost::system::error_code &ec);
 
     RedisAuth authFromRedis;
+    
+    void loadAllReminders();
+    void start();
 };
 
 #endif

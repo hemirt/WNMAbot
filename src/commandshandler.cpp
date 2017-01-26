@@ -571,18 +571,25 @@ CommandsHandler::remindMe(const IRCMessage &message,
         reminderMessage = "No reminder";
     }
 
+    std::string whichReminder = this->redisClient.addReminder(message.user, seconds, reminderMessage);
+    
     auto remindFunction =
         [
           owner = this->channelObject->owner, user = message.user,
-          reminderMessage
+          reminderMessage, whichReminder
         ](const boost::system::error_code &er)
             ->void
     {
-        if (owner->channels.empty()) {
+        if(er) {
+            std::cerr << "Timer error: " << er << std::endl;
+            return;
+        }
+        if (owner->channels.count(owner->nick) == 0) {
             owner->joinChannel(owner->nick);
         }
 
         owner->channels.at(owner->nick).whisper(reminderMessage, user);
+        owner->channels.at(owner->nick).commandsHandler.redisClient.removeReminder(user, whichReminder);
     };
 
     auto t =

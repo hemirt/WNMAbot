@@ -43,9 +43,10 @@ public:
     Response handle(const IRCMessage &message);
 
     Channel *channelObject;
+    
+    RedisClient redisClient;
 
 private:
-    RedisClient redisClient;
 
     bool isAdmin(const std::string &user);
     Response addCommand(const IRCMessage &message,

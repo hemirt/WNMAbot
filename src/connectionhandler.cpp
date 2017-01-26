@@ -22,12 +22,7 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
     this->authFromRedis.setOauth(this->pass);
     this->authFromRedis.setName(this->nick);
 
-    auto timer = new boost::asio::steady_timer(this->ioService);
-    timer->expires_from_now(std::chrono::seconds(2));
-    timer->async_wait(
-        boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
-
-    joinChannel(this->nick);
+    this->start();
 }
 
 ConnectionHandler::ConnectionHandler()
@@ -46,12 +41,20 @@ ConnectionHandler::ConnectionHandler()
         throw std::runtime_error("No authentication provided");
     }
 
+    this->start();
+}
+
+void
+ConnectionHandler::start()
+{
     auto timer = new boost::asio::steady_timer(this->ioService);
     timer->expires_from_now(std::chrono::seconds(2));
     timer->async_wait(
         boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
 
     joinChannel(this->nick);
+    
+    this->loadAllReminders();
 }
 
 void
@@ -143,4 +146,36 @@ ConnectionHandler::shutdown()
     this->channels.clear();
     this->dummyWork.reset();
     this->ioService.stop();
+}
+
+void
+ConnectionHandler::loadAllReminders()
+{
+    auto remindersMap = this->authFromRedis.getAllReminders();
+    for(const auto &name_vec : remindersMap)
+    {
+        for(const auto& reminder : name_vec.second)
+        {
+            auto remindFunction =
+                [ this, user = name_vec.first, reminderMessage = reminder.message, whichReminder = reminder.id]
+                (const boost::system::error_code &er)
+                -> void
+            {
+                if(er) {
+                    std::cerr << "Timer error: " << er << std::endl;
+                    return;
+                }
+                if (this->channels.count(this->nick) == 0) {
+                    this->joinChannel(this->nick);
+                }
+                this->channels.at(this->nick).whisper(reminderMessage, user);
+                this->channels.at(this->nick).commandsHandler.redisClient.removeReminder(user, whichReminder);
+            };
+            
+            auto t =
+                new boost::asio::basic_waitable_timer<std::chrono::system_clock>
+                    (ioService, std::chrono::system_clock::from_time_t(reminder.timeStamp));
+            t->async_wait(remindFunction);
+        }
+    }
 }

@@ -189,10 +189,39 @@ RedisClient::addReminder(const std::string &user, int seconds,
 }
 
 void
+RedisClient::removeReminder(const std::string &user, const std::string &which)
+{
+    pt::ptree reminderTree = this->getRemindersOfUser(user);
+    if(reminderTree.empty()) {
+        return;
+    }
+    
+    reminderTree.erase(which);
+    if(reminderTree.empty()) {
+        this->deleteAllReminders(user);
+        return;
+    }
+    
+    std::stringstream ss;
+    pt::write_json(ss, reminderTree, false);
+
+    this->setReminder(user, ss.str());
+}
+
+void
 RedisClient::setReminder(const std::string &user, const std::string &json)
 {
     redisReply *reply = static_cast<redisReply *>(
         redisCommand(this->context, "HSET WNMA:reminders %b %b", user.c_str(),
                      user.size(), json.c_str(), json.size()));
+    freeReplyObject(reply);
+}
+
+void
+RedisClient::deleteAllReminders(const std::string &user)
+{
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HDEL WNMA:reminders %b", user.c_str(),
+                     user.size()));
     freeReplyObject(reply);
 }
