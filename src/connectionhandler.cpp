@@ -93,7 +93,6 @@ bool
 ConnectionHandler::joinChannel(const std::string &channelName)
 {
     std::lock_guard<std::mutex> lk(mtx);
-    
 
     if (this->channels.count(channelName) == 1) {
         return false;

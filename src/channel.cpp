@@ -94,8 +94,7 @@ Channel::handleMessage(const IRCMessage &message)
 
             if (response.type == Response::Type::MESSAGE) {
                 sent = this->say(response.message);
-            } else if (response.type == Response::Type::WHISPER)
-            {
+            } else if (response.type == Response::Type::WHISPER) {
                 this->whisper(response.message, response.whisperReceiver);
             }
             if (!sent) {

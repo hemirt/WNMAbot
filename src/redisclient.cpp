@@ -135,13 +135,13 @@ RedisClient::getRemindersOfUser(const std::string &user)
     redisReply *reply = static_cast<redisReply *>(redisCommand(
         this->context, "HGET WNMA:reminders %b", user.c_str(), user.size()));
     if (reply == NULL && this->context->err) {
-        std::cerr << "RedisClient error getRemindersOfUser(" << user << "): " 
-                  << this->context->errstr << std::endl;
+        std::cerr << "RedisClient error getRemindersOfUser(" << user
+                  << "): " << this->context->errstr << std::endl;
         freeReplyObject(reply);
         this->reconnect();
         return tree;
     }
-    
+
     if (reply->type != REDIS_REPLY_STRING) {
         freeReplyObject(reply);
         return tree;
@@ -163,28 +163,28 @@ RedisClient::addReminder(const std::string &user, int seconds,
     std::string value;
     pt::ptree reminderTree = this->getRemindersOfUser(user);
 
-    auto now = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now());
-    
+    auto now = std::chrono::time_point_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now());
+
     int i = 0;
-    do
-    {
+    do {
         value = std::to_string(i);
         ++i;
-    }
-    while(reminderTree.count(value) != 0);
-    
+    } while (reminderTree.count(value) != 0);
+
     std::chrono::seconds timeToAdd(seconds);
-    
+
     decltype(now) when = now + std::chrono::seconds{seconds};
 
-    reminderTree.put(value + ".when", std::to_string(when.time_since_epoch().count()));
+    reminderTree.put(value + ".when",
+                     std::to_string(when.time_since_epoch().count()));
     reminderTree.put(value + ".what", reminder);
-    
+
     std::stringstream ss;
     pt::write_json(ss, reminderTree, false);
-    
+
     this->setReminder(user, ss.str());
-    
+
     return value;
 }
 

@@ -60,7 +60,7 @@ CommandsHandler::handle(const IRCMessage &message)
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
-    if(commandTree.empty()) {
+    if (commandTree.empty()) {
         return Response();
     }
 
@@ -115,7 +115,7 @@ CommandsHandler::joinChannel(const IRCMessage &message,
         return response;
     }
 
-    if(this->channelObject->owner->joinChannel(tokens[1])) {
+    if (this->channelObject->owner->joinChannel(tokens[1])) {
         response.message = "Joined the " + tokens[1] + " channel SeemsGood";
         response.type = Response::Type::MESSAGE;
     }
@@ -138,7 +138,7 @@ CommandsHandler::leaveChannel(const IRCMessage &message,
         return response;
     }
 
-    if(this->channelObject->owner->leaveChannel(tokens[1])) {
+    if (this->channelObject->owner->leaveChannel(tokens[1])) {
         response.message = "Left the " + tokens[1] + " channel SeemsGood";
         response.type = Response::Type::MESSAGE;
     }
@@ -483,19 +483,21 @@ CommandsHandler::isAdmin(const std::string &user)
     return this->redisClient.isAdmin(user);
 }
 
-auto findLastIn(std::vector<std::string> &tokens) -> decltype(tokens.size()) 
+auto
+findLastIn(std::vector<std::string> &tokens) -> decltype(tokens.size())
 {
     auto i = tokens.size();
     for (; i-- > 1;) {
-        if (tokens[i] == "in" || tokens[i] == "IN" ||
-            tokens[i] == "iN" || tokens[i] == "In") {
+        if (tokens[i] == "in" || tokens[i] == "IN" || tokens[i] == "iN" ||
+            tokens[i] == "In") {
             break;
         }
     }
     return i;
 }
 
-long long getSecondsCount(std::vector<std::string> &tokens, size_t inPos)
+long long
+getSecondsCount(std::vector<std::string> &tokens, size_t inPos)
 {
     long long seconds = 0;
     for (int i = inPos + 1; i < tokens.size(); i++) {
@@ -512,7 +514,8 @@ long long getSecondsCount(std::vector<std::string> &tokens, size_t inPos)
     return seconds;
 }
 
-std::string makeReminderMsg(std::vector<std::string> &tokens, size_t inPos)
+std::string
+makeReminderMsg(std::vector<std::string> &tokens, size_t inPos)
 {
     std::string str;
     int j = 1;
@@ -525,7 +528,8 @@ std::string makeReminderMsg(std::vector<std::string> &tokens, size_t inPos)
 }
 
 Response
-CommandsHandler::remindMe(const IRCMessage &message, std::vector<std::string> &tokens)
+CommandsHandler::remindMe(const IRCMessage &message,
+                          std::vector<std::string> &tokens)
 {
     Response response;
     auto inPos = findLastIn(tokens);
@@ -536,7 +540,7 @@ CommandsHandler::remindMe(const IRCMessage &message, std::vector<std::string> &t
                            "15h 10d 9m (the order does not matter, "
                            "the number must be immediately followed "
                            "by an identifier)\"";
-        return response;    
+        return response;
     }
 
     long long seconds = getSecondsCount(tokens, inPos);
@@ -563,30 +567,31 @@ CommandsHandler::remindMe(const IRCMessage &message, std::vector<std::string> &t
     }
 
     std::string reminderMessage = makeReminderMsg(tokens, inPos);
-    if(reminderMessage.empty()) {
+    if (reminderMessage.empty()) {
         reminderMessage = "No reminder";
     }
 
     auto remindFunction =
-        [ owner = this->channelObject->owner, user = message.user,
-          reminderMessage ](const boost::system::error_code &er)
+        [
+          owner = this->channelObject->owner, user = message.user,
+          reminderMessage
+        ](const boost::system::error_code &er)
             ->void
     {
         if (owner->channels.empty()) {
             owner->joinChannel(owner->nick);
         }
 
-        owner->channels.at(owner->nick)
-            .whisper(reminderMessage, user);
+        owner->channels.at(owner->nick).whisper(reminderMessage, user);
     };
 
-    auto t = new boost::asio::steady_timer(
-        ioService, std::chrono::seconds(seconds));
+    auto t =
+        new boost::asio::steady_timer(ioService, std::chrono::seconds(seconds));
     t->async_wait(remindFunction);
     std::string msg = message.user + ", reminding you in " +
-                      std::to_string(seconds) + " seconds ("
-                      + reminderMessage + ") SeemsGood";
-    
+                      std::to_string(seconds) + " seconds (" + reminderMessage +
+                      ") SeemsGood";
+
     response.type = Response::Type::MESSAGE;
     response.message = msg;
     return response;

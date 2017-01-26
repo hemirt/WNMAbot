@@ -24,7 +24,8 @@ public:
 
     void deleteFullCommand(const std::string &trigger);
 
-    std::string addReminder(const std::string &user, int seconds, const std::string &reminder);
+    std::string addReminder(const std::string &user, int seconds,
+                            const std::string &reminder);
     void setReminder(const std::string &user, const std::string &json);
 
     bool isAdmin(const std::string &user);
