@@ -44,11 +44,10 @@ Channel::say(const std::string &message)
 {
     std::string rawMessage = "PRIVMSG #" + this->channelName + " :";
     // Message length at most 350 characters
-    auto msg = boost::algorithm::replace_all_copy(message, ".", ",");
-    if (msg.length() >= 350) {
-        rawMessage += msg.substr(0, 350);
+    if (message.length() >= 350) {
+        rawMessage += message.substr(0, 350);
     } else {
-        rawMessage += msg;
+        rawMessage += message;
     }
     this->sendToOne(rawMessage);
     messageCount++;
@@ -60,11 +59,10 @@ Channel::whisper(const std::string &message, const std::string &recipient)
 {
     std::string rawMessage = "PRIVMSG #jtv :/w " + recipient + " ";
     // Message length at most 350 characters
-    auto msg = boost::algorithm::replace_all_copy(message, ".", ",");
-    if (msg.length() >= 350) {
-        rawMessage += msg.substr(0, 350);
+    if (message.length() >= 350) {
+        rawMessage += message.substr(0, 350);
     } else {
-        rawMessage += msg;
+        rawMessage += message;
     }
     this->sendToOne(rawMessage);
     messageCount++;
