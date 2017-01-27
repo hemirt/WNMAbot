@@ -28,22 +28,22 @@ RedisAuth::RedisAuth()
         freeReplyObject(reply);
         return;
     } else {
-        auth = true;
         this->oauth = std::string(reply->str, reply->len);
         freeReplyObject(reply);
+        reply = static_cast<redisReply *>(
+            redisCommand(this->context, "GET WNMA:auth:name"));
+        if (reply->type != REDIS_REPLY_STRING) {
+            auth = false;
+            freeReplyObject(reply);
+            return;
+        } else {
+            auth = true;
+            this->name = std::string(reply->str, reply->len);
+            freeReplyObject(reply);
+        }
     }
 
-    reply = static_cast<redisReply *>(
-        redisCommand(this->context, "GET WNMA:auth:name"));
-    if (reply->type != REDIS_REPLY_STRING) {
-        auth = false;
-        freeReplyObject(reply);
-        return;
-    } else {
-        auth = true;
-        this->name = std::string(reply->str, reply->len);
-        freeReplyObject(reply);
-    }
+    
 }
 
 RedisAuth::~RedisAuth()
