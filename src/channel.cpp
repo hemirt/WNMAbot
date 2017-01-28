@@ -74,8 +74,7 @@ Channel::handleMessage(const IRCMessage &message)
 {
     switch (message.type) {
         case IRCMessage::Type::PRIVMSG: {
-            // std::cout << '#' << message.channel << ": " << message.user << ":
-            // " << message.params << std::endl;
+            //std::cout << '#' << message.channel << ": " << message.user << ": " << message.params << std::endl;
             if (messageCount >= 19) {
                 // Too many messages sent recently
                 return false;

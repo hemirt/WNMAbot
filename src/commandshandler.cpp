@@ -57,6 +57,10 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->printChannels(message, tokens);
     } else if (tokens[0] == "!remindme") {
         return this->remindMe(message, tokens);
+    } else if (tokens[0] == "!remind") {
+        return this->remind(message, tokens);
+    } else if (tokens[0] == "!asay") {
+        return this->say(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -606,3 +610,146 @@ CommandsHandler::remindMe(const IRCMessage &message,
     response.message = msg;
     return response;
 }
+
+Response
+CommandsHandler::remind(const IRCMessage &message,
+                        std::vector<std::string> &tokens)
+{
+    Response response;
+    if(tokens.size() < 2) {
+        response.type = Response::Type::WHISPER;
+        response.whisperReceiver = message.user;
+        response.message = "Usage \"!remind <who> [your message] in 20s "
+                           "15h 10d 9m (the order does not matter, "
+                           "the number must be immediately followed "
+                           "by an identifier)\"";
+        return response;
+    }
+    changeToLower(tokens[1]);
+    std::string remindedUser = tokens[1];
+    tokens.erase(tokens.begin() + 1);
+    
+    auto inPos = findLastIn(tokens);
+    if (inPos == 0 || inPos + 1 >= tokens.size()) {
+        response.type = Response::Type::WHISPER;
+        response.whisperReceiver = message.user;
+        response.message = "Usage \"!remind <who> [your message] in 20s "
+                           "15h 10d 9m (the order does not matter, "
+                           "the number must be immediately followed "
+                           "by an identifier)\"";
+        return response;
+    }
+
+    long long seconds = getSecondsCount(tokens, inPos);
+    if (seconds == 0) {
+        response.type = Response::Type::WHISPER;
+        response.message = "Usage \"!remind <who> [your message] in 20s "
+                           "15h 10d 9m (the order does not matter, "
+                           "the number must be immediately followed "
+                           "by an identifier)\"";
+        response.whisperReceiver = message.user;
+        return response;
+    } else if (seconds > 604800) {
+        response.type = Response::Type::WHISPER;
+        response.message = "Maximum amount of time is 7 days NaM";
+        response.whisperReceiver = message.user;
+        return response;
+    } else if (seconds < 0) {
+        response.type = Response::Type::WHISPER;
+        response.message = "Negative amount of time "
+                           "\xF0\x9F\xA4\x94, sorry I can't travel "
+                           "back in time (yet)",
+        response.whisperReceiver = message.user;
+        return response;
+    }
+
+    std::string reminderMessage = makeReminderMsg(tokens, inPos) + " - Reminder by " + message.user;
+    if (reminderMessage.empty()) {
+        reminderMessage = "Reminder by " + message.user;
+    }
+
+    std::string whichReminder = this->redisClient.addReminder(remindedUser, seconds, reminderMessage);
+    
+    int countOfReminders = this->channelObject->owner->userReminders.count(message.user);
+    RemindUsers::Reminder pair;
+    if (countOfReminders >= 2) {
+        pair = this->channelObject->owner->userReminders.getFirst(message.user);
+        this->channelObject->owner->userReminders.removeFirst(message.user);
+        this->redisClient.removeReminder(pair.toUser, pair.whichReminder);
+        pair.timer->cancel();        
+    }
+    
+    
+    auto remindFunction =
+        [
+          owner = this->channelObject->owner, user = remindedUser,
+          reminderMessage, whichReminder, from = message.user
+        ](const boost::system::error_code &er)
+            ->void
+    {
+        if(er) {
+            std::cerr << "Timer error: " << er << std::endl;
+            return;
+        }
+        if (owner->channels.count(owner->nick) == 0) {
+            owner->joinChannel(owner->nick);
+        }
+        
+        owner->channels.at(owner->nick).whisper(reminderMessage, user);
+        owner->channels.at(owner->nick).commandsHandler.redisClient.removeReminder(user, whichReminder);
+        owner->userReminders.remove(from, user, whichReminder);
+    };
+
+    auto t =
+        new boost::asio::steady_timer(ioService, std::chrono::seconds(seconds));
+    t->async_wait(remindFunction);
+    this->channelObject->owner->userReminders.addReminder(message.user, remindedUser, whichReminder, t);
+    boost::algorithm::replace_all(reminderMessage, ".", ",");
+    std::string msg = message.user + ", reminding " + remindedUser +" in " +
+                      std::to_string(seconds) + " seconds (" + reminderMessage +
+                      ") SeemsGood";
+    if(countOfReminders >= 2) {
+        msg += " Also removed old reminder for " + pair.toUser;
+    }
+
+    response.type = Response::Type::MESSAGE;
+    response.message = msg;
+    return response;
+}
+
+Response
+CommandsHandler::say(const IRCMessage &message,
+                        std::vector<std::string> &tokens)
+{
+    Response response;
+    if(tokens.size() < 2) {
+        return response;
+    }
+    tokens.erase(tokens.begin());
+    for(const auto &i : tokens) {
+        response.message += i + " ";
+    }
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

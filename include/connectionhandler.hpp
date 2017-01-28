@@ -4,6 +4,7 @@
 #include "network.hpp"
 #include "redisauth.hpp"
 #include "utilities.hpp"
+#include "remindusers.hpp"
 
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/basic_waitable_timer.hpp>
@@ -46,6 +47,8 @@ public:
 
     std::chrono::steady_clock::time_point runTime =
         std::chrono::steady_clock::now();
+        
+    RemindUsers userReminders;
 
 private:
     // What does this mutex do?

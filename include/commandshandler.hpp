@@ -72,6 +72,10 @@ private:
                            std::vector<std::string> &tokens);
     Response remindMe(const IRCMessage &message,
                       std::vector<std::string> &tokens);
+    Response remind(const IRCMessage &message,
+                    std::vector<std::string> &tokens);
+    Response say(const IRCMessage &message,
+                 std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 
