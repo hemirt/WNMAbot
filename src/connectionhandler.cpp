@@ -53,7 +53,7 @@ ConnectionHandler::start()
         boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
 
     joinChannel(this->nick);
-    
+
     this->loadAllReminders();
 }
 
@@ -152,16 +152,17 @@ void
 ConnectionHandler::loadAllReminders()
 {
     auto remindersMap = this->authFromRedis.getAllReminders();
-    for(const auto &name_vec : remindersMap)
-    {
-        for(const auto& reminder : name_vec.second)
-        {
+    for (const auto &name_vec : remindersMap) {
+        for (const auto &reminder : name_vec.second) {
             auto remindFunction =
-                [ this, user = name_vec.first, reminderMessage = reminder.message, whichReminder = reminder.id]
-                (const boost::system::error_code &er)
-                -> void
+                [
+                  this, user = name_vec.first,
+                  reminderMessage = reminder.message,
+                  whichReminder = reminder.id
+                ](const boost::system::error_code &er)
+                    ->void
             {
-                if(er) {
+                if (er) {
                     std::cerr << "Timer error: " << er << std::endl;
                     return;
                 }
@@ -169,12 +170,15 @@ ConnectionHandler::loadAllReminders()
                     this->joinChannel(this->nick);
                 }
                 this->channels.at(this->nick).whisper(reminderMessage, user);
-                this->channels.at(this->nick).commandsHandler.redisClient.removeReminder(user, whichReminder);
+                this->channels.at(this->nick)
+                    .commandsHandler.redisClient.removeReminder(user,
+                                                                whichReminder);
             };
-            
-            auto t =
-                new boost::asio::basic_waitable_timer<std::chrono::system_clock>
-                    (ioService, std::chrono::system_clock::from_time_t(reminder.timeStamp));
+
+            auto t = new boost::asio::basic_waitable_timer<
+                std::chrono::system_clock>(
+                ioService,
+                std::chrono::system_clock::from_time_t(reminder.timeStamp));
             t->async_wait(remindFunction);
         }
     }

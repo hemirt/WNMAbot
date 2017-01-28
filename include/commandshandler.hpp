@@ -43,11 +43,10 @@ public:
     Response handle(const IRCMessage &message);
 
     Channel *channelObject;
-    
+
     RedisClient redisClient;
 
 private:
-
     bool isAdmin(const std::string &user);
     Response addCommand(const IRCMessage &message,
                         std::vector<std::string> &tokens);
@@ -74,8 +73,7 @@ private:
                       std::vector<std::string> &tokens);
     Response remind(const IRCMessage &message,
                     std::vector<std::string> &tokens);
-    Response say(const IRCMessage &message,
-                 std::vector<std::string> &tokens);
+    Response say(const IRCMessage &message, std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 

@@ -42,8 +42,6 @@ RedisAuth::RedisAuth()
             freeReplyObject(reply);
         }
     }
-
-    
 }
 
 RedisAuth::~RedisAuth()
@@ -71,7 +69,7 @@ RedisAuth::getOauth()
 {
     return oauth;
 }
-    
+
 std::string
 RedisAuth::getName()
 {
@@ -94,38 +92,30 @@ std::map<std::string, std::vector<Reminder>>
 RedisAuth::getAllReminders()
 {
     std::map<std::string, std::vector<Reminder>> reminders;
-    redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "HGETALL WNMA:reminders"));
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HGETALL WNMA:reminders"));
     if (reply->type == REDIS_REPLY_NIL) {
         return reminders;
     }
-    
+
     if (reply->type == REDIS_REPLY_ARRAY) {
-        for(int i = 0; i < reply->elements; i += 2) {
+        for (int i = 0; i < reply->elements; i += 2) {
             std::vector<Reminder> vec;
             pt::ptree tree;
-            
+
             std::string user(reply->element[i]->str, reply->element[i]->len);
-            
-            std::string jsonString(reply->element[i+1]->str, reply->element[i+1]->len);
+
+            std::string jsonString(reply->element[i + 1]->str,
+                                   reply->element[i + 1]->len);
             std::stringstream ss(jsonString);
             pt::read_json(ss, tree);
-            
-            for(const auto& kv : tree) {
-                vec.push_back({kv.first.data(), kv.second.get<int64_t>("when"), kv.second.get<std::string>("what")});
+
+            for (const auto &kv : tree) {
+                vec.push_back({kv.first.data(), kv.second.get<int64_t>("when"),
+                               kv.second.get<std::string>("what")});
             }
             reminders.insert({user, vec});
         }
     }
     return reminders;
 }
-
-
-
-
-
-
-
-
-
-

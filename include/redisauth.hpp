@@ -4,13 +4,12 @@
 #include <hiredis/hiredis.h>
 
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
 #include "stdint.h"
-#include <map>
 
-struct Reminder
-{
+struct Reminder {
     std::string id;
     int64_t timeStamp;
     std::string message;

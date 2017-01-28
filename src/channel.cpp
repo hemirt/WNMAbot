@@ -10,8 +10,8 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/asio/steady_timer.hpp>
 
 Channel::Channel(const std::string &_channelName,
@@ -74,7 +74,8 @@ Channel::handleMessage(const IRCMessage &message)
 {
     switch (message.type) {
         case IRCMessage::Type::PRIVMSG: {
-            //std::cout << '#' << message.channel << ": " << message.user << ": " << message.params << std::endl;
+            // std::cout << '#' << message.channel << ": " << message.user << ":
+            // " << message.params << std::endl;
             if (messageCount >= 19) {
                 // Too many messages sent recently
                 return false;

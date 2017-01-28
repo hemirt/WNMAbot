@@ -18,7 +18,7 @@ public:
     virtual ~Connection();
 
     void writeMessage(const std::string &message);
-    
+
     bool established = false;
 
 private:

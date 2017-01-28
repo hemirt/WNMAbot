@@ -50,7 +50,7 @@ public:
     // The ConnectionHandler managin this channel, should be only one in whole
     // app
     ConnectionHandler *owner;
-    
+
     CommandsHandler commandsHandler;
 
 private:

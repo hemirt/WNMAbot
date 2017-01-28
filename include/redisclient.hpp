@@ -27,7 +27,7 @@ public:
     std::string addReminder(const std::string &user, int seconds,
                             const std::string &reminder);
     void setReminder(const std::string &user, const std::string &json);
-    
+
     void deleteAllReminders(const std::string &user);
     void removeReminder(const std::string &user, const std::string &which);
 

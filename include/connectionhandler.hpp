@@ -3,11 +3,11 @@
 
 #include "network.hpp"
 #include "redisauth.hpp"
-#include "utilities.hpp"
 #include "remindusers.hpp"
+#include "utilities.hpp"
 
-#include <boost/asio/steady_timer.hpp>
 #include <boost/asio/basic_waitable_timer.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/bind.hpp>
 
 #include <chrono>
@@ -47,7 +47,7 @@ public:
 
     std::chrono::steady_clock::time_point runTime =
         std::chrono::steady_clock::now();
-        
+
     RemindUsers userReminders;
 
 private:
@@ -73,7 +73,7 @@ private:
     void MsgDecreaseHandler(const boost::system::error_code &ec);
 
     RedisAuth authFromRedis;
-    
+
     void loadAllReminders();
     void start();
 };
