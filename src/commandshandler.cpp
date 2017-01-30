@@ -1,6 +1,7 @@
 #include "commandshandler.hpp"
 #include "channel.hpp"
 #include "connectionhandler.hpp"
+#include "mtrandom.hpp"
 #include "utilities.hpp"
 
 #include <vector>
@@ -61,6 +62,32 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->remind(message, tokens);
     } else if (tokens[0] == "!asay") {
         return this->say(message, tokens);
+    } else if (tokens[0] == "!kepp") {
+        Response response;
+        auto &mtrandom = MTRandom::getInstance();
+        int nm;
+        if (tokens.size() >= 3) {
+            nm = mtrandom.get_int(std::atoi(tokens[1].c_str()),
+                                  std::atoi(tokens[2].c_str()));
+        } else {
+            nm = mtrandom.get_int();
+        }
+        response.message = std::to_string(nm);
+        response.type = Response::Type::MESSAGE;
+        return response;
+    } else if (tokens[0] == "!kapp") {
+        Response response;
+        auto &mtrandom = MTRandom::getInstance();
+        double nm;
+        if (tokens.size() >= 3) {
+            nm = mtrandom.get_real(std::atof(tokens[1].c_str()),
+                                   std::atof(tokens[2].c_str()));
+        } else {
+            nm = mtrandom.get_real();
+        }
+        response.message = std::to_string(nm);
+        response.type = Response::Type::MESSAGE;
+        return response;
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -731,6 +758,11 @@ CommandsHandler::say(const IRCMessage &message,
     if (tokens.size() < 2) {
         return response;
     }
+
+    if (this->isAdmin(message.user) == false) {
+        return response;
+    }
+
     tokens.erase(tokens.begin());
     for (const auto &i : tokens) {
         response.message += i + " ";
