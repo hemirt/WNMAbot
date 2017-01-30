@@ -230,13 +230,34 @@ CommandsHandler::makeResponse(const IRCMessage &message,
             ss.clear();
             ss << '{' << i << '}';
             if (boost::algorithm::find_regex(
-                    tokens[i], boost::regex("{[0-9]+}|{user}|{channel}"))) {
+                    tokens[i], boost::regex("{\\d+}|{user}|{channel}"))) {
                 return response;
             }
             boost::algorithm::replace_all(tokens[i], ".", ",");
             boost::algorithm::replace_all(responseString, ss.str(), tokens[i]);
         }
     }
+    
+    if (boost::algorithm::find_regex(responseString, boost::regex("{cirnd}"))) {
+        boost::algorithm::replace_all(responseString,
+            "{cirnd}", std::to_string(MTRandom::getInstance().get_int()));
+    }
+    
+    while (boost::algorithm::find_regex(responseString, boost::regex("{irnd}"))) {
+        boost::algorithm::replace_all(responseString,
+            "{irnd}", std::to_string(MTRandom::getInstance().get_int()));
+    }
+    
+    if (boost::algorithm::find_regex(responseString, boost::regex("{cdrnd}"))) {
+        boost::algorithm::replace_all(responseString,
+            "{cdrnd}", std::to_string(MTRandom::getInstance().get_real()));
+    }
+    
+    while (boost::algorithm::find_regex(responseString, boost::regex("{drnd}"))) {
+        boost::algorithm::replace_all(responseString,
+            "{drnd}", std::to_string(MTRandom::getInstance().get_real()));
+    }
+    
     boost::algorithm::replace_all(responseString, "{user}", message.user);
     boost::algorithm::replace_all(responseString, "{channel}", message.channel);
     response.message = responseString;
@@ -283,19 +304,17 @@ CommandsHandler::addCommand(const IRCMessage &message,
         return response;
     }
 
-    std::vector<int> vecNumParams{0};  // vector of {number} numbers,
+    std::vector<int> vecNumParams{0};  // vector of {number} numbers
     for (size_t i = 3; i < tokens.size(); ++i) {
-        if (tokens[i].front() != '{' || tokens[i].back() != '}') {
+        auto it_range = boost::algorithm::find_regex(tokens[i], boost::regex("{\\d+}"));
+        if (!it_range) {
             continue;
         }
-        if (std::all_of(tokens[i].begin() + 1, tokens[i].end() - 1,
-                        ::isdigit)) {
-            vecNumParams.push_back(boost::lexical_cast<int>(
-                std::string(tokens[i].begin() + 1, tokens[i].end() - 1)));
-        }
+        vecNumParams.push_back(boost::lexical_cast<int>(
+            std::string(it_range.begin() + 1, it_range.end() - 1)));
     }
     int numParams = *std::max_element(vecNumParams.begin(), vecNumParams.end());
-
+    
     commandTree.put(tokens[2] + ".response", valueString);
     commandTree.put(tokens[2] + ".numParams", numParams);
     commandTree.put(tokens[2] + ".cooldown", 0);
@@ -349,16 +368,14 @@ CommandsHandler::editCommand(const IRCMessage &message,
         return response;
     }
 
-    std::vector<int> vecNumParams{0};  // vector of {number} numbers,
+    std::vector<int> vecNumParams{0};  // vector of {number} numbers
     for (size_t i = 3; i < tokens.size(); ++i) {
-        if (tokens[i].front() != '{' || tokens[i].back() != '}') {
+        auto it_range = boost::algorithm::find_regex(tokens[i], boost::regex("{\\d+}"));
+        if (!it_range) {
             continue;
         }
-        if (std::all_of(tokens[i].begin() + 1, tokens[i].end() - 1,
-                        ::isdigit)) {
-            vecNumParams.push_back(boost::lexical_cast<int>(
-                std::string(tokens[i].begin() + 1, tokens[i].end() - 1)));
-        }
+        vecNumParams.push_back(boost::lexical_cast<int>(
+            std::string(it_range.begin() + 1, it_range.end() - 1)));
     }
     int numParams = *std::max_element(vecNumParams.begin(), vecNumParams.end());
 
@@ -391,7 +408,7 @@ CommandsHandler::rawEditCommand(const IRCMessage &message,
     }
     changeToLower(tokens[1]);
     changeToLower(tokens[2]);
-    changeToLower(tokens[3]);
+
     // toke[0]   toke[1] toke[2] toke[3]
     // !editcmd trigger default response fkfkfkfkfk kfs kfosd kfods kfods
     // !editcmd trigger default parameters 0
@@ -770,3 +787,16 @@ CommandsHandler::say(const IRCMessage &message,
     response.type = Response::Type::MESSAGE;
     return response;
 }
+
+/*
+    for (size_t i = 3; i < tokens.size(); ++i) {
+        if (tokens[i].front() != '{' || tokens[i].back() != '}') {
+            continue;
+        }
+        if (std::all_of(tokens[i].begin() + 1, tokens[i].end() - 1,
+                        ::isdigit)) {
+            vecNumParams.push_back(boost::lexical_cast<int>(
+                std::string(tokens[i].begin() + 1, tokens[i].end() - 1)));
+        }
+    }
+*/
