@@ -6,7 +6,7 @@ std::mutex MTRandom::mtx;
 MTRandom MTRandom::instance;
 
 double
-MTRandom::get_real(const double &min, const double &max)
+MTRandom::getReal(const double &min, const double &max)
 {
     if (min > max) {
         return 0;
@@ -17,7 +17,7 @@ MTRandom::get_real(const double &min, const double &max)
 }
 
 int
-MTRandom::get_int(const int &min, const int &max)
+MTRandom::getInt(const int &min, const int &max)
 {
     if (min > max) {
         return 0;

@@ -62,32 +62,6 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->remind(message, tokens);
     } else if (tokens[0] == "!asay") {
         return this->say(message, tokens);
-    } else if (tokens[0] == "!kepp") {
-        Response response;
-        auto &mtrandom = MTRandom::getInstance();
-        int nm;
-        if (tokens.size() >= 3) {
-            nm = mtrandom.get_int(std::atoi(tokens[1].c_str()),
-                                  std::atoi(tokens[2].c_str()));
-        } else {
-            nm = mtrandom.get_int();
-        }
-        response.message = std::to_string(nm);
-        response.type = Response::Type::MESSAGE;
-        return response;
-    } else if (tokens[0] == "!kapp") {
-        Response response;
-        auto &mtrandom = MTRandom::getInstance();
-        double nm;
-        if (tokens.size() >= 3) {
-            nm = mtrandom.get_real(std::atof(tokens[1].c_str()),
-                                   std::atof(tokens[2].c_str()));
-        } else {
-            nm = mtrandom.get_real();
-        }
-        response.message = std::to_string(nm);
-        response.type = Response::Type::MESSAGE;
-        return response;
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -240,22 +214,22 @@ CommandsHandler::makeResponse(const IRCMessage &message,
     
     if (boost::algorithm::find_regex(responseString, boost::regex("{cirnd}"))) {
         boost::algorithm::replace_all(responseString,
-            "{cirnd}", std::to_string(MTRandom::getInstance().get_int()));
+            "{cirnd}", std::to_string(MTRandom::getInstance().getInt()));
     }
     
     while (boost::algorithm::find_regex(responseString, boost::regex("{irnd}"))) {
         boost::algorithm::replace_all(responseString,
-            "{irnd}", std::to_string(MTRandom::getInstance().get_int()));
+            "{irnd}", std::to_string(MTRandom::getInstance().getInt()));
     }
     
     if (boost::algorithm::find_regex(responseString, boost::regex("{cdrnd}"))) {
         boost::algorithm::replace_all(responseString,
-            "{cdrnd}", std::to_string(MTRandom::getInstance().get_real()));
+            "{cdrnd}", std::to_string(MTRandom::getInstance().getReal()));
     }
     
     while (boost::algorithm::find_regex(responseString, boost::regex("{drnd}"))) {
         boost::algorithm::replace_all(responseString,
-            "{drnd}", std::to_string(MTRandom::getInstance().get_real()));
+            "{drnd}", std::to_string(MTRandom::getInstance().getReal()));
     }
     
     boost::algorithm::replace_all(responseString, "{user}", message.user);
