@@ -220,7 +220,7 @@ CommandsHandler::makeResponse(const IRCMessage &message,
 
     while (
         boost::algorithm::find_regex(responseString, boost::regex("{irnd}"))) {
-        boost::algorithm::replace_all(
+        boost::algorithm::replace_first(
             responseString, "{irnd}",
             std::to_string(MTRandom::getInstance().getInt()));
     }
@@ -233,7 +233,7 @@ CommandsHandler::makeResponse(const IRCMessage &message,
 
     while (
         boost::algorithm::find_regex(responseString, boost::regex("{drnd}"))) {
-        boost::algorithm::replace_all(
+        boost::algorithm::replace_first(
             responseString, "{drnd}",
             std::to_string(MTRandom::getInstance().getReal()));
     }
