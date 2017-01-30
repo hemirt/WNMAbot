@@ -211,27 +211,33 @@ CommandsHandler::makeResponse(const IRCMessage &message,
             boost::algorithm::replace_all(responseString, ss.str(), tokens[i]);
         }
     }
-    
+
     if (boost::algorithm::find_regex(responseString, boost::regex("{cirnd}"))) {
-        boost::algorithm::replace_all(responseString,
-            "{cirnd}", std::to_string(MTRandom::getInstance().getInt()));
+        boost::algorithm::replace_all(
+            responseString, "{cirnd}",
+            std::to_string(MTRandom::getInstance().getInt()));
     }
-    
-    while (boost::algorithm::find_regex(responseString, boost::regex("{irnd}"))) {
-        boost::algorithm::replace_all(responseString,
-            "{irnd}", std::to_string(MTRandom::getInstance().getInt()));
+
+    while (
+        boost::algorithm::find_regex(responseString, boost::regex("{irnd}"))) {
+        boost::algorithm::replace_all(
+            responseString, "{irnd}",
+            std::to_string(MTRandom::getInstance().getInt()));
     }
-    
+
     if (boost::algorithm::find_regex(responseString, boost::regex("{cdrnd}"))) {
-        boost::algorithm::replace_all(responseString,
-            "{cdrnd}", std::to_string(MTRandom::getInstance().getReal()));
+        boost::algorithm::replace_all(
+            responseString, "{cdrnd}",
+            std::to_string(MTRandom::getInstance().getReal()));
     }
-    
-    while (boost::algorithm::find_regex(responseString, boost::regex("{drnd}"))) {
-        boost::algorithm::replace_all(responseString,
-            "{drnd}", std::to_string(MTRandom::getInstance().getReal()));
+
+    while (
+        boost::algorithm::find_regex(responseString, boost::regex("{drnd}"))) {
+        boost::algorithm::replace_all(
+            responseString, "{drnd}",
+            std::to_string(MTRandom::getInstance().getReal()));
     }
-    
+
     boost::algorithm::replace_all(responseString, "{user}", message.user);
     boost::algorithm::replace_all(responseString, "{channel}", message.channel);
     response.message = responseString;
@@ -280,7 +286,8 @@ CommandsHandler::addCommand(const IRCMessage &message,
 
     std::vector<int> vecNumParams{0};  // vector of {number} numbers
     for (size_t i = 3; i < tokens.size(); ++i) {
-        auto it_range = boost::algorithm::find_regex(tokens[i], boost::regex("{\\d+}"));
+        auto it_range =
+            boost::algorithm::find_regex(tokens[i], boost::regex("{\\d+}"));
         if (!it_range) {
             continue;
         }
@@ -288,7 +295,7 @@ CommandsHandler::addCommand(const IRCMessage &message,
             std::string(it_range.begin() + 1, it_range.end() - 1)));
     }
     int numParams = *std::max_element(vecNumParams.begin(), vecNumParams.end());
-    
+
     commandTree.put(tokens[2] + ".response", valueString);
     commandTree.put(tokens[2] + ".numParams", numParams);
     commandTree.put(tokens[2] + ".cooldown", 0);
@@ -344,7 +351,8 @@ CommandsHandler::editCommand(const IRCMessage &message,
 
     std::vector<int> vecNumParams{0};  // vector of {number} numbers
     for (size_t i = 3; i < tokens.size(); ++i) {
-        auto it_range = boost::algorithm::find_regex(tokens[i], boost::regex("{\\d+}"));
+        auto it_range =
+            boost::algorithm::find_regex(tokens[i], boost::regex("{\\d+}"));
         if (!it_range) {
             continue;
         }
