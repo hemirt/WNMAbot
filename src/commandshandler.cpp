@@ -559,6 +559,35 @@ makeReminderMsg(std::vector<std::string> &tokens, size_t inPos)
     return str;
 }
 
+std::string
+makeTimeString(long long seconds)
+{
+    std::string time;
+    int s = seconds % 60;
+    seconds /= 60;
+    int m = seconds % 60;
+    seconds /= 60;
+    int h = seconds % 24;
+    seconds /=24;
+    int d = seconds;
+    if (d) {
+        time += std::to_string(d) + "d ";
+    }
+    if (h) {
+        time += std::to_string(h) + "h ";
+    }
+    if (m) {
+        time += std::to_string(m) + "m ";
+    }
+    if (s) {
+        time += std::to_string(s) + "s ";
+    }
+    if (time.size() != 0 && time.back() == ' ') {
+        time.pop_back();
+    }
+    return time;
+}
+
 Response
 CommandsHandler::remindMe(const IRCMessage &message,
                           std::vector<std::string> &tokens)
@@ -606,10 +635,11 @@ CommandsHandler::remindMe(const IRCMessage &message,
     std::string whichReminder =
         this->redisClient.addReminder(message.user, seconds, reminderMessage);
 
+    auto whisperMessage = reminderMessage + " - " + makeTimeString(seconds) + " ago";
     auto remindFunction =
         [
           owner = this->channelObject->owner, user = message.user,
-          reminderMessage, whichReminder
+          whisperMessage, whichReminder, seconds
         ](const boost::system::error_code &er)
             ->void
     {
@@ -620,8 +650,8 @@ CommandsHandler::remindMe(const IRCMessage &message,
         if (owner->channels.count(owner->nick) == 0) {
             owner->joinChannel(owner->nick);
         }
-
-        owner->channels.at(owner->nick).whisper(reminderMessage, user);
+        
+        owner->channels.at(owner->nick).whisper(whisperMessage, user);
         owner->channels.at(owner->nick)
             .commandsHandler.redisClient.removeReminder(user, whichReminder);
     };
@@ -710,10 +740,11 @@ CommandsHandler::remind(const IRCMessage &message,
         pair.timer->cancel();
     }
 
+    auto whisperMessage = reminderMessage + " " + makeTimeString(seconds) + " ago";
     auto remindFunction =
         [
           owner = this->channelObject->owner, user = remindedUser,
-          reminderMessage, whichReminder, from = message.user
+          whisperMessage, whichReminder, from = message.user, seconds
         ](const boost::system::error_code &er)
             ->void
     {
@@ -724,8 +755,8 @@ CommandsHandler::remind(const IRCMessage &message,
         if (owner->channels.count(owner->nick) == 0) {
             owner->joinChannel(owner->nick);
         }
-
-        owner->channels.at(owner->nick).whisper(reminderMessage, user);
+        
+        owner->channels.at(owner->nick).whisper(whisperMessage, user);
         owner->channels.at(owner->nick)
             .commandsHandler.redisClient.removeReminder(user, whichReminder);
         owner->userReminders.remove(from, user, whichReminder);
