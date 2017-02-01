@@ -53,6 +53,10 @@ ConnectionHandler::start()
         boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
 
     joinChannel(this->nick);
+    auto channels = this->authFromRedis.getChannels();
+    for(const auto &i : channels) {
+        joinChannel(i);
+    }
 
     this->loadAllReminders();
 }
@@ -102,6 +106,8 @@ ConnectionHandler::joinChannel(const std::string &channelName)
     }
     std::cout << "joining: " << channelName << std::endl;
 
+    this->authFromRedis.addChannel(channelName);
+    
     this->channels.emplace(
         std::piecewise_construct, std::forward_as_tuple(channelName),
         std::forward_as_tuple(channelName, this->ioService, this));
@@ -119,6 +125,8 @@ ConnectionHandler::leaveChannel(const std::string &channelName)
         // We are not connected to the given channel
         return false;
     }
+    
+    this->authFromRedis.removeChannel(channelName);
 
     this->channels.erase(channelName);
 

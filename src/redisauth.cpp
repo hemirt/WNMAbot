@@ -95,6 +95,7 @@ RedisAuth::getAllReminders()
     redisReply *reply = static_cast<redisReply *>(
         redisCommand(this->context, "HGETALL WNMA:reminders"));
     if (reply->type == REDIS_REPLY_NIL) {
+        freeReplyObject(reply);
         return reminders;
     }
 
@@ -117,5 +118,40 @@ RedisAuth::getAllReminders()
             reminders.insert({user, vec});
         }
     }
+    freeReplyObject(reply);
     return reminders;
+}
+
+std::vector<std::string>
+RedisAuth::getChannels()
+{
+    std::vector<std::string> channels;
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "SMEMBERS WNMA:channels"));
+    if (reply->type != REDIS_REPLY_ARRAY) {
+        freeReplyObject(reply);
+        return channels;
+    }
+    
+    for (int i = 0; i < reply->elements; ++i) {
+        channels.push_back(std::string(reply->element[i]->str, reply->element[i]->len));
+    }
+    
+    freeReplyObject(reply);
+    return channels;
+}
+
+void
+RedisAuth::addChannel(const std::string &channel)
+{
+    redisReply *reply = static_cast<redisReply *>(redisCommand(
+        this->context, "SADD WNMA:channels %b", channel.c_str(), channel.size()));
+    freeReplyObject(reply);
+}
+void
+RedisAuth::removeChannel(const std::string &channel)
+{
+    redisReply *reply = static_cast<redisReply *>(redisCommand(
+        this->context, "SREM WNMA:channels %b", channel.c_str(), channel.size()));
+    freeReplyObject(reply);
 }

@@ -27,6 +27,9 @@ public:
     bool isValid();
     bool hasAuth();
     std::map<std::string, std::vector<Reminder>> getAllReminders();
+    std::vector<std::string> getChannels();
+    void addChannel(const std::string &channel);
+    void removeChannel(const std::string &channel);
 
 private:
     bool valid;

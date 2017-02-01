@@ -119,7 +119,9 @@ CommandsHandler::joinChannel(const IRCMessage &message,
         this->channelObject->whisper("Usage: !joinchn <channel>", message.user);
         return response;
     }
-
+    
+    changeToLower(tokens[1]);
+    
     if (this->channelObject->owner->joinChannel(tokens[1])) {
         response.message = "Joined the " + tokens[1] + " channel SeemsGood";
         response.type = Response::Type::MESSAGE;
@@ -142,6 +144,8 @@ CommandsHandler::leaveChannel(const IRCMessage &message,
                                      message.user);
         return response;
     }
+    
+    changeToLower(tokens[1]);
 
     if (this->channelObject->owner->leaveChannel(tokens[1])) {
         response.message = "Left the " + tokens[1] + " channel SeemsGood";

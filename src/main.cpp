@@ -14,11 +14,11 @@ main(int argc, char *argv[])
         irc = new ConnectionHandler(argv[1], argv[2]);
     }
 
-    irc->joinChannel("pajlada");
-    irc->joinChannel("hemirt");
-    irc->joinChannel("forsenlol");
-    irc->joinChannel("nymn_hs");
-    irc->joinChannel("nuuls");
+    //irc->joinChannel("pajlada");
+    //irc->joinChannel("hemirt");
+    //irc->joinChannel("forsenlol");
+    //irc->joinChannel("nymn_hs");
+    //irc->joinChannel("nuuls");
 
     std::cout << "added all" << std::endl;
 
