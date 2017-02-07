@@ -14,8 +14,9 @@ public:
         return instance;
     }
 
-    double getReal(const double &min = 0, const double &max = 1);
-    int getInt(const int &min = 0, const int &max = 100);
+    double getReal(double min = 0, double max = 1);
+    int getInt(int min = 0, int max = 100);
+    bool getBool(double p = 0.5);
 
     MTRandom(MTRandom const &) = delete;
     void operator=(MTRandom const &) = delete;

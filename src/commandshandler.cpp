@@ -215,6 +215,9 @@ CommandsHandler::makeResponse(const IRCMessage &message,
             boost::algorithm::replace_all(responseString, ss.str(), tokens[i]);
         }
     }
+    
+    boost::algorithm::replace_all(responseString, "{user}", message.user);
+    boost::algorithm::replace_all(responseString, "{channel}", message.channel);
 
     if (boost::algorithm::find_regex(responseString, boost::regex("{cirnd}"))) {
         boost::algorithm::replace_all(
@@ -241,9 +244,44 @@ CommandsHandler::makeResponse(const IRCMessage &message,
             responseString, "{drnd}",
             std::to_string(MTRandom::getInstance().getReal()));
     }
-
-    boost::algorithm::replace_all(responseString, "{user}", message.user);
-    boost::algorithm::replace_all(responseString, "{channel}", message.channel);
+    
+    auto it = boost::algorithm::find_regex(responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"));
+    bool success = MTRandom::getInstance().getBool();
+    if(it) {
+        do {
+            std::string match(it.begin(), it.end());
+            if (match.compare(0, strlen("{true:"), "{true:") == 0) {
+                if (success) {
+                    boost::algorithm::replace_regex(
+                        responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
+                        std::string(match.begin() + sizeof("{true:") - 1, match.end() - 1),
+                        boost::match_default | boost::format_first_only);
+                } else {
+                    boost::algorithm::erase_regex(
+                        responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
+                        boost::match_default | boost::format_first_only);
+                }
+            } else if (match.compare(0, strlen("{false:"), "{false:") == 0) {
+                if (!success) {
+                    boost::algorithm::replace_regex(
+                        responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
+                        std::string(match.begin() + sizeof("{false:") - 1, match.end() - 1),
+                        boost::match_default | boost::format_first_only);
+                } else {
+                    boost::algorithm::erase_regex(
+                        responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
+                        boost::match_default | boost::format_first_only);
+                }
+            } else {
+                boost::algorithm::replace_regex(
+                responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
+                std::string("{unknown}"),
+                boost::match_default | boost::format_first_only);
+            }
+        } while (it = 
+            boost::algorithm::find_regex(responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"))
+            );
+    }
     response.message = responseString;
     response.type = Response::Type::MESSAGE;
     return response;
