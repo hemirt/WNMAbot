@@ -8,5 +8,6 @@ void changeToLower(std::string &str);
 std::string timenow();
 std::vector<std::string> splitMsg(std::string &msg,
                                   const std::string &delimiter = " ");
+std::string makeTimeString(long long seconds);
 
 #endif

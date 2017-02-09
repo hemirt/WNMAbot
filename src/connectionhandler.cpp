@@ -71,7 +71,7 @@ ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
         return;
     }
 
-    std::lock_guard<std::mutex> lk(mtx);
+    std::lock_guard<std::mutex> lk(channelMtx);
 
     if (this->quit) {
         return;
@@ -99,7 +99,7 @@ ConnectionHandler::~ConnectionHandler()
 bool
 ConnectionHandler::joinChannel(const std::string &channelName)
 {
-    std::lock_guard<std::mutex> lk(mtx);
+    std::lock_guard<std::mutex> lk(channelMtx);
 
     if (this->channels.count(channelName) == 1) {
         return false;
@@ -118,7 +118,7 @@ ConnectionHandler::joinChannel(const std::string &channelName)
 bool
 ConnectionHandler::leaveChannel(const std::string &channelName)
 {
-    std::lock_guard<std::mutex> lk(mtx);
+    std::lock_guard<std::mutex> lk(channelMtx);
     std::cout << "leaving: " << channelName << std::endl;
 
     if (this->channels.count(channelName) == 0) {
@@ -149,7 +149,7 @@ ConnectionHandler::run()
 void
 ConnectionHandler::shutdown()
 {
-    std::lock_guard<std::mutex> lk(mtx);
+    std::lock_guard<std::mutex> lk(this->channelMtx);
     this->quit = true;
     this->channels.clear();
     this->dummyWork.reset();

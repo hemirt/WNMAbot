@@ -1,6 +1,7 @@
 #ifndef CONNHANDLER_HPP
 #define CONNHANDLER_HPP
 
+#include "afkers.hpp"
 #include "network.hpp"
 #include "redisauth.hpp"
 #include "remindusers.hpp"
@@ -49,12 +50,12 @@ public:
         std::chrono::steady_clock::now();
 
     RemindUsers userReminders;
+    
+    Afkers afkers;
 
 private:
-    // What does this mutex do?
-    // Naming it "mtx" tells me nothing, other than that it's a mutex
-    // But I already know that because of its type
-    std::mutex mtx;
+    std::mutex channelMtx;
+    std::mutex afkersMtx;
 
     // A bool for quit? checking
     std::atomic<bool> quit;

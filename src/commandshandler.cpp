@@ -62,6 +62,10 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->remind(message, tokens);
     } else if (tokens[0] == "!asay") {
         return this->say(message, tokens);
+    } else if (tokens[0] == "!afk") {
+        return this->afk(message, tokens);
+    } else if (tokens[0] == "!isafk") {
+        return this->isAfk(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -601,35 +605,6 @@ makeReminderMsg(std::vector<std::string> &tokens, size_t inPos)
     return str;
 }
 
-std::string
-makeTimeString(long long seconds)
-{
-    std::string time;
-    int s = seconds % 60;
-    seconds /= 60;
-    int m = seconds % 60;
-    seconds /= 60;
-    int h = seconds % 24;
-    seconds /=24;
-    int d = seconds;
-    if (d) {
-        time += std::to_string(d) + "d ";
-    }
-    if (h) {
-        time += std::to_string(h) + "h ";
-    }
-    if (m) {
-        time += std::to_string(m) + "m ";
-    }
-    if (s) {
-        time += std::to_string(s) + "s ";
-    }
-    if (time.size() != 0 && time.back() == ' ') {
-        time.pop_back();
-    }
-    return time;
-}
-
 Response
 CommandsHandler::remindMe(const IRCMessage &message,
                           std::vector<std::string> &tokens)
@@ -839,6 +814,65 @@ CommandsHandler::say(const IRCMessage &message,
     for (const auto &i : tokens) {
         response.message += i + " ";
     }
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::afk(const IRCMessage &message,
+                     std::vector<std::string> &tokens)
+{
+    Response response;
+    std::string msg;
+    for (int i = 1; i < tokens.size(); ++i) {
+        boost::algorithm::replace_all(tokens[i], ".", ",");
+        msg += tokens[i] + ' ';
+    }
+    
+    if (msg.back() == ' ') {
+        msg.pop_back();
+    }
+    
+    this->channelObject->owner->afkers.setAfker(message.user, msg);
+    
+    response.type = Response::Type::MESSAGE;
+    response.message = message.user + " is now afk ResidentSleeper";
+    if(msg.size() != 0) {
+        response.message += " - " + msg;
+    }
+    
+    return response;
+}
+
+Response
+CommandsHandler::isAfk(const IRCMessage &message,
+                     std::vector<std::string> &tokens)
+{
+    Response response;
+    if(tokens.size() < 2) {
+        return response;
+    }
+    
+    changeToLower(tokens[1]);
+    
+    auto afk = this->channelObject->owner->afkers.getAfker(tokens[1]);
+    
+    if(afk.exists) {
+        auto now = std::chrono::steady_clock::now();
+        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(
+                            now - afk.time).count();
+        std::string when = makeTimeString(seconds);
+        if(when.size() == 0) {
+            when = "0s";
+        }
+        response.message = message.user + ", " + tokens[1] + " went afk " + when + " ago";
+        if(afk.message.size() != 0) {
+            response.message += " - " + afk.message;
+        }
+    } else {
+        response.message = message.user + ", user " + tokens[1] + " is not afk SeemsGood";
+    }
+    
     response.type = Response::Type::MESSAGE;
     return response;
 }

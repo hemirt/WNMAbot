@@ -23,8 +23,9 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/commandshandler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/redisclient.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/redisauth.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/src/remindusers.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/remindusers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mtrandom.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/afkers.cpp
 )
 
 add_executable(WNMAbot ${SOURCE})

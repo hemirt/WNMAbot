@@ -49,3 +49,32 @@ splitMsg(std::string &msg, const std::string &delimiter)
     vec.push_back(msg);
     return vec;
 }
+
+std::string
+makeTimeString(long long seconds)
+{
+    std::string time;
+    int s = seconds % 60;
+    seconds /= 60;
+    int m = seconds % 60;
+    seconds /= 60;
+    int h = seconds % 24;
+    seconds /=24;
+    int d = seconds;
+    if (d) {
+        time += std::to_string(d) + "d ";
+    }
+    if (h) {
+        time += std::to_string(h) + "h ";
+    }
+    if (m) {
+        time += std::to_string(m) + "m ";
+    }
+    if (s) {
+        time += std::to_string(s) + "s ";
+    }
+    if (time.size() != 0 && time.back() == ' ') {
+        time.pop_back();
+    }
+    return time;
+}
