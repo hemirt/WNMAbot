@@ -123,9 +123,9 @@ CommandsHandler::joinChannel(const IRCMessage &message,
         this->channelObject->whisper("Usage: !joinchn <channel>", message.user);
         return response;
     }
-    
+
     changeToLower(tokens[1]);
-    
+
     if (this->channelObject->owner->joinChannel(tokens[1])) {
         response.message = "Joined the " + tokens[1] + " channel SeemsGood";
         response.type = Response::Type::MESSAGE;
@@ -148,7 +148,7 @@ CommandsHandler::leaveChannel(const IRCMessage &message,
                                      message.user);
         return response;
     }
-    
+
     changeToLower(tokens[1]);
 
     if (this->channelObject->owner->leaveChannel(tokens[1])) {
@@ -219,7 +219,7 @@ CommandsHandler::makeResponse(const IRCMessage &message,
             boost::algorithm::replace_all(responseString, ss.str(), tokens[i]);
         }
     }
-    
+
     boost::algorithm::replace_all(responseString, "{user}", message.user);
     boost::algorithm::replace_all(responseString, "{channel}", message.channel);
 
@@ -248,43 +248,50 @@ CommandsHandler::makeResponse(const IRCMessage &message,
             responseString, "{drnd}",
             std::to_string(MTRandom::getInstance().getReal()));
     }
-    
-    auto it = boost::algorithm::find_regex(responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"));
+
+    auto it = boost::algorithm::find_regex(
+        responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"));
     bool success = MTRandom::getInstance().getBool();
-    if(it) {
+    if (it) {
         do {
             std::string match(it.begin(), it.end());
             if (match.compare(0, strlen("{true:"), "{true:") == 0) {
                 if (success) {
                     boost::algorithm::replace_regex(
-                        responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
-                        std::string(match.begin() + sizeof("{true:") - 1, match.end() - 1),
+                        responseString,
+                        boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
+                        std::string(match.begin() + sizeof("{true:") - 1,
+                                    match.end() - 1),
                         boost::match_default | boost::format_first_only);
                 } else {
                     boost::algorithm::erase_regex(
-                        responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
+                        responseString,
+                        boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
                         boost::match_default | boost::format_first_only);
                 }
             } else if (match.compare(0, strlen("{false:"), "{false:") == 0) {
                 if (!success) {
                     boost::algorithm::replace_regex(
-                        responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
-                        std::string(match.begin() + sizeof("{false:") - 1, match.end() - 1),
+                        responseString,
+                        boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
+                        std::string(match.begin() + sizeof("{false:") - 1,
+                                    match.end() - 1),
                         boost::match_default | boost::format_first_only);
                 } else {
                     boost::algorithm::erase_regex(
-                        responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
+                        responseString,
+                        boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
                         boost::match_default | boost::format_first_only);
                 }
             } else {
                 boost::algorithm::replace_regex(
-                responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
-                std::string("{unknown}"),
-                boost::match_default | boost::format_first_only);
+                    responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"),
+                    std::string("{unknown}"),
+                    boost::match_default | boost::format_first_only);
             }
-        } while (it = 
-            boost::algorithm::find_regex(responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"))
-            );
+        } while (
+            it = boost::algorithm::find_regex(
+                responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}")));
     }
     response.message = responseString;
     response.type = Response::Type::MESSAGE;
@@ -652,7 +659,8 @@ CommandsHandler::remindMe(const IRCMessage &message,
     std::string whichReminder =
         this->redisClient.addReminder(message.user, seconds, reminderMessage);
 
-    auto whisperMessage = reminderMessage + " - " + makeTimeString(seconds) + " ago";
+    auto whisperMessage =
+        reminderMessage + " - " + makeTimeString(seconds) + " ago";
     auto remindFunction =
         [
           owner = this->channelObject->owner, user = message.user,
@@ -667,7 +675,7 @@ CommandsHandler::remindMe(const IRCMessage &message,
         if (owner->channels.count(owner->nick) == 0) {
             owner->joinChannel(owner->nick);
         }
-        
+
         owner->channels.at(owner->nick).whisper(whisperMessage, user);
         owner->channels.at(owner->nick)
             .commandsHandler.redisClient.removeReminder(user, whichReminder);
@@ -757,7 +765,8 @@ CommandsHandler::remind(const IRCMessage &message,
         pair.timer->cancel();
     }
 
-    auto whisperMessage = reminderMessage + " " + makeTimeString(seconds) + " ago";
+    auto whisperMessage =
+        reminderMessage + " " + makeTimeString(seconds) + " ago";
     auto remindFunction =
         [
           owner = this->channelObject->owner, user = remindedUser,
@@ -772,7 +781,7 @@ CommandsHandler::remind(const IRCMessage &message,
         if (owner->channels.count(owner->nick) == 0) {
             owner->joinChannel(owner->nick);
         }
-        
+
         owner->channels.at(owner->nick).whisper(whisperMessage, user);
         owner->channels.at(owner->nick)
             .commandsHandler.redisClient.removeReminder(user, whichReminder);
@@ -828,51 +837,54 @@ CommandsHandler::afk(const IRCMessage &message,
         boost::algorithm::replace_all(tokens[i], ".", ",");
         msg += tokens[i] + ' ';
     }
-    
+
     if (msg.back() == ' ') {
         msg.pop_back();
     }
-    
+
     this->channelObject->owner->afkers.setAfker(message.user, msg);
-    
+
     response.type = Response::Type::MESSAGE;
     response.message = message.user + " is now afk ResidentSleeper";
-    if(msg.size() != 0) {
+    if (msg.size() != 0) {
         response.message += " - " + msg;
     }
-    
+
     return response;
 }
 
 Response
 CommandsHandler::isAfk(const IRCMessage &message,
-                     std::vector<std::string> &tokens)
+                       std::vector<std::string> &tokens)
 {
     Response response;
-    if(tokens.size() < 2) {
+    if (tokens.size() < 2) {
         return response;
     }
-    
+
     changeToLower(tokens[1]);
-    
+
     auto afk = this->channelObject->owner->afkers.getAfker(tokens[1]);
-    
-    if(afk.exists) {
+
+    if (afk.exists) {
         auto now = std::chrono::steady_clock::now();
-        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(
-                            now - afk.time).count();
+        auto seconds =
+            std::chrono::duration_cast<std::chrono::seconds>(now - afk.time)
+                .count();
         std::string when = makeTimeString(seconds);
-        if(when.size() == 0) {
+        if (when.size() == 0) {
             when = "0s";
         }
-        response.message = message.user + ", " + tokens[1] + " went afk " + when + " ago";
-        if(afk.message.size() != 0) {
+        response.message =
+            message.user + ", " + tokens[1] + " went afk " + when + " ago";
+        if (afk.message.size() != 0) {
             response.message += " - " + afk.message;
         }
     } else {
-        response.message = message.user + ", user " + tokens[1] + " is not afk SeemsGood";
+        response.message =
+            message.user + ", user " + tokens[1] + " is not afk SeemsGood";
     }
-    
+
     response.type = Response::Type::MESSAGE;
     return response;
 }

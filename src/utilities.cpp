@@ -59,7 +59,7 @@ makeTimeString(long long seconds)
     int m = seconds % 60;
     seconds /= 60;
     int h = seconds % 24;
-    seconds /=24;
+    seconds /= 24;
     int d = seconds;
     if (d) {
         time += std::to_string(d) + "d ";

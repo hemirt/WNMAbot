@@ -76,14 +76,15 @@ Channel::handleMessage(const IRCMessage &message)
         case IRCMessage::Type::PRIVMSG: {
             // std::cout << '#' << message.channel << ": " << message.user << ":
             // " << message.params << std::endl;
-            
+
             bool bafk = true;
             if (owner->afkers.isAfker(message.user)) {
                 auto afk = owner->afkers.getAfker(message.user);
                 if (afk.exists) {
                     auto now = std::chrono::steady_clock::now();
                     if (std::chrono::duration_cast<std::chrono::seconds>(
-                            now - afk.time).count() > 10) {
+                            now - afk.time)
+                            .count() > 10) {
                         owner->afkers.removeAfker(message.user);
                         bafk = false;
                     } else {
@@ -92,7 +93,7 @@ Channel::handleMessage(const IRCMessage &message)
                     }
                 }
             }
-            
+
             if (messageCount >= 19) {
                 // Too many messages sent recently
                 return false;
@@ -189,11 +190,11 @@ Channel::handleMessage(const IRCMessage &message)
                                      connected + ".");
                 }
             }
-            
+
             if (!bafk && !sent) {
-                sent = this->say(message.user + " is no longer afk HeyGuys");                
+                sent = this->say(message.user + " is no longer afk HeyGuys");
             }
-            
+
             if (sent) {
                 lastMessageTime = timeNow;
             }

@@ -50,12 +50,11 @@ public:
         std::chrono::steady_clock::now();
 
     RemindUsers userReminders;
-    
+
     Afkers afkers;
 
 private:
     std::mutex channelMtx;
-    std::mutex afkersMtx;
 
     // A bool for quit? checking
     std::atomic<bool> quit;

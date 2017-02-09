@@ -132,11 +132,12 @@ RedisAuth::getChannels()
         freeReplyObject(reply);
         return channels;
     }
-    
+
     for (int i = 0; i < reply->elements; ++i) {
-        channels.push_back(std::string(reply->element[i]->str, reply->element[i]->len));
+        channels.push_back(
+            std::string(reply->element[i]->str, reply->element[i]->len));
     }
-    
+
     freeReplyObject(reply);
     return channels;
 }
@@ -144,14 +145,16 @@ RedisAuth::getChannels()
 void
 RedisAuth::addChannel(const std::string &channel)
 {
-    redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "SADD WNMA:channels %b", channel.c_str(), channel.size()));
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "SADD WNMA:channels %b", channel.c_str(),
+                     channel.size()));
     freeReplyObject(reply);
 }
 void
 RedisAuth::removeChannel(const std::string &channel)
 {
-    redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "SREM WNMA:channels %b", channel.c_str(), channel.size()));
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "SREM WNMA:channels %b", channel.c_str(),
+                     channel.size()));
     freeReplyObject(reply);
 }

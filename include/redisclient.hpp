@@ -32,7 +32,7 @@ public:
     void removeReminder(const std::string &user, const std::string &which);
 
     bool isAdmin(const std::string &user);
-    
+
 private:
     redisContext *context;
     void deleteRedisKey(const std::string &key);
