@@ -76,7 +76,8 @@ private:
     Response say(const IRCMessage &message, std::vector<std::string> &tokens);
     Response afk(const IRCMessage &message, std::vector<std::string> &tokens);
     Response isAfk(const IRCMessage &message, std::vector<std::string> &tokens);
-
+    Response comeBackMsg(const IRCMessage &message, std::vector<std::string> &tokens);
+    
     boost::asio::io_service &ioService;
 
     std::unordered_map<std::string, std::chrono::steady_clock::time_point>

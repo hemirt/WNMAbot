@@ -224,3 +224,11 @@ RedisClient::deleteAllReminders(const std::string &user)
         this->context, "HDEL WNMA:reminders %b", user.c_str(), user.size()));
     freeReplyObject(reply);
 }
+
+std::unique_ptr<redisReply, decltype(&freeReplyObject)>
+RedisClient::rawCommand(const std::string &cmd)
+{
+    std::unique_ptr<redisReply, decltype(&freeReplyObject)> ptr(static_cast<redisReply *>(
+        redisCommand(this->context, "%b", cmd.c_str(), cmd.size())), &freeReplyObject);
+    return ptr;
+}

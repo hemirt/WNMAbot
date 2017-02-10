@@ -26,6 +26,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/remindusers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mtrandom.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/afkers.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/comebackmsg.cpp
 )
 
 add_executable(WNMAbot ${SOURCE})

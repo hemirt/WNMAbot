@@ -15,6 +15,7 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
           this->resolver
               .resolve(BoostConnection::resolver::query(IRC_HOST, IRC_PORT))
               ->endpoint())
+    , comebacks(this->ioService, this)
 {
     if (!this->authFromRedis.isValid()) {
         throw std::runtime_error("Redis connection error, see std::cerr");
@@ -33,6 +34,7 @@ ConnectionHandler::ConnectionHandler()
           this->resolver
               .resolve(BoostConnection::resolver::query(IRC_HOST, IRC_PORT))
               ->endpoint())
+    , comebacks(this->ioService, this)
 {
     if (this->authFromRedis.isValid() && this->authFromRedis.hasAuth()) {
         this->pass = this->authFromRedis.getOauth();
@@ -190,4 +192,11 @@ ConnectionHandler::loadAllReminders()
             t->async_wait(remindFunction);
         }
     }
+}
+
+unsigned int
+ConnectionHandler::ofChannelCount(const std::string &channel)
+{
+    std::lock_guard<std::mutex> lock(channelMtx);
+    return this->channels.count(channel);
 }

@@ -6,6 +6,7 @@
 #include "redisauth.hpp"
 #include "remindusers.hpp"
 #include "utilities.hpp"
+#include "comebackmsg.hpp"
 
 #include <boost/asio/basic_waitable_timer.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -28,6 +29,7 @@ public:
 
     bool joinChannel(const std::string &channelName);
     bool leaveChannel(const std::string &channelName);
+    unsigned int ofChannelCount(const std::string &channel);
     void run();
 
     // It's not a map of channel sockets, it's a map of channels.
@@ -52,6 +54,8 @@ public:
     RemindUsers userReminders;
 
     Afkers afkers;
+    
+    ComeBackMsg comebacks;
 
 private:
     std::mutex channelMtx;

@@ -66,6 +66,8 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->afk(message, tokens);
     } else if (tokens[0] == "!isafk") {
         return this->isAfk(message, tokens);
+    } else if (tokens[0] == "!comebackmsg") {
+        return this->comeBackMsg(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -886,6 +888,36 @@ CommandsHandler::isAfk(const IRCMessage &message,
     }
 
     response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::comeBackMsg(const IRCMessage &message,
+                       std::vector<std::string> &tokens)
+{
+    Response response;
+    if (this->isAdmin(message.user) == false) {
+        return response;
+    }
+    if (tokens.size() < 3) {
+        return response;
+    }
+
+    changeToLower(tokens[1]);
+    
+    std::string msg;
+    for (int i = 2; i < tokens.size(); ++i) {
+        msg += tokens[i] + ' ';
+    }
+
+    if (msg.back() == ' ') {
+        msg.pop_back();
+    }
+    
+    this->channelObject->owner->comebacks.makeComeBackMsg(message.user, tokens[1], msg);
+
+    response.type = Response::Type::MESSAGE;
+    response.message = message.user + ", the user " + tokens[1] + " will get your message once he writes anything in chat SeemsGood";
     return response;
 }
 

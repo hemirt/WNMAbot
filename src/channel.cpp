@@ -65,7 +65,6 @@ Channel::whisper(const std::string &message, const std::string &recipient)
         rawMessage += message;
     }
     this->sendToOne(rawMessage);
-    messageCount++;
     return true;
 }
 
@@ -93,7 +92,9 @@ Channel::handleMessage(const IRCMessage &message)
                     }
                 }
             }
-
+            
+            owner->comebacks.sendMsgs(message.user);
+            
             if (messageCount >= 19) {
                 // Too many messages sent recently
                 return false;

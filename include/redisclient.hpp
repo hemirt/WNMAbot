@@ -32,6 +32,8 @@ public:
     void removeReminder(const std::string &user, const std::string &which);
 
     bool isAdmin(const std::string &user);
+   
+    std::unique_ptr<redisReply, decltype(&freeReplyObject)> rawCommand(const std::string &cmd);
 
 private:
     redisContext *context;
