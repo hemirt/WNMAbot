@@ -2,11 +2,11 @@
 #define CONNHANDLER_HPP
 
 #include "afkers.hpp"
+#include "comebackmsg.hpp"
 #include "network.hpp"
 #include "redisauth.hpp"
 #include "remindusers.hpp"
 #include "utilities.hpp"
-#include "comebackmsg.hpp"
 
 #include <boost/asio/basic_waitable_timer.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -54,7 +54,7 @@ public:
     RemindUsers userReminders;
 
     Afkers afkers;
-    
+
     ComeBackMsg comebacks;
 
 private:

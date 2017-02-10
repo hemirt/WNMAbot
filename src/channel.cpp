@@ -92,9 +92,9 @@ Channel::handleMessage(const IRCMessage &message)
                     }
                 }
             }
-            
+
             owner->comebacks.sendMsgs(message.user);
-            
+
             if (messageCount >= 19) {
                 // Too many messages sent recently
                 return false;

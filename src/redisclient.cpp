@@ -228,7 +228,9 @@ RedisClient::deleteAllReminders(const std::string &user)
 std::unique_ptr<redisReply, decltype(&freeReplyObject)>
 RedisClient::rawCommand(const std::string &cmd)
 {
-    std::unique_ptr<redisReply, decltype(&freeReplyObject)> ptr(static_cast<redisReply *>(
-        redisCommand(this->context, "%b", cmd.c_str(), cmd.size())), &freeReplyObject);
+    std::unique_ptr<redisReply, decltype(&freeReplyObject)> ptr(
+        static_cast<redisReply *>(
+            redisCommand(this->context, "%b", cmd.c_str(), cmd.size())),
+        &freeReplyObject);
     return ptr;
 }

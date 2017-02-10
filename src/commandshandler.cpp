@@ -893,7 +893,7 @@ CommandsHandler::isAfk(const IRCMessage &message,
 
 Response
 CommandsHandler::comeBackMsg(const IRCMessage &message,
-                       std::vector<std::string> &tokens)
+                             std::vector<std::string> &tokens)
 {
     Response response;
     if (this->isAdmin(message.user) == false) {
@@ -904,7 +904,7 @@ CommandsHandler::comeBackMsg(const IRCMessage &message,
     }
 
     changeToLower(tokens[1]);
-    
+
     std::string msg;
     for (int i = 2; i < tokens.size(); ++i) {
         msg += tokens[i] + ' ';
@@ -913,11 +913,14 @@ CommandsHandler::comeBackMsg(const IRCMessage &message,
     if (msg.back() == ' ') {
         msg.pop_back();
     }
-    
-    this->channelObject->owner->comebacks.makeComeBackMsg(message.user, tokens[1], msg);
+
+    this->channelObject->owner->comebacks.makeComeBackMsg(message.user,
+                                                          tokens[1], msg);
 
     response.type = Response::Type::MESSAGE;
-    response.message = message.user + ", the user " + tokens[1] + " will get your message once he writes anything in chat SeemsGood";
+    response.message =
+        message.user + ", the user " + tokens[1] +
+        " will get your message once he writes anything in chat SeemsGood";
     return response;
 }
 
