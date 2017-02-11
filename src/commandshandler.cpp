@@ -942,6 +942,8 @@ CommandsHandler::addBlacklist(const IRCMessage &message,
         return response;
     }
     
+    changeToLower(tokens[1]);
+    
     this->channelObject->owner->addBlacklist(tokens[1], tokens[2]);
     
     response.type = Response::Type::MESSAGE;
@@ -961,6 +963,8 @@ CommandsHandler::removeBlacklist(const IRCMessage &message,
     if (tokens.size() < 2) {
         return response;
     }
+    
+    changeToLower(tokens[1]);
     
     this->channelObject->owner->removeBlacklist(tokens[1]);
     response.type = Response::Type::MESSAGE;
