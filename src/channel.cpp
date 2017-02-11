@@ -40,9 +40,13 @@ Channel::createConnection()
 }
 
 bool
-Channel::say(const std::string &message)
+Channel::say(std::string message, bool admin)
 {
     std::string rawMessage = "PRIVMSG #" + this->channelName + " :";
+    if (!admin) {
+        owner->sanitizeMsg(message);
+    }
+    
     // Message length at most 350 characters
     if (message.length() >= 350) {
         rawMessage += message.substr(0, 350);
@@ -77,18 +81,19 @@ Channel::handleMessage(const IRCMessage &message)
             // " << message.params << std::endl;
 
             bool bafk = true;
+            std::unique_ptr<Afkers::Afk> afk;
             if (owner->afkers.isAfker(message.user)) {
-                auto afk = owner->afkers.getAfker(message.user);
-                if (afk.exists) {
+                afk = std::make_unique<Afkers::Afk>(owner->afkers.getAfker(message.user));
+                if (afk->exists) {
                     auto now = std::chrono::steady_clock::now();
                     if (std::chrono::duration_cast<std::chrono::seconds>(
-                            now - afk.time)
+                            now - afk->time)
                             .count() > 10) {
                         owner->afkers.removeAfker(message.user);
                         bafk = false;
                     } else {
-                        afk.time = now;
-                        owner->afkers.updateAfker(message.user, afk);
+                        afk->time = now;
+                        owner->afkers.updateAfker(message.user, *afk);
                     }
                 }
             }
@@ -113,7 +118,7 @@ Channel::handleMessage(const IRCMessage &message)
             const auto response = this->commandsHandler.handle(message);
 
             if (response.type == Response::Type::MESSAGE) {
-                sent = this->say(response.message);
+                sent = this->say(response.message, this->commandsHandler.isAdmin(message.user));
             } else if (response.type == Response::Type::WHISPER) {
                 this->whisper(response.message, response.whisperReceiver);
             }
@@ -193,7 +198,7 @@ Channel::handleMessage(const IRCMessage &message)
             }
 
             if (!bafk && !sent) {
-                sent = this->say(message.user + " is no longer afk HeyGuys");
+                sent = this->say(message.user + " is no longer afk HeyGuys (" + afk->message + ")", this->commandsHandler.isAdmin(message.user));
             }
 
             if (sent) {

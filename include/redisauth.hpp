@@ -30,6 +30,9 @@ public:
     std::vector<std::string> getChannels();
     void addChannel(const std::string &channel);
     void removeChannel(const std::string &channel);
+    std::map<std::string, std::string> getBlacklist();
+    void addBlacklist(const std::string &search, const std::string &replace);
+    void removeBlacklist(const std::string &search);
 
 private:
     bool valid;

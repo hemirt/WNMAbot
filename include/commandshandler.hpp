@@ -45,9 +45,10 @@ public:
     Channel *channelObject;
 
     RedisClient redisClient;
+    
+    bool isAdmin(const std::string &user);
 
 private:
-    bool isAdmin(const std::string &user);
     Response addCommand(const IRCMessage &message,
                         std::vector<std::string> &tokens);
     Response editCommand(const IRCMessage &message,
@@ -78,6 +79,8 @@ private:
     Response isAfk(const IRCMessage &message, std::vector<std::string> &tokens);
     Response comeBackMsg(const IRCMessage &message,
                          std::vector<std::string> &tokens);
+    Response addBlacklist(const IRCMessage &message, std::vector<std::string> &tokens);
+    Response removeBlacklist(const IRCMessage &message, std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 

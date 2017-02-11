@@ -25,7 +25,7 @@ public:
 
     std::deque<Connection> connections;
 
-    bool say(const std::string &message);
+    bool say(std::string message, bool admin = false);
     bool whisper(const std::string &message, const std::string &recipient);
     void ping();
     bool handleMessage(const IRCMessage &message) final;
@@ -75,6 +75,7 @@ private:
 
     std::chrono::steady_clock::time_point connectedTime =
         std::chrono::steady_clock::now();
+
 };
 
 #endif

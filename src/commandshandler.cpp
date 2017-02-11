@@ -68,6 +68,10 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->isAfk(message, tokens);
     } else if (tokens[0] == "!comebackmsg") {
         return this->comeBackMsg(message, tokens);
+    } else if (tokens[0] == "!addblacklist") {
+        return this->addBlacklist(message, tokens);
+    } else if (tokens[0] == "!removeblacklist") {
+        return this->removeBlacklist(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -836,9 +840,9 @@ CommandsHandler::afk(const IRCMessage &message,
     Response response;
     std::string msg;
     for (int i = 1; i < tokens.size(); ++i) {
-        boost::algorithm::replace_all(tokens[i], ".", ",");
         msg += tokens[i] + ' ';
     }
+    boost::algorithm::replace_all(msg, ".", ",");
 
     if (msg.back() == ' ') {
         msg.pop_back();
@@ -924,15 +928,43 @@ CommandsHandler::comeBackMsg(const IRCMessage &message,
     return response;
 }
 
-/*
-    for (size_t i = 3; i < tokens.size(); ++i) {
-        if (tokens[i].front() != '{' || tokens[i].back() != '}') {
-            continue;
-        }
-        if (std::all_of(tokens[i].begin() + 1, tokens[i].end() - 1,
-                        ::isdigit)) {
-            vecNumParams.push_back(boost::lexical_cast<int>(
-                std::string(tokens[i].begin() + 1, tokens[i].end() - 1)));
-        }
+Response
+CommandsHandler::addBlacklist(const IRCMessage &message,
+                             std::vector<std::string> &tokens)
+{
+    Response response;
+    if (this->isAdmin(message.user) == false) {
+        return response;
+    }    
+    if (tokens.size() == 2) {
+        tokens.push_back("*");
+    } else if (tokens.size() < 3) {
+        return response;
     }
-*/
+    
+    this->channelObject->owner->addBlacklist(tokens[1], tokens[2]);
+    
+    response.type = Response::Type::MESSAGE;
+    response.message =
+        message.user + ", added blacklist for " + tokens[1] + " SeemsGood";
+    return response;
+}
+
+Response
+CommandsHandler::removeBlacklist(const IRCMessage &message,
+                             std::vector<std::string> &tokens)
+{
+    Response response;
+    if (this->isAdmin(message.user) == false) {
+        return response;
+    }    
+    if (tokens.size() < 2) {
+        return response;
+    }
+    
+    this->channelObject->owner->removeBlacklist(tokens[1]);
+    response.type = Response::Type::MESSAGE;
+    response.message =
+        message.user + ", removed blacklist for " + tokens[1] + " SeemsGood";
+    return response;
+}

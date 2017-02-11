@@ -158,3 +158,44 @@ RedisAuth::removeChannel(const std::string &channel)
                      channel.size()));
     freeReplyObject(reply);
 }
+
+std::map<std::string, std::string>
+RedisAuth::getBlacklist()
+{
+    std::map<std::string, std::string> blacklist;
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HGETALL WNMA:blacklist"));
+    if (reply->type == REDIS_REPLY_NIL) {
+        freeReplyObject(reply);
+        return blacklist;
+    }
+
+    if (reply->type == REDIS_REPLY_ARRAY) {
+        for (int i = 0; i < reply->elements; i += 2) {
+            std::string search(reply->element[i]->str, reply->element[i]->len);
+            std::string replace(reply->element[i + 1]->str, reply->element[i + 1]->len);
+            
+            blacklist.emplace(std::make_pair(search, replace));
+        }
+    }
+    freeReplyObject(reply);
+    return blacklist;
+}
+
+void
+RedisAuth::addBlacklist(const std::string &search, const std::string &replace)
+{
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HSET WNMA:blacklist %b %b", search.c_str(),
+                     search.size(), replace.c_str(), replace.size()));
+    freeReplyObject(reply);
+}
+
+void
+RedisAuth::removeBlacklist(const std::string &search)
+{
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HDEL WNMA:blacklist %b", search.c_str(),
+                     search.size()));
+    freeReplyObject(reply);
+}
