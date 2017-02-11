@@ -221,7 +221,7 @@ CommandsHandler::makeResponse(const IRCMessage &message,
                     tokens[i], boost::regex("{\\d+}|{user}|{channel}"))) {
                 return response;
             }
-            boost::algorithm::replace_all(tokens[i], ".", ",");
+            //boost::algorithm::replace_all(tokens[i], ".", ",");
             boost::algorithm::replace_all(responseString, ss.str(), tokens[i]);
         }
     }
@@ -690,7 +690,7 @@ CommandsHandler::remindMe(const IRCMessage &message,
     auto t =
         new boost::asio::steady_timer(ioService, std::chrono::seconds(seconds));
     t->async_wait(remindFunction);
-    boost::algorithm::replace_all(reminderMessage, ".", ",");
+    //boost::algorithm::replace_all(reminderMessage, ".", ",");
     std::string msg = message.user + ", reminding you in " +
                       std::to_string(seconds) + " seconds (" + reminderMessage +
                       ") SeemsGood";
@@ -799,7 +799,7 @@ CommandsHandler::remind(const IRCMessage &message,
     t->async_wait(remindFunction);
     this->channelObject->owner->userReminders.addReminder(
         message.user, remindedUser, whichReminder, t);
-    boost::algorithm::replace_all(reminderMessage, ".", ",");
+    //boost::algorithm::replace_all(reminderMessage, ".", ",");
     std::string msg = message.user + ", reminding " + remindedUser + " in " +
                       std::to_string(seconds) + " seconds (" + reminderMessage +
                       ") SeemsGood";
@@ -842,7 +842,7 @@ CommandsHandler::afk(const IRCMessage &message,
     for (int i = 1; i < tokens.size(); ++i) {
         msg += tokens[i] + ' ';
     }
-    boost::algorithm::replace_all(msg, ".", ",");
+    //boost::algorithm::replace_all(msg, ".", ",");
 
     if (msg.back() == ' ') {
         msg.pop_back();
