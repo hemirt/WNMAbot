@@ -206,7 +206,7 @@ ConnectionHandler::ofChannelCount(const std::string &channel)
 
 void ConnectionHandler::sanitizeMsg(std::string &msg)
 {
-    std::lock_guard<std::mutex> lock(blacklistMtx);
+    std::shared_lock<std::shared_mutex> lock(blacklistMtx);
     for (const auto &i : blacklist) {
         boost::algorithm::replace_all(msg, i.first, i.second);
     }
@@ -215,7 +215,7 @@ void ConnectionHandler::sanitizeMsg(std::string &msg)
 void
 ConnectionHandler::addBlacklist(const std::string &search, const std::string &replace)
 {
-    std::lock_guard<std::mutex> lock(blacklistMtx);
+    std::unique_lock<std::shared_mutex> lock(blacklistMtx);
     this->blacklist[search] = replace;
     this->authFromRedis.addBlacklist(search, replace);
 }
@@ -223,7 +223,7 @@ ConnectionHandler::addBlacklist(const std::string &search, const std::string &re
 void
 ConnectionHandler::removeBlacklist(const std::string &search)
 {
-    std::lock_guard<std::mutex> lock(blacklistMtx);
+    std::unique_lock<std::shared_mutex> lock(blacklistMtx);
     this->blacklist.erase(search);
     this->authFromRedis.removeBlacklist(search);
 }

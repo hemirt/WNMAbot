@@ -10,7 +10,7 @@ include_directories(${HIREDIS_INCLUDE_DIR})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-set(CMAKE_CXX_FLAGS "-pthread -std=c++14 -O3 ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-pthread -std=c++17 -O3 ${CMAKE_CXX_FLAGS}")
 
 set(SOURCE
     ${SOURCE}

@@ -16,6 +16,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 
 class Channel;
@@ -64,7 +65,7 @@ public:
 
 private:
     std::mutex channelMtx;
-    std::mutex blacklistMtx;
+    std::shared_mutex blacklistMtx;
 
     // A bool for quit? checking
     std::atomic<bool> quit;
