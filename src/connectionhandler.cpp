@@ -208,7 +208,7 @@ void ConnectionHandler::sanitizeMsg(std::string &msg)
 {
     std::shared_lock<std::shared_mutex> lock(blacklistMtx);
     for (const auto &i : blacklist) {
-        boost::algorithm::replace_all(msg, i.first, i.second);
+        boost::algorithm::ireplace_all(msg, i.first, i.second);
     }
 }
 
