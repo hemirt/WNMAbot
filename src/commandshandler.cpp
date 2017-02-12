@@ -221,7 +221,8 @@ CommandsHandler::makeResponse(const IRCMessage &message,
                     tokens[i], boost::regex("{\\d+}|{user}|{channel}"))) {
                 return response;
             }
-            //boost::algorithm::replace_all(tokens[i], ".", ",");
+            
+            this->channelObject->owner->sanitizeMsg(tokens[i]);
             boost::algorithm::replace_all(responseString, ss.str(), tokens[i]);
         }
     }
@@ -690,7 +691,11 @@ CommandsHandler::remindMe(const IRCMessage &message,
     auto t =
         new boost::asio::steady_timer(ioService, std::chrono::seconds(seconds));
     t->async_wait(remindFunction);
-    //boost::algorithm::replace_all(reminderMessage, ".", ",");
+    
+    
+    this->channelObject->owner->sanitizeMsg(reminderMessage);
+    
+    
     std::string msg = message.user + ", reminding you in " +
                       std::to_string(seconds) + " seconds (" + reminderMessage +
                       ") SeemsGood";
@@ -787,7 +792,6 @@ CommandsHandler::remind(const IRCMessage &message,
         if (owner->channels.count(owner->nick) == 0) {
             owner->joinChannel(owner->nick);
         }
-
         owner->channels.at(owner->nick).whisper(whisperMessage, user);
         owner->channels.at(owner->nick)
             .commandsHandler.redisClient.removeReminder(user, whichReminder);
@@ -799,7 +803,9 @@ CommandsHandler::remind(const IRCMessage &message,
     t->async_wait(remindFunction);
     this->channelObject->owner->userReminders.addReminder(
         message.user, remindedUser, whichReminder, t);
-    //boost::algorithm::replace_all(reminderMessage, ".", ",");
+    
+    
+    this->channelObject->owner->sanitizeMsg(reminderMessage);
     std::string msg = message.user + ", reminding " + remindedUser + " in " +
                       std::to_string(seconds) + " seconds (" + reminderMessage +
                       ") SeemsGood";
@@ -842,14 +848,16 @@ CommandsHandler::afk(const IRCMessage &message,
     for (int i = 1; i < tokens.size(); ++i) {
         msg += tokens[i] + ' ';
     }
-    //boost::algorithm::replace_all(msg, ".", ",");
 
     if (msg.back() == ' ') {
         msg.pop_back();
     }
 
-    this->channelObject->owner->afkers.setAfker(message.user, msg);
-
+    
+    this->channelObject->owner->sanitizeMsg(msg);
+    
+    this->channelObject->owner->afkers.setAfker(message.user, msg);    
+    
     response.type = Response::Type::MESSAGE;
     response.message = message.user + " is now afk ResidentSleeper";
     if (msg.size() != 0) {

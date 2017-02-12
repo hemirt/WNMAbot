@@ -40,12 +40,9 @@ Channel::createConnection()
 }
 
 bool
-Channel::say(std::string message, bool admin)
+Channel::say(const std::string &message)
 {
     std::string rawMessage = "PRIVMSG #" + this->channelName + " :";
-    if (!admin) {
-        owner->sanitizeMsg(message);
-    }
     
     // Message length at most 350 characters
     if (message.length() >= 350) {
@@ -118,7 +115,7 @@ Channel::handleMessage(const IRCMessage &message)
             const auto response = this->commandsHandler.handle(message);
 
             if (response.type == Response::Type::MESSAGE) {
-                sent = this->say(response.message, this->commandsHandler.isAdmin(message.user));
+                sent = this->say(response.message);
             } else if (response.type == Response::Type::WHISPER) {
                 this->whisper(response.message, response.whisperReceiver);
             }
@@ -198,7 +195,10 @@ Channel::handleMessage(const IRCMessage &message)
             }
 
             if (!bafk && !sent) {
-                sent = this->say(message.user + " is no longer afk HeyGuys : " + afk->message, this->commandsHandler.isAdmin(message.user));
+                if (!this->commandsHandler.isAdmin(message.user)) {
+                    owner->sanitizeMsg(afk->message);
+                }
+                sent = this->say(message.user + " is no longer afk HeyGuys : " + afk->message);
             }
 
             if (sent) {

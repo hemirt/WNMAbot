@@ -25,7 +25,7 @@ public:
 
     std::deque<Connection> connections;
 
-    bool say(std::string message, bool admin = false);
+    bool say(const std::string &message);
     bool whisper(const std::string &message, const std::string &recipient);
     void ping();
     bool handleMessage(const IRCMessage &message) final;
