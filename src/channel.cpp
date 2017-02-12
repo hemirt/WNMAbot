@@ -198,7 +198,7 @@ Channel::handleMessage(const IRCMessage &message)
             }
 
             if (!bafk && !sent) {
-                sent = this->say(message.user + " is no longer afk HeyGuys (" + afk->message + ")", this->commandsHandler.isAdmin(message.user));
+                sent = this->say(message.user + " is no longer afk HeyGuys : " + afk->message, this->commandsHandler.isAdmin(message.user));
             }
 
             if (sent) {
