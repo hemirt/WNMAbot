@@ -37,19 +37,6 @@ timenow()
     return ss.str();
 }
 
-std::vector<std::string>
-splitMsg(std::string &msg, const std::string &delimiter)
-{
-    std::vector<std::string> vec;
-    size_t pos = 0;
-    while ((pos = msg.find(delimiter)) != std::string::npos) {
-        vec.push_back(msg.substr(0, pos));
-        msg.erase(0, pos + delimiter.length());
-    }
-    vec.push_back(msg);
-    return vec;
-}
-
 std::string
 makeTimeString(long long seconds)
 {
