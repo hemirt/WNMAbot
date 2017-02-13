@@ -2,6 +2,7 @@
 #include <iostream>
 #include "channel.hpp"
 #include "connectionhandler.hpp"
+#include "utilities.hpp"
 
 ComeBackMsg::ComeBackMsg(boost::asio::io_service &_ioService,
                          ConnectionHandler *_ch)
