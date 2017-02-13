@@ -58,14 +58,15 @@ public:
 
     ComeBackMsg comebacks;
     
-    std::map<std::string, std::string> blacklist;
     void addBlacklist(const std::string &search, const std::string &replace);
     void removeBlacklist(const std::string &search);
     void sanitizeMsg(std::string &msg);
+    bool isBlacklisted(const std::string &msg);
 
 private:
     std::mutex channelMtx;
     std::shared_mutex blacklistMtx;
+    std::map<std::string, std::string> blacklist;
 
     // A bool for quit? checking
     std::atomic<bool> quit;

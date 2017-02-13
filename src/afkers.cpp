@@ -37,3 +37,19 @@ Afkers::getAfker(const std::string &user)
     }
     return this->afkersMap.at(user);
 }
+
+std::string
+Afkers::getAfkers()
+{
+    std::string afkers;
+    std::lock_guard<std::mutex> lock(this->afkersMapMtx);
+    for (const auto &i : this->afkersMap) {
+        afkers += i.first + ", ";
+    }
+    
+    if (!afkers.empty()) {
+        afkers.erase(afkers.end() - 2, afkers.end());
+    }
+    
+    return afkers;
+}

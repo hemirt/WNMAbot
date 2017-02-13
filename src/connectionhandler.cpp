@@ -207,9 +207,15 @@ ConnectionHandler::ofChannelCount(const std::string &channel)
 void ConnectionHandler::sanitizeMsg(std::string &msg)
 {
     std::shared_lock<std::shared_mutex> lock(blacklistMtx);
-    for (const auto &i : blacklist) {
+    for (const auto &i : this->blacklist) {
         boost::algorithm::ireplace_all(msg, i.first, i.second);
     }
+}
+
+bool ConnectionHandler::isBlacklisted(const std::string &msg)
+{
+    std::shared_lock<std::shared_mutex> lock(blacklistMtx);
+    return this->blacklist.count(msg) == 1;
 }
 
 void

@@ -21,6 +21,7 @@ public:
     void updateAfker(const std::string &user, const Afk &afk);
     void removeAfker(const std::string &user);
     Afk getAfker(const std::string &user);
+    std::string getAfkers();
 
 private:
     std::unordered_map<std::string, Afk> afkersMap;

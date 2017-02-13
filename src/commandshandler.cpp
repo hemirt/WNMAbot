@@ -72,6 +72,8 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->addBlacklist(message, tokens);
     } else if (tokens[0] == "!removeblacklist") {
         return this->removeBlacklist(message, tokens);
+    } else if (tokens[0] == "!whoisafk") {
+        return this->whoIsAfk(message);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -877,6 +879,9 @@ CommandsHandler::isAfk(const IRCMessage &message,
     }
 
     changeToLower(tokens[1]);
+    if(this->channelObject->owner->isBlacklisted(tokens[1])) {
+        return response;
+    }
 
     auto afk = this->channelObject->owner->afkers.getAfker(tokens[1]);
 
@@ -978,5 +983,19 @@ CommandsHandler::removeBlacklist(const IRCMessage &message,
     response.type = Response::Type::MESSAGE;
     response.message =
         message.user + ", removed blacklist for " + tokens[1] + " SeemsGood";
+    return response;
+}
+
+Response
+CommandsHandler::whoIsAfk(const IRCMessage &message)
+{
+    Response response;
+    std::string afkers = this->channelObject->owner->afkers.getAfkers();
+    if (afkers.empty()) {
+        response.message = message.user + ", right now there is nobody afk SeemsGood";
+    } else {
+        response.message = message.user + ", list of afk users: " + afkers;
+    }
+    response.type = Response::Type::MESSAGE;
     return response;
 }
