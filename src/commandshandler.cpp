@@ -4,8 +4,8 @@
 #include "mtrandom.hpp"
 #include "utilities.hpp"
 
-#include <vector>
 #include <stdint.h>
+#include <vector>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -224,7 +224,7 @@ CommandsHandler::makeResponse(const IRCMessage &message,
                     tokens[i], boost::regex("{\\d+}|{user}|{channel}"))) {
                 return response;
             }
-            
+
             this->channelObject->owner->sanitizeMsg(tokens[i]);
             boost::algorithm::replace_all(responseString, ss.str(), tokens[i]);
         }
@@ -694,11 +694,9 @@ CommandsHandler::remindMe(const IRCMessage &message,
     auto t =
         new boost::asio::steady_timer(ioService, std::chrono::seconds(seconds));
     t->async_wait(remindFunction);
-    
-    
+
     this->channelObject->owner->sanitizeMsg(reminderMessage);
-    
-    
+
     std::string msg = message.user + ", reminding you in " +
                       std::to_string(seconds) + " seconds (" + reminderMessage +
                       ") SeemsGood";
@@ -806,8 +804,7 @@ CommandsHandler::remind(const IRCMessage &message,
     t->async_wait(remindFunction);
     this->channelObject->owner->userReminders.addReminder(
         message.user, remindedUser, whichReminder, t);
-    
-    
+
     this->channelObject->owner->sanitizeMsg(reminderMessage);
     std::string msg = message.user + ", reminding " + remindedUser + " in " +
                       std::to_string(seconds) + " seconds (" + reminderMessage +
@@ -856,11 +853,10 @@ CommandsHandler::afk(const IRCMessage &message,
         msg.pop_back();
     }
 
-    
     this->channelObject->owner->sanitizeMsg(msg);
-    
-    this->channelObject->owner->afkers.setAfker(message.user, msg);    
-    
+
+    this->channelObject->owner->afkers.setAfker(message.user, msg);
+
     response.type = Response::Type::MESSAGE;
     response.message = message.user + " is now afk ResidentSleeper";
     if (msg.size() != 0) {
@@ -880,7 +876,7 @@ CommandsHandler::isAfk(const IRCMessage &message,
     }
 
     changeToLower(tokens[1]);
-    if(this->channelObject->owner->isBlacklisted(tokens[1])) {
+    if (this->channelObject->owner->isBlacklisted(tokens[1])) {
         return response;
     }
 
@@ -944,22 +940,22 @@ CommandsHandler::comeBackMsg(const IRCMessage &message,
 
 Response
 CommandsHandler::addBlacklist(const IRCMessage &message,
-                             std::vector<std::string> &tokens)
+                              std::vector<std::string> &tokens)
 {
     Response response;
     if (this->isAdmin(message.user) == false) {
         return response;
-    }    
+    }
     if (tokens.size() == 2) {
         tokens.push_back("*");
     } else if (tokens.size() < 3) {
         return response;
     }
-    
+
     changeToLower(tokens[1]);
-    
+
     this->channelObject->owner->addBlacklist(tokens[1], tokens[2]);
-    
+
     response.type = Response::Type::MESSAGE;
     response.message =
         message.user + ", added blacklist for " + tokens[1] + " SeemsGood";
@@ -968,18 +964,18 @@ CommandsHandler::addBlacklist(const IRCMessage &message,
 
 Response
 CommandsHandler::removeBlacklist(const IRCMessage &message,
-                             std::vector<std::string> &tokens)
+                                 std::vector<std::string> &tokens)
 {
     Response response;
     if (this->isAdmin(message.user) == false) {
         return response;
-    }    
+    }
     if (tokens.size() < 2) {
         return response;
     }
-    
+
     changeToLower(tokens[1]);
-    
+
     this->channelObject->owner->removeBlacklist(tokens[1]);
     response.type = Response::Type::MESSAGE;
     response.message =
@@ -993,7 +989,8 @@ CommandsHandler::whoIsAfk(const IRCMessage &message)
     Response response;
     std::string afkers = this->channelObject->owner->afkers.getAfkers();
     if (afkers.empty()) {
-        response.message = message.user + ", right now there is nobody afk SeemsGood";
+        response.message =
+            message.user + ", right now there is nobody afk SeemsGood";
     } else {
         response.message = message.user + ", list of afk users: " + afkers;
     }

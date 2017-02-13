@@ -43,7 +43,7 @@ bool
 Channel::say(const std::string &message)
 {
     std::string rawMessage = "PRIVMSG #" + this->channelName + " :";
-    
+
     // Message length at most 350 characters
     if (message.length() >= 350) {
         rawMessage += message.substr(0, 350);
@@ -80,7 +80,8 @@ Channel::handleMessage(const IRCMessage &message)
             bool bafk = true;
             std::unique_ptr<Afkers::Afk> afk;
             if (owner->afkers.isAfker(message.user)) {
-                afk = std::make_unique<Afkers::Afk>(owner->afkers.getAfker(message.user));
+                afk = std::make_unique<Afkers::Afk>(
+                    owner->afkers.getAfker(message.user));
                 if (afk->exists) {
                     auto now = std::chrono::steady_clock::now();
                     if (std::chrono::duration_cast<std::chrono::seconds>(
@@ -198,7 +199,8 @@ Channel::handleMessage(const IRCMessage &message)
                 if (!this->commandsHandler.isAdmin(message.user)) {
                     owner->sanitizeMsg(afk->message);
                 }
-                sent = this->say(message.user + " is no longer afk HeyGuys : " + afk->message);
+                sent = this->say(message.user + " is no longer afk HeyGuys : " +
+                                 afk->message);
             }
 
             if (sent) {

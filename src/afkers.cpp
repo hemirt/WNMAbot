@@ -46,10 +46,10 @@ Afkers::getAfkers()
     for (const auto &i : this->afkersMap) {
         afkers += i.first + ", ";
     }
-    
+
     if (!afkers.empty()) {
         afkers.erase(afkers.end() - 2, afkers.end());
     }
-    
+
     return afkers;
 }

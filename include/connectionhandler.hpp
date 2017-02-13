@@ -56,7 +56,7 @@ public:
     Afkers afkers;
 
     ComeBackMsg comebacks;
-    
+
     void addBlacklist(const std::string &search, const std::string &replace);
     void removeBlacklist(const std::string &search);
     void sanitizeMsg(std::string &msg);

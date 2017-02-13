@@ -1,6 +1,6 @@
 #include "connectionhandler.hpp"
-#include "channel.hpp"
 #include <boost/algorithm/string/replace.hpp>
+#include "channel.hpp"
 
 static const char *IRC_HOST = "irc.chat.twitch.tv";
 static const char *IRC_PORT = "6667";
@@ -62,7 +62,7 @@ ConnectionHandler::start()
     }
 
     this->loadAllReminders();
-    
+
     this->blacklist = this->authFromRedis.getBlacklist();
 }
 
@@ -204,7 +204,8 @@ ConnectionHandler::ofChannelCount(const std::string &channel)
     return this->channels.count(channel);
 }
 
-void ConnectionHandler::sanitizeMsg(std::string &msg)
+void
+ConnectionHandler::sanitizeMsg(std::string &msg)
 {
     std::shared_lock<std::shared_mutex> lock(blacklistMtx);
     for (const auto &i : this->blacklist) {
@@ -212,14 +213,16 @@ void ConnectionHandler::sanitizeMsg(std::string &msg)
     }
 }
 
-bool ConnectionHandler::isBlacklisted(const std::string &msg)
+bool
+ConnectionHandler::isBlacklisted(const std::string &msg)
 {
     std::shared_lock<std::shared_mutex> lock(blacklistMtx);
     return this->blacklist.count(msg) == 1;
 }
 
 void
-ConnectionHandler::addBlacklist(const std::string &search, const std::string &replace)
+ConnectionHandler::addBlacklist(const std::string &search,
+                                const std::string &replace)
 {
     std::unique_lock<std::shared_mutex> lock(blacklistMtx);
     this->blacklist[search] = replace;

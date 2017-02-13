@@ -173,8 +173,9 @@ RedisAuth::getBlacklist()
     if (reply->type == REDIS_REPLY_ARRAY) {
         for (int i = 0; i < reply->elements; i += 2) {
             std::string search(reply->element[i]->str, reply->element[i]->len);
-            std::string replace(reply->element[i + 1]->str, reply->element[i + 1]->len);
-            
+            std::string replace(reply->element[i + 1]->str,
+                                reply->element[i + 1]->len);
+
             blacklist.emplace(std::make_pair(search, replace));
         }
     }
