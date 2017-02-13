@@ -5,6 +5,7 @@
 #include "utilities.hpp"
 
 #include <vector>
+#include <stdint.h>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -576,8 +577,8 @@ CommandsHandler::isAdmin(const std::string &user)
     return this->redisClient.isAdmin(user);
 }
 
-auto
-findLastIn(std::vector<std::string> &tokens) -> decltype(tokens.size())
+size_t
+findLastIn(std::vector<std::string> &tokens)
 {
     auto i = tokens.size();
     for (; i-- > 1;) {
@@ -589,10 +590,10 @@ findLastIn(std::vector<std::string> &tokens) -> decltype(tokens.size())
     return i;
 }
 
-long long
+int64_t
 getSecondsCount(std::vector<std::string> &tokens, size_t inPos)
 {
-    long long seconds = 0;
+    int64_t seconds = 0;
     for (int i = inPos + 1; i < tokens.size(); i++) {
         if (tokens[i].back() == 'd') {
             seconds += std::atoll(tokens[i].c_str()) * 24 * 3600;

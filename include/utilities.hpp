@@ -3,9 +3,9 @@
 
 #include <string>
 #include <vector>
+#include <stdint.h>
 
 void changeToLower(std::string &str);
-std::string timenow();
-std::string makeTimeString(long long seconds);
+std::string makeTimeString(int64_t seconds);
 
 #endif

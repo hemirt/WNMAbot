@@ -1,10 +1,8 @@
 #include "utilities.hpp"
 
 #include <algorithm>
-#include <ctime>
 #include <iomanip>
 #include <locale>
-#include <sstream>
 
 void
 changeToLower(std::string &str)
@@ -28,17 +26,7 @@ changeToLower(std::string &str)
 }
 
 std::string
-timenow()
-{
-    std::time_t result = std::time(nullptr);
-    std::stringstream ss;
-    ss.imbue(std::locale());
-    ss << std::put_time(std::localtime(&result), "%T %Z (UTC%z)");
-    return ss.str();
-}
-
-std::string
-makeTimeString(long long seconds)
+makeTimeString(int64_t seconds)
 {
     std::string time;
     int s = seconds % 60;
