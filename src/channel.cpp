@@ -76,22 +76,41 @@ Channel::handleMessage(const IRCMessage &message)
         case IRCMessage::Type::PRIVMSG: {
             // std::cout << '#' << message.channel << ": " << message.user << ":
             // " << message.params << std::endl;
-
-            bool bafk = true;
-            std::unique_ptr<Afkers::Afk> afk;
-            if (owner->afkers.isAfker(message.user)) {
-                afk = std::make_unique<Afkers::Afk>(
-                    owner->afkers.getAfker(message.user));
-                if (afk->exists) {
+            
+            auto timeNow = std::chrono::high_resolution_clock::now();
+            auto msSinceLastMessage =
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    timeNow - lastMessageTime);
+            
+            bool sent = false;
+            {
+                auto afk = owner->afkers.getAfker(message.user);
+                if (afk.exists) {
                     auto now = std::chrono::steady_clock::now();
-                    if (std::chrono::duration_cast<std::chrono::seconds>(
-                            now - afk->time)
-                            .count() > 10) {
+                    if (std::chrono::duration_cast<std::chrono::seconds>
+                            (now - afk.time).count() > 10) {
                         owner->afkers.removeAfker(message.user);
-                        bafk = false;
+                        
+                        if (msSinceLastMessage.count() <= 1500) {
+                            auto t =
+                                new boost::asio::steady_timer(ioService, std::chrono::milliseconds(1500));
+                            t->async_wait([user = message.user, message = afk.message, this]
+                                          (const boost::system::    error_code &er) {
+                                if(er) {
+                                    return;
+                                }
+                                if(std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::high_resolution_clock::now() - this->lastMessageTime).count() <= 1500) {
+                                    return;
+                                }
+                                this->say(user + " is back: " + message);
+                            });
+                        } else {
+                            sent = this->say(message.user + " is back: " + afk.message);
+                        }
                     } else {
-                        afk->time = now;
-                        owner->afkers.updateAfker(message.user, *afk);
+                        afk.time = now;
+                        owner->afkers.updateAfker(message.user, afk);
                     }
                 }
             }
@@ -103,20 +122,31 @@ Channel::handleMessage(const IRCMessage &message)
                 return false;
             }
 
-            auto timeNow = std::chrono::high_resolution_clock::now();
-            auto msSinceLastMessage =
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                    timeNow - lastMessageTime);
             if (msSinceLastMessage.count() <= 1500) {
                 // Last message was sent less than 1.5 seconds ago
                 return false;
             }
 
-            bool sent = false;
             const auto response = this->commandsHandler.handle(message);
 
             if (response.type == Response::Type::MESSAGE) {
-                sent = this->say(response.message);
+                if(sent) {
+                    auto t =
+                        new boost::asio::steady_timer(ioService, std::chrono::milliseconds(1500));
+                    t->async_wait([user = message.user, message = response.message, this]
+                                  (const boost::system::    error_code &er) {
+                        if(er) {
+                            return;
+                        }
+                        if(std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::high_resolution_clock::now() - this->lastMessageTime).count() <= 1500) {
+                                    return;
+                        }
+                        this->say(message);
+                    });
+                } else {
+                    sent = this->say(response.message);
+                }
             } else if (response.type == Response::Type::WHISPER) {
                 this->whisper(response.message, response.whisperReceiver);
             }
@@ -194,15 +224,7 @@ Channel::handleMessage(const IRCMessage &message)
                                      connected + ".");
                 }
             }
-
-            if (!bafk && !sent) {
-                if (!this->commandsHandler.isAdmin(message.user)) {
-                    owner->sanitizeMsg(afk->message);
-                }
-                sent = this->say(message.user + " is no longer afk HeyGuys : " +
-                                 afk->message);
-            }
-
+            
             if (sent) {
                 lastMessageTime = timeNow;
             }

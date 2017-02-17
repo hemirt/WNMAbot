@@ -75,6 +75,8 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->removeBlacklist(message, tokens);
     } else if (tokens[0] == "!whoisafk") {
         return this->whoIsAfk(message);
+    } else if (tokens[0] == "!regex") {
+        return this->regexTest(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -996,4 +998,31 @@ CommandsHandler::whoIsAfk(const IRCMessage &message)
     }
     response.type = Response::Type::MESSAGE;
     return response;
+}
+
+Response
+CommandsHandler::regexTest(const IRCMessage &message, std::vector<std::string> &tokens)
+{
+    Response response;
+    if (!this->isAdmin(message.user)) {
+        return response;
+    }
+    
+    tokens.erase(tokens.begin());
+    
+    if (tokens.size() == 0) {
+        return response;
+    }
+    
+    std::string joined = boost::algorithm::join(tokens, " ");
+    
+    boost::smatch match;
+    boost::regex expression("{b(:\\s?(\\d+))?}");
+    if(boost::regex_search(joined.cbegin(), joined.cend(), match, expression)) {
+        std::cout << "size: " << match.size();
+        std::cout << "\nmaxsize: " << match.max_size() << std::endl;
+        for (const auto &i : match) {
+            std::cout << i << "\nmatched: " << i.matched << "\nlength: " << i.length() << "\nstr: " << i.str() << std::endl;
+        }
+    }
 }

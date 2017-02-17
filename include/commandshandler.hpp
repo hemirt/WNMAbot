@@ -84,6 +84,7 @@ private:
     Response removeBlacklist(const IRCMessage &message,
                              std::vector<std::string> &tokens);
     Response whoIsAfk(const IRCMessage &message);
+    Response regexTest(const IRCMessage &message, std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 
