@@ -1001,28 +1001,32 @@ CommandsHandler::whoIsAfk(const IRCMessage &message)
 }
 
 Response
-CommandsHandler::regexTest(const IRCMessage &message, std::vector<std::string> &tokens)
+CommandsHandler::regexTest(const IRCMessage &message,
+                           std::vector<std::string> &tokens)
 {
     Response response;
     if (!this->isAdmin(message.user)) {
         return response;
     }
-    
+
     tokens.erase(tokens.begin());
-    
+
     if (tokens.size() == 0) {
         return response;
     }
-    
+
     std::string joined = boost::algorithm::join(tokens, " ");
-    
+
     boost::smatch match;
     boost::regex expression("{b(:\\s?(\\d+))?}");
-    if(boost::regex_search(joined.cbegin(), joined.cend(), match, expression)) {
+    if (boost::regex_search(joined.cbegin(), joined.cend(), match,
+                            expression)) {
         std::cout << "size: " << match.size();
         std::cout << "\nmaxsize: " << match.max_size() << std::endl;
         for (const auto &i : match) {
-            std::cout << i << "\nmatched: " << i.matched << "\nlength: " << i.length() << "\nstr: " << i.str() << std::endl;
+            std::cout << i << "\nmatched: " << i.matched
+                      << "\nlength: " << i.length() << "\nstr: " << i.str()
+                      << std::endl;
         }
     }
 }

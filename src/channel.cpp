@@ -76,37 +76,44 @@ Channel::handleMessage(const IRCMessage &message)
         case IRCMessage::Type::PRIVMSG: {
             // std::cout << '#' << message.channel << ": " << message.user << ":
             // " << message.params << std::endl;
-            
+
             auto timeNow = std::chrono::high_resolution_clock::now();
             auto msSinceLastMessage =
                 std::chrono::duration_cast<std::chrono::milliseconds>(
                     timeNow - lastMessageTime);
-            
+
             bool sent = false;
             {
                 auto afk = owner->afkers.getAfker(message.user);
                 if (afk.exists) {
                     auto now = std::chrono::steady_clock::now();
-                    if (std::chrono::duration_cast<std::chrono::seconds>
-                            (now - afk.time).count() > 10) {
+                    if (std::chrono::duration_cast<std::chrono::seconds>(
+                            now - afk.time)
+                            .count() > 10) {
                         owner->afkers.removeAfker(message.user);
-                        
+
                         if (msSinceLastMessage.count() <= 1500) {
-                            auto t =
-                                new boost::asio::steady_timer(ioService, std::chrono::milliseconds(1500));
-                            t->async_wait([user = message.user, message = afk.message, this]
-                                          (const boost::system::    error_code &er) {
-                                if(er) {
+                            auto t = new boost::asio::steady_timer(
+                                ioService, std::chrono::milliseconds(1500));
+                            t->async_wait([
+                                user = message.user, message = afk.message, this
+                            ](const boost::system::error_code &er) {
+                                if (er) {
                                     return;
                                 }
-                                if(std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::high_resolution_clock::now() - this->lastMessageTime).count() <= 1500) {
+                                if (std::chrono::duration_cast<
+                                        std::chrono::milliseconds>(
+                                        std::chrono::high_resolution_clock::
+                                            now() -
+                                        this->lastMessageTime)
+                                        .count() <= 1500) {
                                     return;
                                 }
                                 this->say(user + " is back: " + message);
                             });
                         } else {
-                            sent = this->say(message.user + " is back: " + afk.message);
+                            sent = this->say(message.user + " is back: " +
+                                             afk.message);
                         }
                     } else {
                         afk.time = now;
@@ -130,17 +137,21 @@ Channel::handleMessage(const IRCMessage &message)
             const auto response = this->commandsHandler.handle(message);
 
             if (response.type == Response::Type::MESSAGE) {
-                if(sent) {
-                    auto t =
-                        new boost::asio::steady_timer(ioService, std::chrono::milliseconds(1500));
-                    t->async_wait([user = message.user, message = response.message, this]
-                                  (const boost::system::    error_code &er) {
-                        if(er) {
+                if (sent) {
+                    auto t = new boost::asio::steady_timer(
+                        ioService, std::chrono::milliseconds(1500));
+                    t->async_wait([
+                        user = message.user, message = response.message, this
+                    ](const boost::system::error_code &er) {
+                        if (er) {
                             return;
                         }
-                        if(std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::high_resolution_clock::now() - this->lastMessageTime).count() <= 1500) {
-                                    return;
+                        if (std::chrono::duration_cast<
+                                std::chrono::milliseconds>(
+                                std::chrono::high_resolution_clock::now() -
+                                this->lastMessageTime)
+                                .count() <= 1500) {
+                            return;
                         }
                         this->say(message);
                     });
@@ -224,7 +235,7 @@ Channel::handleMessage(const IRCMessage &message)
                                      connected + ".");
                 }
             }
-            
+
             if (sent) {
                 lastMessageTime = timeNow;
             }
