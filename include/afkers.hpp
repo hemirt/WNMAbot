@@ -5,6 +5,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <hiredis/hiredis.h>
 
 class Afkers
 {
@@ -15,6 +16,8 @@ public:
         std::chrono::time_point<std::chrono::steady_clock> time;
     };
 
+    Afkers();
+    ~Afkers();
     bool isAfker(const std::string &user);
     void setAfker(const std::string &user, const std::string &message = "");
     void updateAfker(const std::string &user, const Afk &afk);
@@ -25,6 +28,10 @@ public:
 private:
     std::unordered_map<std::string, Afk> afkersMap;
     std::mutex afkersMapMtx;
+    redisContext *context;
+    void setAfkerRedis(const std::string &user, const Afk &afk);
+    void removeAfkerRedis(const std::string &user);
+    void getAllAfkersRedis();
 };
 
 #endif
