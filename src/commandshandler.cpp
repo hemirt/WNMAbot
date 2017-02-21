@@ -77,6 +77,16 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->whoIsAfk(message);
     } else if (tokens[0] == "!regex") {
         return this->regexTest(message, tokens);
+    } else if (tokens[0] == "!setuser" || tokens[0] == "!setcountry") {
+        return this->setUser(message, tokens);
+    } else if (tokens[0] == "!country") {
+        return this->isFrom(message, tokens);
+    } else if (tokens[0] == "!countries") {
+        return this->getCountries(message, tokens);
+    } else if (tokens[0] == "!print") {
+        return this->printUsersData(message);
+    } else if (tokens[0] == "!usersfrom") {
+        return this->getUsersFrom(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -1029,4 +1039,88 @@ CommandsHandler::regexTest(const IRCMessage &message,
                       << std::endl;
         }
     }
+}
+
+Response
+CommandsHandler::setUser(const IRCMessage &message,
+                         std::vector<std::string> &tokens) 
+{
+    Response response;
+    if (!this->isAdmin(message.user) || tokens.size() < 3) {
+        return response;
+    }
+    
+    std::string country;
+    for (int i = 2; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+    
+    this->channelObject->owner->usersData.setUser(tokens[1], country);
+    response.message = message.user + ", set the country of " + tokens[1] + " to " + country + " SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::isFrom(const IRCMessage &message,
+                         std::vector<std::string> &tokens) 
+{
+    Response response;
+    if (tokens.size() < 2) {
+        return response;
+    }
+    
+    auto country = this->channelObject->owner->usersData.getUsersCountry(tokens[1]);
+    response.message = message.user + ", " + tokens[1] + " is from " + country + " SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::getCountries(const IRCMessage &message,
+                         std::vector<std::string> &tokens) 
+{
+    Response response;
+    auto countries = this->channelObject->owner->usersData.getCountries();
+    response.message = message.user + ", there are: " + countries + " SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::getUsersFrom(const IRCMessage &message,
+                         std::vector<std::string> &tokens) 
+{
+    Response response;
+    if (tokens.size() < 2) {
+        return response;
+    }
+    
+    std::string country;
+    for (int i = 1; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+    
+    auto users = this->channelObject->owner->usersData.getUsersFrom(country);
+    response.message = message.user + ", from " + country + " are these users: " + users + " SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::printUsersData(const IRCMessage &message) 
+{
+    Response response;
+    if (!this->isAdmin(message.user)) {
+        std::cout << "not an admin" << std::endl;
+        return response;
+    }
+    this->channelObject->owner->usersData.printAllCout();
+    return response;
 }

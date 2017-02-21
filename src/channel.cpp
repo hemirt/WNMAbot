@@ -97,7 +97,7 @@ Channel::handleMessage(const IRCMessage &message)
                             auto t = new boost::asio::steady_timer(
                                 ioService, std::chrono::milliseconds(1500));
                             t->async_wait([
-                                user = message.user, message = afk.message, this
+                                user = message.user, message = afk.message, this, time = afk.time
                             ](const boost::system::error_code &er) {
                                 if (er) {
                                     return;
@@ -110,18 +110,29 @@ Channel::handleMessage(const IRCMessage &message)
                                         .count() <= 1500) {
                                     return;
                                 }
+                                auto now = std::chrono::steady_clock::now();
+                                auto seconds =
+                                    std::chrono::duration_cast<std::chrono::seconds>(now - time)
+                                        .count();
+                                std::string when = makeTimeString(seconds);
                                 if(message.empty()) {
-                                    this->say(user + " is back HeyGuys");
+                                    this->say(user + " is back(" + when + " ago) HeyGuys");
                                 } else {
-                                    this->say(user + " is back: " + message);
+                                    this->say(user + " is back(" + when + " ago): " + message);
                                 }
                                 
                             });
                         } else {
+                            auto now = std::chrono::steady_clock::now();
+                            auto seconds =
+                                std::chrono::duration_cast<std::chrono::seconds>(now - afk.time)
+                                    .count();
+                            std::string when = makeTimeString(seconds);
                             if(afk.message.empty()) {
-                                sent = this->say(message.user + " is back HeyGuys");
+                                
+                                sent = this->say(message.user + " is back(" + when + " ago) HeyGuys");
                             } else {
-                                sent = this->say(message.user + " is back: " +
+                                sent = this->say(message.user + " is back(" + when + " ago): " +
                                              afk.message);
                             }
                         }

@@ -86,6 +86,15 @@ private:
     Response whoIsAfk(const IRCMessage &message);
     Response regexTest(const IRCMessage &message,
                        std::vector<std::string> &tokens);
+    Response setUser(const IRCMessage &message,
+                             std::vector<std::string> &tokens);
+    Response isFrom(const IRCMessage &message,
+                             std::vector<std::string> &tokens);
+    Response getCountries(const IRCMessage &message,
+                             std::vector<std::string> &tokens);
+    Response getUsersFrom(const IRCMessage &message,
+                             std::vector<std::string> &tokens);
+    Response printUsersData(const IRCMessage &message);
 
     boost::asio::io_service &ioService;
 
