@@ -62,7 +62,7 @@ public:
     void removeBlacklist(const std::string &search);
     void sanitizeMsg(std::string &msg);
     bool isBlacklisted(const std::string &msg);
-    
+
     Users usersData;
 
 private:

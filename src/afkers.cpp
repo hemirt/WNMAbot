@@ -1,7 +1,7 @@
 #include "afkers.hpp"
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <stdint.h>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <iostream>
 
 namespace pt = boost::property_tree;
@@ -11,12 +11,10 @@ Afkers::Afkers()
     this->context = redisConnect("127.0.0.1", 6379);
     if (this->context == NULL || this->context->err) {
         if (this->context) {
-            std::cerr << "Afkers error: " << this->context->errstr
-                      << std::endl;
+            std::cerr << "Afkers error: " << this->context->errstr << std::endl;
             redisFree(this->context);
         } else {
-            std::cerr << "Afkers can't allocate redis context"
-                      << std::endl;
+            std::cerr << "Afkers can't allocate redis context" << std::endl;
         }
     }
     this->getAllAfkersRedis();
@@ -93,22 +91,24 @@ Afkers::setAfkerRedis(const std::string &user, const Afk &afk)
     pt::ptree tree;
     tree.put("message", afk.message);
     int64_t epoch = std::chrono::duration_cast<std::chrono::seconds>(
-        afk.time.time_since_epoch()).count();
+                        afk.time.time_since_epoch())
+                        .count();
     tree.put("time", epoch);
     std::stringstream ss;
     pt::write_json(ss, tree, false);
     std::string json = ss.str();
-    
+
     redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HSET WNMA:afkers %b %b", user.c_str(), user.size(), json.c_str(), json.size()));
+        redisCommand(this->context, "HSET WNMA:afkers %b %b", user.c_str(),
+                     user.size(), json.c_str(), json.size()));
     freeReplyObject(reply);
 }
 
 void
 Afkers::removeAfkerRedis(const std::string &user)
-{ 
-    redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HDEL WNMA:afkers %b", user.c_str(), user.size()));
+{
+    redisReply *reply = static_cast<redisReply *>(redisCommand(
+        this->context, "HDEL WNMA:afkers %b", user.c_str(), user.size()));
     freeReplyObject(reply);
 }
 
@@ -142,7 +142,8 @@ Afkers::getAllAfkersRedis()
             std::string message = tree.get("message", "");
 
             auto dur = std::chrono::seconds(time);
-            auto timepoint = std::chrono::time_point<std::chrono::steady_clock>(dur);
+            auto timepoint =
+                std::chrono::time_point<std::chrono::steady_clock>(dur);
 
             this->afkersMap[user] = {true, message, timepoint};
         }

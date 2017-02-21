@@ -2,14 +2,13 @@
 #define REMIND_HPP
 
 #include <stdint.h>
+#include <chrono>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <vector>
-#include <mutex>
-#include <chrono>
-#include <shared_mutex>
 
-struct Reminder
-{
+struct Reminder {
     std::string from;
     std::string to;
     std::string what;
@@ -21,19 +20,22 @@ struct Reminder
 
 class RemindsHandler
 {
-public: 
-    RemindsHandler(boost::asio::io_service &_ioService); // load Reminders from redis
+public:
+    RemindsHandler(
+        boost::asio::io_service &_ioService);  // load Reminders from redis
     size_t count(const std::string &from);
     std::vector<Reminder> getRemindersFrom(const std::string &from);
     std::vector<Reminder> getRemindersTo(const std::string &to);
-    bool addReminder(const std::string &from, const std::string &to, const std::string &what, int64_t seconds);
-    void removeReminder(const std::string& from, const std::string &to, size_t id);
+    bool addReminder(const std::string &from, const std::string &to,
+                     const std::string &what, int64_t seconds);
+    void removeReminder(const std::string &from, const std::string &to,
+                        size_t id);
     void removeAllRemindersFrom(const std::string &from);
     void removeAllRemindersTo(const std::string &to);
     void removeFromRedis(const Reminder &reminder);
     void saveToRedis(const Reminder &reminder);
     void loadFromRedis();
-    
+
 private:
     std::vector<Reminder> reminders;
     std::shared_mutex vecMtx;
@@ -42,4 +44,4 @@ private:
     boost::asio::io_service &ioService;
 };
 
-#endif //REMIND_HPP
+#endif  // REMIND_HPP

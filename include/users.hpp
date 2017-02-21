@@ -2,12 +2,11 @@
 #define USERS_HPP
 
 #include <hiredis/hiredis.h>
-#include <set>
 #include <map>
 #include <mutex>
+#include <set>
 #include <shared_mutex>
 #include <string>
-
 
 class Users
 {
@@ -28,5 +27,3 @@ private:
 };
 
 #endif
-
-

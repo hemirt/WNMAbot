@@ -1,11 +1,11 @@
 #ifndef AFKERS_HPP
 #define AFKERS_HPP
 
+#include <hiredis/hiredis.h>
 #include <chrono>
 #include <mutex>
 #include <string>
 #include <unordered_map>
-#include <hiredis/hiredis.h>
 
 class Afkers
 {

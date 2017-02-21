@@ -10,10 +10,10 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/asio/steady_timer.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 Channel::Channel(const std::string &_channelName,
                  boost::asio::io_service &_ioService, ConnectionHandler *_owner)
@@ -90,14 +90,16 @@ Channel::handleMessage(const IRCMessage &message)
                     auto now = std::chrono::steady_clock::now();
                     if (std::chrono::duration_cast<std::chrono::seconds>(
                             now - afk.time)
-                            .count() > 10 || boost::iequals(message.params.substr(0, 5), "!back")) {
+                                .count() > 10 ||
+                        boost::iequals(message.params.substr(0, 5), "!back")) {
                         owner->afkers.removeAfker(message.user);
 
                         if (msSinceLastMessage.count() <= 1500) {
                             auto t = new boost::asio::steady_timer(
                                 ioService, std::chrono::milliseconds(1500));
                             t->async_wait([
-                                user = message.user, message = afk.message, this, time = afk.time
+                                user = message.user, message = afk.message,
+                                this, time = afk.time
                             ](const boost::system::error_code &er) {
                                 if (er) {
                                     return;
@@ -112,28 +114,33 @@ Channel::handleMessage(const IRCMessage &message)
                                 }
                                 auto now = std::chrono::steady_clock::now();
                                 auto seconds =
-                                    std::chrono::duration_cast<std::chrono::seconds>(now - time)
+                                    std::chrono::duration_cast<
+                                        std::chrono::seconds>(now - time)
                                         .count();
                                 std::string when = makeTimeString(seconds);
-                                if(message.empty()) {
-                                    this->say(user + " is back(" + when + " ago) HeyGuys");
+                                if (message.empty()) {
+                                    this->say(user + " is back(" + when +
+                                              " ago) HeyGuys");
                                 } else {
-                                    this->say(user + " is back(" + when + " ago): " + message);
+                                    this->say(user + " is back(" + when +
+                                              " ago): " + message);
                                 }
-                                
+
                             });
                         } else {
                             auto now = std::chrono::steady_clock::now();
                             auto seconds =
-                                std::chrono::duration_cast<std::chrono::seconds>(now - afk.time)
+                                std::chrono::duration_cast<
+                                    std::chrono::seconds>(now - afk.time)
                                     .count();
                             std::string when = makeTimeString(seconds);
-                            if(afk.message.empty()) {
-                                
-                                sent = this->say(message.user + " is back(" + when + " ago) HeyGuys");
+                            if (afk.message.empty()) {
+                                sent = this->say(message.user + " is back(" +
+                                                 when + " ago) HeyGuys");
                             } else {
-                                sent = this->say(message.user + " is back(" + when + " ago): " +
-                                             afk.message);
+                                sent =
+                                    this->say(message.user + " is back(" +
+                                              when + " ago): " + afk.message);
                             }
                         }
                     } else {
