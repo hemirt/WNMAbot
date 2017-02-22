@@ -34,6 +34,7 @@ CommandsHandler::~CommandsHandler()
 Response
 CommandsHandler::handle(const IRCMessage &message)
 {
+    this->setOfUsers.addUser(message.user);
     std::vector<std::string> tokens;
     boost::algorithm::split(tokens, message.params,
                             boost::algorithm::is_space(),
@@ -65,6 +66,8 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->say(message, tokens);
     } else if (tokens[0] == "!afk") {
         return this->afk(message, tokens);
+    } else if (tokens[0] == "!gn") {
+        return this->goodNight(message, tokens);
     } else if (tokens[0] == "!isafk") {
         return this->isAfk(message, tokens);
     } else if (tokens[0] == "!comebackmsg") {
@@ -77,16 +80,20 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->whoIsAfk(message);
     } else if (tokens[0] == "!regex") {
         return this->regexTest(message, tokens);
-    } else if (tokens[0] == "!setuser" || tokens[0] == "!setcountry") {
+    } else if (tokens[0] == "!setfrom") {
         return this->setUser(message, tokens);
-    } else if (tokens[0] == "!country") {
+    } else if (tokens[0] == "!setliving") {
+        return this->setUserLiving(message, tokens);
+    } else if (tokens[0] == "!where" || tokens[0] == "!country") {
         return this->isFrom(message, tokens);
-    } else if (tokens[0] == "!countries") {
-        return this->getCountries(message, tokens);
     } else if (tokens[0] == "!print") {
         return this->printUsersData(message);
     } else if (tokens[0] == "!usersfrom") {
         return this->getUsersFrom(message, tokens);
+    } else if (tokens[0] == "!usersliving") {
+        return this->getUsersLiving(message, tokens);
+    } else if (tokens[0] == "!deleteuser") {
+        return this->deleteUser(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -879,6 +886,24 @@ CommandsHandler::afk(const IRCMessage &message,
 }
 
 Response
+CommandsHandler::goodNight(const IRCMessage &message,
+                           std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if(tokens.size() > 1 && this->setOfUsers.isUser(tokens[1])) {
+        return response;
+    }
+
+    this->channelObject->owner->afkers.setAfker(message.user, "ResidentSleeper");
+
+    response.type = Response::Type::MESSAGE;
+    response.message = message.user + " is now sleeping ResidentSleeper";
+
+    return response;
+}
+
+Response
 CommandsHandler::isAfk(const IRCMessage &message,
                        std::vector<std::string> &tokens)
 {
@@ -1059,8 +1084,32 @@ CommandsHandler::setUser(const IRCMessage &message,
     }
 
     this->channelObject->owner->usersData.setUser(tokens[1], country);
-    response.message = message.user + ", set the country of " + tokens[1] +
-                       " to " + country + " SeemsGood";
+    response.message = message.user + ", set the country where " + tokens[1] +
+                       " comes from to " + country + " SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::setUserLiving(const IRCMessage &message,
+                         std::vector<std::string> &tokens)
+{
+    Response response;
+    if (!this->isAdmin(message.user) || tokens.size() < 3) {
+        return response;
+    }
+
+    std::string country;
+    for (int i = 2; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+
+    this->channelObject->owner->usersData.setUserLiving(tokens[1], country);
+    response.message = message.user + ", set the country where " + tokens[1] +
+                       " lives to " + country + " SeemsGood";
     response.type = Response::Type::MESSAGE;
     return response;
 }
@@ -1077,19 +1126,7 @@ CommandsHandler::isFrom(const IRCMessage &message,
     auto country =
         this->channelObject->owner->usersData.getUsersCountry(tokens[1]);
     response.message =
-        message.user + ", " + tokens[1] + " is from " + country + " SeemsGood";
-    response.type = Response::Type::MESSAGE;
-    return response;
-}
-
-Response
-CommandsHandler::getCountries(const IRCMessage &message,
-                              std::vector<std::string> &tokens)
-{
-    Response response;
-    auto countries = this->channelObject->owner->usersData.getCountries();
-    response.message =
-        message.user + ", there are: " + countries + " SeemsGood";
+        message.user + ", " + country + " SeemsGood";
     response.type = Response::Type::MESSAGE;
     return response;
 }
@@ -1119,13 +1156,51 @@ CommandsHandler::getUsersFrom(const IRCMessage &message,
 }
 
 Response
+CommandsHandler::getUsersLiving(const IRCMessage &message,
+                              std::vector<std::string> &tokens)
+{
+    Response response;
+    if (tokens.size() < 2) {
+        return response;
+    }
+
+    std::string country;
+    for (int i = 1; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+
+    auto users = this->channelObject->owner->usersData.getUsersLiving(country);
+    response.message = message.user + ", in " + country +
+                       " live users: " + users + " SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
 CommandsHandler::printUsersData(const IRCMessage &message)
 {
     Response response;
     if (!this->isAdmin(message.user)) {
-        std::cout << "not an admin" << std::endl;
         return response;
     }
     this->channelObject->owner->usersData.printAllCout();
+    return response;
+}
+
+Response
+CommandsHandler::deleteUser(const IRCMessage &message,
+                         std::vector<std::string> &tokens)
+{
+    Response response;
+    if (!this->isAdmin(message.user) || tokens.size() < 2) {
+        return response;
+    }
+
+    this->channelObject->owner->usersData.deleteUser(tokens[1]);
+    response.message = message.user + ", deleted user " + tokens[1] + " SeemsGood";
+    response.type = Response::Type::MESSAGE;
     return response;
 }

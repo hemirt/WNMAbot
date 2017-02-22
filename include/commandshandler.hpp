@@ -4,6 +4,7 @@
 #include "ircmessage.hpp"
 #include "network.hpp"
 #include "redisclient.hpp"
+#include "setofusers.hpp"
 
 #include <boost/property_tree/ptree.hpp>
 #include <chrono>
@@ -76,6 +77,7 @@ private:
                     std::vector<std::string> &tokens);
     Response say(const IRCMessage &message, std::vector<std::string> &tokens);
     Response afk(const IRCMessage &message, std::vector<std::string> &tokens);
+    Response goodNight(const IRCMessage &message, std::vector<std::string> &tokens);
     Response isAfk(const IRCMessage &message, std::vector<std::string> &tokens);
     Response comeBackMsg(const IRCMessage &message,
                          std::vector<std::string> &tokens);
@@ -88,11 +90,15 @@ private:
                        std::vector<std::string> &tokens);
     Response setUser(const IRCMessage &message,
                      std::vector<std::string> &tokens);
+    Response setUserLiving(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response deleteUser(const IRCMessage &message,
+                        std::vector<std::string> &tokens);
     Response isFrom(const IRCMessage &message,
-                    std::vector<std::string> &tokens);
-    Response getCountries(const IRCMessage &message,
-                          std::vector<std::string> &tokens);
+                    std::vector<std::string> &tokens);;
     Response getUsersFrom(const IRCMessage &message,
+                          std::vector<std::string> &tokens);
+    Response getUsersLiving(const IRCMessage &message,
                           std::vector<std::string> &tokens);
     Response printUsersData(const IRCMessage &message);
 
@@ -100,6 +106,8 @@ private:
 
     std::unordered_map<std::string, std::chrono::steady_clock::time_point>
         cooldownsMap;
+        
+    SetOfUsers setOfUsers;
 };
 
 #endif
