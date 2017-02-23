@@ -1,5 +1,6 @@
 #include "setofusers.hpp"
 #include <iostream>
+#include "utilities.hpp"
 
 SetOfUsers::SetOfUsers()
 {
@@ -22,8 +23,9 @@ SetOfUsers::~SetOfUsers()
 }
 
 bool
-SetOfUsers::isUser(const std::string &user)
+SetOfUsers::isUser(std::string &user)
 {
+    changeToLower(user);
     redisReply *reply = static_cast<redisReply *>(redisCommand(
         this->context, "SISMEMBER WNMA:users %b", user.c_str(), user.size()));
     if (reply == NULL && this->context->err) {

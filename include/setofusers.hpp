@@ -10,7 +10,7 @@ public:
     SetOfUsers();
     ~SetOfUsers();
     void addUser(const std::string &user);
-    bool isUser(const std::string &user);
+    bool isUser(std::string &user);
 
 private:
     redisContext *context;
