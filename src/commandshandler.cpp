@@ -100,6 +100,12 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->getUsersLiving(message, tokens);
     } else if (tokens[0] == "!deleteuser") {
         return this->deleteUser(message, tokens);
+    } else if (tokens[0] == "!myfrom") {
+        return this->myFrom(message, tokens);
+    } else if (tokens[0] == "!myliving") {
+        return this->myLiving(message, tokens);
+    } else if (tokens[0] == "!mydelete") {
+        return this->myDelete(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -1216,6 +1222,66 @@ CommandsHandler::deleteUser(const IRCMessage &message,
 
     this->channelObject->owner->usersData.deleteUser(tokens[1]);
     response.message = message.user + ", deleted user " + tokens[1] + " SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::myFrom(const IRCMessage &message,
+                         std::vector<std::string> &tokens)
+{
+    Response response;
+    if (tokens.size() < 2) {
+        return response;
+    }
+
+    std::string country;
+    for (int i = 1; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+    
+    
+
+    this->channelObject->owner->usersData.setUser(message.user, country);
+    response.message = message.user + ", set the country you're from to " + country + " SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::myLiving(const IRCMessage &message,
+                         std::vector<std::string> &tokens)
+{
+    Response response;
+    if (tokens.size() < 2) {
+        return response;
+    }
+
+    std::string country;
+    for (int i = 1; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+
+    this->channelObject->owner->usersData.setUserLiving(message.user, country);
+    response.message = message.user + ", the country you live was set to " + country + " SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::myDelete(const IRCMessage &message,
+                         std::vector<std::string> &tokens)
+{
+    Response response;
+
+    this->channelObject->owner->usersData.deleteUser(message.user);
+    response.message = message.user + ", deleted your data SeemsGood";
     response.type = Response::Type::MESSAGE;
     return response;
 }

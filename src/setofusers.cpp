@@ -23,7 +23,7 @@ SetOfUsers::~SetOfUsers()
 }
 
 bool
-SetOfUsers::isUser(std::string &user)
+SetOfUsers::isUser(std::string user)
 {
     changeToLower(user);
     redisReply *reply = static_cast<redisReply *>(redisCommand(

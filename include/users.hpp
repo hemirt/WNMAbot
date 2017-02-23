@@ -17,12 +17,12 @@ public:
     };
     Users();
     ~Users();
-    void setUser(std::string &user, std::string &country);
-    void setUserLiving(std::string &user, std::string &country);
-    void deleteUser(std::string &user);
-    std::string getUsersCountry(std::string &user);
-    std::string getUsersLiving(std::string &country);
-    std::string getUsersFrom(std::string &country);
+    void setUser(std::string user, std::string &country);
+    void setUserLiving(std::string user, std::string &living);
+    void deleteUser(std::string user);
+    std::string getUsersCountry(std::string user);
+    std::string getUsersLiving(std::string living);
+    std::string getUsersFrom(std::string country);
     void printAllCout();
 
 private:

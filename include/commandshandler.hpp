@@ -95,12 +95,18 @@ private:
     Response deleteUser(const IRCMessage &message,
                         std::vector<std::string> &tokens);
     Response isFrom(const IRCMessage &message,
-                    std::vector<std::string> &tokens);;
+                    std::vector<std::string> &tokens);
     Response getUsersFrom(const IRCMessage &message,
                           std::vector<std::string> &tokens);
     Response getUsersLiving(const IRCMessage &message,
                           std::vector<std::string> &tokens);
     Response printUsersData(const IRCMessage &message);
+    Response myFrom(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response myLiving(const IRCMessage &message,
+                        std::vector<std::string> &tokens);
+    Response myDelete(const IRCMessage &message,
+                    std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 

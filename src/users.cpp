@@ -53,7 +53,7 @@ Users::~Users()
 }
 
 void
-Users::setUser(std::string &user, std::string &country)
+Users::setUser(std::string user, std::string &country)
 {
     changeToLower(country);
     changeToLower(user);
@@ -83,7 +83,7 @@ Users::setUser(std::string &user, std::string &country)
 }
 
 void
-Users::setUserLiving(std::string &user, std::string &living)
+Users::setUserLiving(std::string user, std::string &living)
 {
     changeToLower(living);
     changeToLower(user);
@@ -113,7 +113,7 @@ Users::setUserLiving(std::string &user, std::string &living)
 
 
 void
-Users::deleteUser(std::string &user)
+Users::deleteUser(std::string user)
 {
     changeToLower(user);
     std::unique_lock<std::shared_mutex> lock(containersMtx);
@@ -126,7 +126,7 @@ Users::deleteUser(std::string &user)
 }
 
 std::string
-Users::getUsersCountry(std::string &user)
+Users::getUsersCountry(std::string user)
 {
     changeToLower(user);
     std::shared_lock<std::shared_mutex> lock(containersMtx);
@@ -144,14 +144,14 @@ Users::getUsersCountry(std::string &user)
 }
 
 std::string
-Users::getUsersFrom(std::string &country)
+Users::getUsersFrom(std::string country)
 {
     changeToLower(country);
     std::string usersString;
     std::shared_lock<std::shared_mutex> lock(containersMtx);
     for (const auto &i : users) {
         if (i.second.from == country) {
-            usersString += i.first + ", ";
+            usersString += i.first[0] + std::string("\u05C4") + i.first.substr(1, std::string::npos) + ", ";         
         }
     }
 
@@ -164,14 +164,14 @@ Users::getUsersFrom(std::string &country)
 }
 
 std::string
-Users::getUsersLiving(std::string &country)
+Users::getUsersLiving(std::string country)
 {
     changeToLower(country);
     std::string usersString;
     std::shared_lock<std::shared_mutex> lock(containersMtx);
     for (const auto &i : users) {
         if (i.second.living == country || (i.second.living.empty() && i.second.from == country)) {
-            usersString += i.first + ", ";
+            usersString += i.first[0] + std::string("\u05C4") + i.first.substr(1, std::string::npos) + ", ";
         }
     }
 

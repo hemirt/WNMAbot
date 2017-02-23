@@ -7,12 +7,12 @@
 void
 changeToLower(std::string &str)
 {
-    static std::vector<std::string> vekcharup{"Á", "C", "D", "É", "E",
-                                              "Í", "N", "Ó", "R", "Š",
-                                              "T", "Ú", "U", "Ý", "Ž"};
-    static std::vector<std::string> vekchardown{"á", "c", "d", "é", "e",
-                                                "í", "n", "ó", "r", "š",
-                                                "t", "ú", "u", "ý", "ž"};
+    static std::vector<std::string> vekcharup{"Á", "Č", "Ď", "É", "Ě",
+                                              "Í", "Ň", "Ó", "Ř", "Š",
+                                              "Ť", "Ú", "Ů", "Ý", "Ž"};
+    static std::vector<std::string> vekchardown{"á", "č", "ď", "é", "ě",
+                                                "í", "ň", "ó", "ř", "š",
+                                                "ť", "ú", "ů", "ý", "ž"};
 
     for (int i = 0; i < vekcharup.size(); ++i) {
         size_t pos = 0;
