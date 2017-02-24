@@ -4,7 +4,7 @@
 #include "ircmessage.hpp"
 #include "network.hpp"
 #include "redisclient.hpp"
-#include "setofusers.hpp"
+#include "userids.hpp"
 
 #include <boost/property_tree/ptree.hpp>
 #include <chrono>
@@ -113,7 +113,7 @@ private:
     std::unordered_map<std::string, std::chrono::steady_clock::time_point>
         cooldownsMap;
         
-    SetOfUsers setOfUsers;
+    UserIDs &userIDs;
 };
 
 #endif

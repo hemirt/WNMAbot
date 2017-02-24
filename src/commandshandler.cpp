@@ -24,6 +24,7 @@ CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService,
                                  Channel *_channelObject)
     : ioService(_ioService)
     , channelObject(_channelObject)
+    , userIDs(UserIDs::getInstance())
 {
 }
 

@@ -26,6 +26,28 @@ changeToLower(std::string &str)
 }
 
 std::string
+changeToLower_copy(std::string str)
+{
+    static std::vector<std::string> vekcharup{"Á", "Č", "Ď", "É", "Ě",
+                                              "Í", "Ň", "Ó", "Ř", "Š",
+                                              "Ť", "Ú", "Ů", "Ý", "Ž"};
+    static std::vector<std::string> vekchardown{"á", "č", "ď", "é", "ě",
+                                                "í", "ň", "ó", "ř", "š",
+                                                "ť", "ú", "ů", "ý", "ž"};
+
+    for (int i = 0; i < vekcharup.size(); ++i) {
+        size_t pos = 0;
+        while ((pos = str.find(vekcharup[i], 0)) != std::string::npos) {
+            str.replace(pos, vekcharup[i].size(), vekchardown[i], 0,
+                        vekchardown[i].size());
+        }
+    }
+    std::transform(str.begin(), str.end(), str.begin(),
+                   [](char c) { return std::tolower(c, std::locale()); });
+    return str;
+}
+
+std::string
 makeTimeString(int64_t seconds)
 {
     std::string time;
