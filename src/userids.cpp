@@ -33,9 +33,9 @@ UserIDs::isUser(std::string user)
 
     changeToLower(user);
     redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "SISMEMBER WNMA:userids %b", user.c_str(), user.size()));
+        this->context, "HEXISTS WNMA:userids %b", user.c_str(), user.size()));
     if (reply == NULL && this->context->err) {
-        std::cerr << "SetOfUser error: " << this->context->errstr << std::endl;
+        std::cerr << "Userids error: " << this->context->errstr << std::endl;
         freeReplyObject(reply);
         return false;
     }
