@@ -10,8 +10,8 @@ class UserIDs
 public:
     void addUser(const std::string &user);
     bool isUser(std::string user);
-    int getID(const std::string &user);
-    std::string getUserName(int userID);
+    std::string getID(const std::string &user);
+    std::string getUserName(const std::string &userIDstr);
     
     // Singleton
     static UserIDs &

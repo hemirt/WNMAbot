@@ -28,22 +28,22 @@ Countries::setFrom(std::string user, std::string from)
     changeToLower(country);
     changeToLower(user);
     
-    int userID = this->userIDs.getID(user);
-    if (userID == -1) {
+    std::string userIDstr = this->userIDs.getID(user);
+    if (userIDstr.empty()) {
         return;
     }
-    int countryID = this->getCountryID(from);
-    if (countryID == -1) {
+    std::string countryIDstr = this->getCountryID(from);
+    if (countryIDstr.empty()) {
         return;
     }
     
     std::lock_guard<std::mutex> lock(this->accessMtx);
     
     redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HSET WNMA:user:%i countryFrom %i", userID, countryID))
+        redisCommand(this->context, "HSET WNMA:user:%b countryFrom %b", userIDstr.c_str(), userIDstr.size(), countryIDstr.c_str(), countryIDstr.size()))
     freeReplyObject(reply);
     
-    this->addUserFromCountry(userID, countryID);
+    this->addUserFromCountry(userIDstr, countryIDstr);
 }
 
 void
@@ -52,39 +52,39 @@ Countries::setLive(std::string user, std::string living)
     changeToLower(living);
     changeToLower(user);
     
-    int userID = this->userIDs.getID(user);
-    if (userID == -1) {
+    std::string userIDstr = this->userIDs.getID(user);
+    if (userIDstr.empty()) {
         return;
     }
-    int countryID = this->getCountryID(living);
-    if (countryID == -1) {
+    std::string countryIDstr = this->getCountryID(living);
+    if (countryIDstr.empty()) {
         return;
     }
     
     std::lock_guard<std::mutex> lock(this->accessMtx);
 
     redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "HSET WNMA:user:%i countryLive %i", id, countryID))
+        this->context, "HSET WNMA:user:%b countryLive %b", userIDstr.c_str(), userIDstr.size(), countryIDstr.c_str(), countryIDstr.size()))
     freeReplyObject(reply);
     
-    this->addUserLiveCountry(userID, countryID)
+    this->addUserLiveCountry(userIDstr, countryIDstr)
 }
 
 void
-Countries::addUserFromCountry(int userID, int countryID)
+Countries::addUserFromCountry(const std::string &userIDstr, const std::string &countryIDstr)
 {
     // must be already called under lock(this->accessMtx)
     redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "SADD WNMA:country:%i:from %i", countryID, userID));
+        this->context, "SADD WNMA:country:%b:from %b", countryIDstr.c_str(), countryIDstr.size(), userIDstr.c_str(), userIDstr.size()));
     freeReplyObject(reply);
 }
 
 void
-Countries::addUserLiveCountry(int userID, int countryID)
+Countries::addUserLiveCountry(const std::string &userIDstr, const std::string &countryIDstr)
 {
     // must be already called under lock(this->accessMtx)
     redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "SADD WNMA:country:%i:live %i", countryID, userID));
+        this->context, "SADD WNMA:country:%b:live %b", countryIDstr.c_str(), countryIDstr.size(), userIDstr.c_str(), userIDstr.size()));
     freeReplyObject(reply);
 }
 
@@ -93,15 +93,15 @@ std::vector<std::string>
 Countries::usersFrom(const std::string &country)
 {
     std::vector<std::string> users;
-    int countryID = this->getCountryID(country);
-    if (countryID == -1) {
+    std::string countryIDstr = this->getCountryID(country);
+    if (countryIDstr.empty()) {
         return users;
     }
-    
+
     std::lock_guard<std::mutex> lock(this->accessMtx);
-    
+
     redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "SMEMBERS WNMA:country:%i:from"));
+        this->context, "SMEMBERS WNMA:country:%b:from", countryIDstr.c_str(), countryIDstr.size()));
     
     if (reply == NULL || reply->type != REDIS_REPLY_ARRAY) {
         freeReplyObject(reply);
@@ -109,10 +109,9 @@ Countries::usersFrom(const std::string &country)
     }
     
     for (int i = 0; i < reply->len; i++) {
-        std::string username = this->userIDs.getUserName(reply->integer);
+        std::string username = this->userIDs.getUserName(std::string(reply->element[i]->str, reply->element[i]->len));
         if (!username.empty()) {
-            // how to tell vector that it can steal the username string? TriHard
-            users.push_back(username);
+            users.emplace_back(std::move(username));
         }
     }
     
@@ -123,15 +122,15 @@ std::vector<std::string>
 Countries::usersLive(const std::string &country)
 {
     std::vector<std::string> users;
-    int countryID = this->getCountryID(country);
-    if (countryID == -1) {
+    std::string countryIDstr = this->getCountryID(country);
+    if (countryIDstr.empty()) {
         return users;
     }
-    
+
     std::lock_guard<std::mutex> lock(this->accessMtx);
-    
+
     redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "SMEMBERS WNMA:country:%i:live"));
+        this->context, "SMEMBERS WNMA:country:%b:live", countryIDstr.c_str(), countryIDstr.size()));
     
     if (reply == NULL || reply->type != REDIS_REPLY_ARRAY) {
         freeReplyObject(reply);
@@ -139,22 +138,20 @@ Countries::usersLive(const std::string &country)
     }
     
     for (int i = 0; i < reply->len; i++) {
-        std::string username = this->userIDs.getUserName(reply->integer);
+        std::string username = this->userIDs.getUserName(std::string(reply->element[i]->str, reply->element[i]->len));
         if (!username.empty()) {
-            // how to tell vector that it can steal the username string? TriHard
-            users.push_back(username);
+            users.emplace_back(std::move(username));
         }
     }
     
     return users;
 }
 
-int
+std::string
 Countries::getCountryID(const std::string &country)
 {
-    int countryID;
     std::string lcCountry = changeToLower_copy(country);
-    
+
     std::lock_guard<std::mutex> lock(this->accessMtx);
     
     // get countries id
@@ -163,37 +160,38 @@ Countries::getCountryID(const std::string &country)
     
     if(reply == NULL) {
         // error
-        return -1;
-    } else if(reply->type != REDIS_REPLY_INTEGER) {
+        return std::string();
+    } else if(reply->type != REDIS_REPLY_STRING) {
         // country is not in the database, create it
         freeReplyObject(reply);
         
         // get next countryID
-        // probably like this?
         reply = static_cast<redisReply *>(redisCommand(
             this->context, "INCR WNMA:nextcountryid"));
         if (reply == NULL || reply->type != REDIS_REPLY_INTEGER) {
-            return -1;
+            return std::string();
         }
-        countryID = reply->integer;
+        int countryID = reply->integer;
         freeReplyObject(reply);
+        
+        std::string countryIDstr = std::to_string(countryID);
         
         // add a country record to WNMA:countries name - id
         reply = static_cast<redisReply *>(redisCommand(
-            this->context, "HSET WNMA:countries %b %i", lcCountry.c_str(), lcCountry.size(), countryID));
+            this->context, "HSET WNMA:countries %b %b", lcCountry.c_str(), lcCountry.size(), countryIDstr.c_str(), countryIDstr.size()));
         freeReplyObject(reply);
         
         // create WNMA:country:ID:displayname
         reply = static_cast<redisReply *>(redisCommand(
-            this->context, "HSET WNMA:country:%i:displayname %b", country.c_str(), country.size()));
+            this->context, "SET WNMA:country:%b:displayname %b", countryIDstr.c_str(), countryIDstr.size(), country.c_str(), country.size()));
         freeReplyObject(reply);
         
-        return countryID;
+        return countryIDstr;
     } else {
         // country exists, return id
-        countryID = reply->integer;
+        std::string countryIDstr(reply->str, reply->len);
         freeReplyObject(reply);
-        return countryID;
+        return countryIDstr;
     }    
 }
 
@@ -201,15 +199,15 @@ void
 Countries::deleteFrom(std::string user)
 {
     changeToLower(user);
-    int userID = this->userIDs.getID(user);
-    if (userID == -1) {
+    std::string userIDstr = this->userIDs.getID(user);
+    if (userIDstr.empty()) {
         return;
     }
-    
+
     std::lock_guard<std::mutex> lock(this->accessMtx);
     
     redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HDEL WNMA:user:%i countryFrom", userID));
+        redisCommand(this->context, "HDEL WNMA:user:%b countryFrom", userIDstr.c_str(), userIDstr.size()));
     freeReplyObject(reply);
 }
 
@@ -217,15 +215,15 @@ void
 Countries::deleteLive(std::string user)
 {
     changeToLower(user);
-    int userID = this->userIDs.getID(user);
-    if (userID == -1) {
+    std::string userIDstr = this->userIDs.getID(user);
+    if (userIDstr.empty()) {
         return;
     }
-    
+
     std::lock_guard<std::mutex> lock(this->accessMtx);
     
     redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HDEL WNMA:user:%i countryLive", userID));
+        redisCommand(this->context, "HDEL WNMA:user:%b countryLive", userIDstr.c_str(), userIDstr.size()));
     freeReplyObject(reply);
 }
 
@@ -233,25 +231,25 @@ std::string
 Countries::getFrom(std::string user)
 {
     changeToLower(user);
-    int userID = this->userIDs.getID(user);
-    if (userID == -1) {
+    std::string userIDstr = this->userIDs.getID(user);
+    if (userIDstr.empty()) {
         return std::string();
     }
-    
+
     std::lock_guard<std::mutex> lock(this->accessMtx);
     
     redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "HGET WNMA:user:%i countryFrom", userID));
-    if (reply == NULL || reply->type != REDIS_REPLY_INTEGER) {
+        this->context, "HGET WNMA:user:%b countryFrom", userIDstr.c_str(), userIDstr.size()));
+    if (reply == NULL || reply->type != REDIS_REPLY_STRING) {
         freeReplyObject(reply);
         return std::string();
     }
-    
-    int countryID = reply->integer;
+
+    std::string countryIDstr(reply->str, reply->len);
     freeReplyObject(reply);
     
     reply = static_cast<redisReply *>(redisCommand(
-        this->context, "HGET:country:%i:displayname", countryID));
+        this->context, "HGET:country:%b:displayname", countryIDstr.c_str(), countryIDstr.size()));
     if(reply == NULL || reply->type != REDIS_REPLY_STRING) {
         freeReplyObject(reply);
         return std::string();
@@ -266,25 +264,25 @@ std::string
 Countries::getLive(std::string user)
 {
     changeToLower(user);
-    int userID = this->userIDs.getID(user);
-    if (userID == -1) {
+    std::string userIDstr = this->userIDs.getID(user);
+    if (userIDstr.empty()) {
         return std::string();
     }
     
     std::lock_guard<std::mutex> lock(this->accessMtx);
     
     redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "HGET WNMA:user:%i countryLive", userID));
-    if (reply == NULL || reply->type != REDIS_REPLY_INTEGER) {
+        this->context, "HGET WNMA:user:%b countryLive", userIDstr.c_str(), userIDstr.size()));
+    if (reply == NULL || reply->type != REDIS_REPLY_STRING) {
         freeReplyObject(reply);
         return std::string();
     }
     
-    int countryID = reply->integer;
+    std::string countryIDstr(reply->str, reply->len)
     freeReplyObject(reply);
     
     reply = static_cast<redisReply *>(redisCommand(
-        this->context, "HGET:country:%i:displayname", countryID));
+        this->context, "HGET:country:%b:displayname", countryIDstr.c_str(), countryIDstr.size()));
     if(reply == NULL || reply->type != REDIS_REPLY_STRING) {
         freeReplyObject(reply);
         return std::string();

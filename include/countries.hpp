@@ -22,9 +22,6 @@ public:
     std::string getFrom(std::string user);
     std::string getLive(std::string user);
     
-    void addUserFromCountry(int userID, int countryID);
-    void addUserLiveCountry(int userID, int countryID);
-    
     std::vector<std::string> usersFrom(const std::string &country);
     std::vector<std::string> usersLive(const std::string &country);
     
@@ -44,8 +41,8 @@ private:
     static Countries instance;
     UsersIDs &userIDs;
     
-    void addUserFromCountry(const std::string &user, const std::string &from)
-    void addUserLiveCountry(const std::string &user, const std::string &live)
+    void addUserFromCountry(const std::string &userIDstr, const std::string &countryIDstr)
+    void addUserLiveCountry(const std::string &userIDstr, const std::string &countryIDstr)
 
 };
 

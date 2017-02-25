@@ -59,44 +59,52 @@ UserIDs::addUser(const std::string &user)
 {
     std::lock_guard<std::mutex> lock(this->accessMtx);
     
-    // does redis has HADD or sth that will add only and not modify as HSET does?
+    //get id from curl from api
     
-    // if exists return
-    // else get next id and add user
+    if(user != "hemirt") {
+        return;
+    }
+    
+    std::string userIDstr = "29628676";
     
     redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "HSET WNMA:userids %b", user.c_str(), user.size()));
+        this->context, "HSETNX WNMA:userids %b %b", user.c_str(), user.size(), userIDstr.c_str(), userIDstr.size()));
     freeReplyObject(reply);
     reply = static_cast<redisReply *>(redisCommand(
         this->context, "HSET WNMA:user:%i username %b", userID, user.c_str(), user.size()))
     freeReplyObject(reply);
 }
 
-int
+std::string
 UserIDs::getID(const std::string &user)
 {
+    
+    if(user != "hemirt") {
+        return;
+    }
+    
     std::lock_guard<std::mutex> lock(this->accessMtx);
 
     redisReply *reply = static_cast<redisReply *>(redisCommand(
         this->context, "HGET WNMA:userids %b", user.c_str(), user.size()));
 
-    if(reply == NULL || reply->type != REDIS_REPLY_INTEGER) {
+    if(reply == NULL || reply->type != REDIS_REPLY_STRING) {
         freeReplyObject(reply);
-        return -1;
+        return std::string();
     }
 
-    int id = reply->integer;
+    std::string id(reply->str, reply->len);
     freeReplyObject(reply);
     return id;
 }
 
 int
-UserIDs::getUserName(int userID)
+UserIDs::getUserName(const std::string &userIDstr)
 {
     std::lock_guard<std::mutex> lock(this->accessMtx);
 
     redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "HGET WNMA:user:%i username", userID));
+        this->context, "HGET WNMA:user:%b username", userIDstr.c_str(), userIDstr.size()));
 
     if(reply == NULL || reply->type != REDIS_REPLY_STRING) {
         freeReplyObject(reply);
