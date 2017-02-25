@@ -17,7 +17,7 @@ public:
     static UserIDs &
     getInstance()
     {
-        return this->instance;
+        return instance;
     }
     UserIDs(UserIDs const &) = delete;
     void operator=(UserIDs const &) = delete;

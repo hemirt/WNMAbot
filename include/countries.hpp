@@ -17,7 +17,9 @@ public:
     void deleteFrom(std::string user);
     void deleteLive(std::string user);
 
-    int getCountryID(const std::string &country);
+    std::string getCountryID(const std::string &country);
+    std::string createCountry(const std::string &country);
+    
     std::string getFrom(std::string user);
     std::string getLive(std::string user);
 
@@ -27,7 +29,7 @@ public:
     static Countries &
     getInstance()
     {
-        return this->instance;
+        return instance;
     }
     Countries(Countries const &) = delete;
     void operator=(Countries const &) = delete;
@@ -38,13 +40,12 @@ private:
     static redisContext *context;
     static std::mutex accessMtx;
     static Countries instance;
-    UsersIDs &userIDs;
+    UserIDs &userIDs;
 
     void addUserFromCountry(const std::string &userIDstr,
                             const std::string &countryIDstr);
-    void
-    addUserLiveCountry(const std::string &userIDstr,
-                       const std::string &countryIDstr)
+    void addUserLiveCountry(const std::string &userIDstr,
+                            const std::string &countryIDstr);
 };
 
 #endif

@@ -27,8 +27,6 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mtrandom.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/afkers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/comebackmsg.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/users.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/setofusers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/userids.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/countries.cpp
 )

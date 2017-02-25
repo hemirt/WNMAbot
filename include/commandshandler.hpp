@@ -4,6 +4,8 @@
 #include "ircmessage.hpp"
 #include "network.hpp"
 #include "redisclient.hpp"
+
+#include "countries.hpp"
 #include "userids.hpp"
 
 #include <boost/property_tree/ptree.hpp>
@@ -113,8 +115,6 @@ private:
 
     std::unordered_map<std::string, std::chrono::steady_clock::time_point>
         cooldownsMap;
-
-    UserIDs &userIDs;
 };
 
 #endif

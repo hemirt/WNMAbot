@@ -2,6 +2,7 @@
 #include <iostream>
 #include "utilities.hpp"
 
+redisContext *UserIDs::context = NULL;
 std::mutex UserIDs::accessMtx;
 UserIDs UserIDs::instance;
 
@@ -71,16 +72,17 @@ UserIDs::addUser(const std::string &user)
         redisCommand(this->context, "HSETNX WNMA:userids %b %b", user.c_str(),
                      user.size(), userIDstr.c_str(), userIDstr.size()));
     freeReplyObject(reply);
-    reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HSET WNMA:user:%i username %b", userID,
-                     user.c_str(), user.size())) freeReplyObject(reply);
+    reply = static_cast<redisReply *>(redisCommand(
+        this->context, "HSET WNMA:user:%b username %b", userIDstr.c_str(),
+        userIDstr.size(), user.c_str(), user.size()));
+    freeReplyObject(reply);
 }
 
 std::string
 UserIDs::getID(const std::string &user)
 {
     if (user != "hemirt") {
-        return;
+        return std::string();
     }
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
@@ -98,7 +100,7 @@ UserIDs::getID(const std::string &user)
     return id;
 }
 
-int
+std::string
 UserIDs::getUserName(const std::string &userIDstr)
 {
     std::lock_guard<std::mutex> lock(this->accessMtx);
