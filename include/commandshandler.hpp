@@ -77,7 +77,8 @@ private:
                     std::vector<std::string> &tokens);
     Response say(const IRCMessage &message, std::vector<std::string> &tokens);
     Response afk(const IRCMessage &message, std::vector<std::string> &tokens);
-    Response goodNight(const IRCMessage &message, std::vector<std::string> &tokens);
+    Response goodNight(const IRCMessage &message,
+                       std::vector<std::string> &tokens);
     Response isAfk(const IRCMessage &message, std::vector<std::string> &tokens);
     Response comeBackMsg(const IRCMessage &message,
                          std::vector<std::string> &tokens);
@@ -91,7 +92,7 @@ private:
     Response setUser(const IRCMessage &message,
                      std::vector<std::string> &tokens);
     Response setUserLiving(const IRCMessage &message,
-                     std::vector<std::string> &tokens);
+                           std::vector<std::string> &tokens);
     Response deleteUser(const IRCMessage &message,
                         std::vector<std::string> &tokens);
     Response isFrom(const IRCMessage &message,
@@ -99,20 +100,20 @@ private:
     Response getUsersFrom(const IRCMessage &message,
                           std::vector<std::string> &tokens);
     Response getUsersLiving(const IRCMessage &message,
-                          std::vector<std::string> &tokens);
+                            std::vector<std::string> &tokens);
     Response printUsersData(const IRCMessage &message);
     Response myFrom(const IRCMessage &message,
-                     std::vector<std::string> &tokens);
-    Response myLiving(const IRCMessage &message,
-                        std::vector<std::string> &tokens);
-    Response myDelete(const IRCMessage &message,
                     std::vector<std::string> &tokens);
+    Response myLiving(const IRCMessage &message,
+                      std::vector<std::string> &tokens);
+    Response myDelete(const IRCMessage &message,
+                      std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 
     std::unordered_map<std::string, std::chrono::steady_clock::time_point>
         cooldownsMap;
-        
+
     UserIDs &userIDs;
 };
 

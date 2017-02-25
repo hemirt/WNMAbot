@@ -42,8 +42,8 @@ CommandsHandler::handle(const IRCMessage &message)
                             boost::token_compress_on);
 
     changeToLower(tokens[0]);
-    
-    if(!this->isAdmin(message.user)) {
+
+    if (!this->isAdmin(message.user)) {
         for (int i = 1; i < tokens.size(); i++) {
             this->channelObject->owner->sanitizeMsg(tokens[i]);
         }
@@ -257,7 +257,7 @@ CommandsHandler::makeResponse(const IRCMessage &message,
                 return response;
             }
 
-            //this->channelObject->owner->sanitizeMsg(tokens[i]);
+            // this->channelObject->owner->sanitizeMsg(tokens[i]);
             boost::algorithm::replace_all(responseString, ss.str(), tokens[i]);
         }
     }
@@ -727,7 +727,7 @@ CommandsHandler::remindMe(const IRCMessage &message,
         new boost::asio::steady_timer(ioService, std::chrono::seconds(seconds));
     t->async_wait(remindFunction);
 
-    //this->channelObject->owner->sanitizeMsg(reminderMessage);
+    // this->channelObject->owner->sanitizeMsg(reminderMessage);
 
     std::string msg = message.user + ", reminding you in " +
                       std::to_string(seconds) + " seconds (" + reminderMessage +
@@ -837,7 +837,7 @@ CommandsHandler::remind(const IRCMessage &message,
     this->channelObject->owner->userReminders.addReminder(
         message.user, remindedUser, whichReminder, t);
 
-    //this->channelObject->owner->sanitizeMsg(reminderMessage);
+    // this->channelObject->owner->sanitizeMsg(reminderMessage);
     std::string msg = message.user + ", reminding " + remindedUser + " in " +
                       std::to_string(seconds) + " seconds (" + reminderMessage +
                       ") SeemsGood";
@@ -885,7 +885,7 @@ CommandsHandler::afk(const IRCMessage &message,
         msg.pop_back();
     }
 
-    //this->channelObject->owner->sanitizeMsg(msg);
+    // this->channelObject->owner->sanitizeMsg(msg);
 
     this->channelObject->owner->afkers.setAfker(message.user, msg);
 
@@ -904,11 +904,12 @@ CommandsHandler::goodNight(const IRCMessage &message,
 {
     Response response;
 
-    if(tokens.size() > 1 && this->setOfUsers.isUser(tokens[1])) {
+    if (tokens.size() > 1 && this->setOfUsers.isUser(tokens[1])) {
         return response;
     }
 
-    this->channelObject->owner->afkers.setAfker(message.user, "ResidentSleeper");
+    this->channelObject->owner->afkers.setAfker(message.user,
+                                                "ResidentSleeper");
 
     response.type = Response::Type::MESSAGE;
     response.message = message.user + " is now sleeping ResidentSleeper";
@@ -1105,7 +1106,7 @@ CommandsHandler::setUser(const IRCMessage &message,
 
 Response
 CommandsHandler::setUserLiving(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
+                               std::vector<std::string> &tokens)
 {
     Response response;
     if (!this->isAdmin(message.user) || tokens.size() < 3) {
@@ -1138,8 +1139,7 @@ CommandsHandler::isFrom(const IRCMessage &message,
 
     auto country =
         this->channelObject->owner->usersData.getUsersCountry(tokens[1]);
-    response.message =
-        message.user + ", " + country + " SeemsGood";
+    response.message = message.user + ", " + country + " SeemsGood";
     response.type = Response::Type::MESSAGE;
     return response;
 }
@@ -1163,10 +1163,11 @@ CommandsHandler::getUsersFrom(const IRCMessage &message,
 
     auto users = this->channelObject->owner->usersData.getUsersFrom(country);
     if (users.empty()) {
-        response.message = message.user + ", there are no users from " + country + " ForeverAlone";
+        response.message = message.user + ", there are no users from " +
+                           country + " ForeverAlone";
     } else {
         response.message = message.user + ", from " + country +
-                       " are these users: " + users + " SeemsGood";
+                           " are these users: " + users + " SeemsGood";
     }
 
     response.type = Response::Type::MESSAGE;
@@ -1175,7 +1176,7 @@ CommandsHandler::getUsersFrom(const IRCMessage &message,
 
 Response
 CommandsHandler::getUsersLiving(const IRCMessage &message,
-                              std::vector<std::string> &tokens)
+                                std::vector<std::string> &tokens)
 {
     Response response;
     if (tokens.size() < 2) {
@@ -1192,10 +1193,11 @@ CommandsHandler::getUsersLiving(const IRCMessage &message,
 
     auto users = this->channelObject->owner->usersData.getUsersLiving(country);
     if (users.empty()) {
-        response.message = message.user + ", there are no users living in " + country + " ForeverAlone";
-    } else { 
-        response.message = message.user + ", in " + country +
-                           " live users: " + users + " SeemsGood";
+        response.message = message.user + ", there are no users living in " +
+                           country + " ForeverAlone";
+    } else {
+        response.message = message.user + ", in " + country + " live users: " +
+                           users + " SeemsGood";
     }
     response.type = Response::Type::MESSAGE;
     return response;
@@ -1214,7 +1216,7 @@ CommandsHandler::printUsersData(const IRCMessage &message)
 
 Response
 CommandsHandler::deleteUser(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
+                            std::vector<std::string> &tokens)
 {
     Response response;
     if (!this->isAdmin(message.user) || tokens.size() < 2) {
@@ -1222,14 +1224,15 @@ CommandsHandler::deleteUser(const IRCMessage &message,
     }
 
     this->channelObject->owner->usersData.deleteUser(tokens[1]);
-    response.message = message.user + ", deleted user " + tokens[1] + " SeemsGood";
+    response.message =
+        message.user + ", deleted user " + tokens[1] + " SeemsGood";
     response.type = Response::Type::MESSAGE;
     return response;
 }
 
 Response
 CommandsHandler::myFrom(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
+                        std::vector<std::string> &tokens)
 {
     Response response;
     if (tokens.size() < 2) {
@@ -1243,18 +1246,17 @@ CommandsHandler::myFrom(const IRCMessage &message,
     if (country.back() == ' ') {
         country.pop_back();
     }
-    
-    
 
     this->channelObject->owner->usersData.setUser(message.user, country);
-    response.message = message.user + ", set the country you're from to " + country + " SeemsGood";
+    response.message = message.user + ", set the country you're from to " +
+                       country + " SeemsGood";
     response.type = Response::Type::MESSAGE;
     return response;
 }
 
 Response
 CommandsHandler::myLiving(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
+                          std::vector<std::string> &tokens)
 {
     Response response;
     if (tokens.size() < 2) {
@@ -1270,14 +1272,15 @@ CommandsHandler::myLiving(const IRCMessage &message,
     }
 
     this->channelObject->owner->usersData.setUserLiving(message.user, country);
-    response.message = message.user + ", the country you live was set to " + country + " SeemsGood";
+    response.message = message.user + ", the country you live was set to " +
+                       country + " SeemsGood";
     response.type = Response::Type::MESSAGE;
     return response;
 }
 
 Response
 CommandsHandler::myDelete(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
+                          std::vector<std::string> &tokens)
 {
     Response response;
 
