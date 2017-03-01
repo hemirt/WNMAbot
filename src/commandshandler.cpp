@@ -263,6 +263,21 @@ CommandsHandler::makeResponse(const IRCMessage &message,
 
     boost::algorithm::replace_all(responseString, "{user}", message.user);
     boost::algorithm::replace_all(responseString, "{channel}", message.channel);
+    
+    if (boost::algorithm::find_regex(responseString, boost::regex("{\\d+\\+}"))) {
+        std::string msg;
+        for (int i = 1; i < tokens.size(); i++) {
+            msg += tokens[i] + " ";
+        }
+        if (msg.empty()) {
+            msg = "nothing eShrug";
+        } else {
+            msg.pop_back();
+        }
+        boost::algorithm::replace_all_regex(
+            responseString, boost::regex("{\\d+\\+}"),
+            msg);
+    }
 
     if (boost::algorithm::find_regex(responseString, boost::regex("{cirnd}"))) {
         boost::algorithm::replace_all(
