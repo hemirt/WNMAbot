@@ -88,7 +88,7 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->regexTest(message, tokens);
     } else if (tokens[0] == "!setfrom") {
         return this->setUser(message, tokens);
-    } else if (tokens[0] == "!setliving") {
+    } else if (tokens[0] == "!setlive") {
         return this->setUserLiving(message, tokens);
     } else if (tokens[0] == "!where" || tokens[0] == "!country") {
         return this->isFrom(message, tokens);
@@ -96,13 +96,13 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->printUsersData(message);
     } else if (tokens[0] == "!usersfrom") {
         return this->getUsersFrom(message, tokens);
-    } else if (tokens[0] == "!usersliving") {
+    } else if (tokens[0] == "!userslive") {
         return this->getUsersLiving(message, tokens);
     } else if (tokens[0] == "!deleteuser") {
         return this->deleteUser(message, tokens);
     } else if (tokens[0] == "!myfrom") {
         return this->myFrom(message, tokens);
-    } else if (tokens[0] == "!myliving") {
+    } else if (tokens[0] == "!mylive") {
         return this->myLiving(message, tokens);
     } else if (tokens[0] == "!mydelete") {
         return this->myDelete(message, tokens);
