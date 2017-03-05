@@ -8,6 +8,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <utility>
 
 using std::experimental::optional;
 
@@ -39,8 +40,8 @@ public:
     std::string getFrom(std::string user);
     std::string getLive(std::string user);
 
-    std::vector<std::string> usersFrom(const std::string &country);
-    std::vector<std::string> usersLive(const std::string &country);
+    std::pair<std::string, std::vector<std::string>> usersFrom(const std::string &country);
+    std::pair<std::string, std::vector<std::string>> usersLive(const std::string &country);
 
     static Countries &
     getInstance()

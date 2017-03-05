@@ -96,16 +96,23 @@ Countries::setLive(std::string user, std::string living)
     return Countries::Result::SUCCESS;
 }
 
-std::vector<std::string>
+std::pair<std::string, std::vector<std::string>>
 Countries::usersFrom(const std::string &country)
 {
-    std::vector<std::string> users;
+    std::pair<std::string, std::vector<std::string>> pair;
     std::string countryIDstr = this->getCountryID(country);
     if (countryIDstr.empty()) {
-        return users;
+        return pair;
     }
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
+    
+    auto display = this->redisGetDisplayName(countryIDstr);
+    if(!display) {
+        return pair;
+    } else {
+        pair.first = display.value();
+    }
 
     redisReply *reply = static_cast<redisReply *>(
         redisCommand(this->context, "SMEMBERS WNMA:country:%b:from",
@@ -113,48 +120,55 @@ Countries::usersFrom(const std::string &country)
 
     if (reply == NULL || reply->type != REDIS_REPLY_ARRAY) {
         freeReplyObject(reply);
-        return users;
+        return pair;
     }
     for (int i = 0; i < reply->elements; i++) {
         std::string username = this->userIDs.getUserName(
             std::string(reply->element[i]->str, reply->element[i]->len));
         if (!username.empty()) {
-            users.emplace_back(std::move(username));
+            pair.second.emplace_back(std::move(username));
         }
     }
 
-    return users;
+    return pair;
 }
 
-std::vector<std::string>
+std::pair<std::string, std::vector<std::string>>
 Countries::usersLive(const std::string &country)
 {
-    std::vector<std::string> users;
+    std::pair<std::string, std::vector<std::string>> pair;
     std::string countryIDstr = this->getCountryID(country);
     if (countryIDstr.empty()) {
-        return users;
+        return pair;
     }
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
 
+    auto display = this->redisGetDisplayName(countryIDstr);
+    if(!display) {
+        return pair;
+    } else {
+        pair.first = display.value();
+    }
+    
     redisReply *reply = static_cast<redisReply *>(
         redisCommand(this->context, "SMEMBERS WNMA:country:%b:live",
                      countryIDstr.c_str(), countryIDstr.size()));
 
     if (reply == NULL || reply->type != REDIS_REPLY_ARRAY) {
         freeReplyObject(reply);
-        return users;
+        return pair;
     }
 
     for (int i = 0; i < reply->elements; i++) {
         std::string username = this->userIDs.getUserName(
             std::string(reply->element[i]->str, reply->element[i]->len));
         if (!username.empty()) {
-            users.emplace_back(std::move(username));
+            pair.second.emplace_back(std::move(username));
         }
     }
 
-    return users;
+    return pair;
 }
 
 std::string

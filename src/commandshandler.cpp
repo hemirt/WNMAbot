@@ -1215,14 +1215,15 @@ CommandsHandler::getUsersFrom(const IRCMessage &message,
         country.pop_back();
     }
 
-    auto users = Countries::getInstance().usersFrom(country);
-    if (users.empty()) {
-        response.message = message.user + ", there are no users from " +
-                           country + " ForeverAlone";
+    auto pairDisplayUsers = Countries::getInstance().usersFrom(country);
+    if (pairDisplayUsers.first.empty()) {
+        response.message = message.user + ", the country " + country + " doesn't exist NaM";
+    } else if (pairDisplayUsers.second.empty()) {
+        response.message = message.user + ", there are no users from " + pairDisplayUsers.first + " ForeverAlone";
     } else {
         response.message =
-            message.user + ", from " + country + " are these users: ";
-        for (const auto &i : users) {
+            message.user + ", from " + pairDisplayUsers.first + " are these users: ";
+        for (const auto &i : pairDisplayUsers.second) {
             response.message += i[0] + std::string("\u05C4") +
                                 i.substr(1, std::string::npos) + ", ";
         }
@@ -1252,13 +1253,15 @@ CommandsHandler::getUsersLiving(const IRCMessage &message,
         country.pop_back();
     }
 
-    auto users = Countries::getInstance().usersLive(country);
-    if (users.empty()) {
+    auto pairDisplayUsers = Countries::getInstance().usersLive(country);
+    if (pairDisplayUsers.first.empty()) {
+        response.message = message.user + ", the country " + country + " doesn't exist NaM";
+    } else if (pairDisplayUsers.second.empty()) {
         response.message = message.user + ", there are no users living in " +
-                           country + " ForeverAlone";
+                           pairDisplayUsers.first + " ForeverAlone";
     } else {
-        response.message = message.user + ", in " + country + " live users: ";
-        for (const auto &i : users) {
+        response.message = message.user + ", in " + pairDisplayUsers.first + " live users: ";
+        for (const auto &i : pairDisplayUsers.second) {
             response.message += i[0] + std::string("\u05C4") +
                                 i.substr(1, std::string::npos) + ", ";
         }
