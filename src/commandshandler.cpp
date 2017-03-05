@@ -108,6 +108,12 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->myDelete(message, tokens);
     } else if (tokens[0] == "!createcountry" && this->isAdmin(message.user)) {
         return this->createCountry(message, tokens);
+    } else if (tokens[0] == "!deletecountry" && this->isAdmin(message.user)) {
+        return this->deleteCountry(message, tokens);
+    } else if (tokens[0] == "!renamecountry" && this->isAdmin(message.user)) {
+        return this->renameCountry(message, tokens);
+    } else if (tokens[0] == "!getcountryid" && this->isAdmin(message.user)) {
+        return this->getCountryID(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -1303,11 +1309,17 @@ CommandsHandler::myFrom(const IRCMessage &message,
     if (country.back() == ' ') {
         country.pop_back();
     }
-
-    Countries::getInstance().setFrom(message.user, country);
-    response.message = message.user + ", set the country you're from to " +
+  
+    auto result = Countries::getInstance().setFrom(message.user, country);
+    if (result == Countries::Result::SUCCESS) {
+        response.message = message.user + ", set the country you're from to " +
                        country + " SeemsGood";
-    response.type = Response::Type::MESSAGE;
+        response.type = Response::Type::MESSAGE;  
+    } else if (result == Countries::Result::NOCOUNTRY) {
+        response.message = message.user + ", you cannot use this country NaM";
+        response.type = Response::Type::MESSAGE;
+    }
+
     return response;
 }
 
@@ -1328,10 +1340,16 @@ CommandsHandler::myLiving(const IRCMessage &message,
         country.pop_back();
     }
 
-    Countries::getInstance().setLive(message.user, country);
-    response.message = message.user + ", the country you live was set to " +
+    auto result = Countries::getInstance().setLive(message.user, country);
+    if (result == Countries::Result::SUCCESS) {
+        response.message = message.user + ", the country you live was set to " +
                        country + " SeemsGood";
-    response.type = Response::Type::MESSAGE;
+        response.type = Response::Type::MESSAGE;
+    } else if (result == Countries::Result::NOCOUNTRY) {
+        response.message = message.user + ", you cannot use this country NaM";
+        response.type = Response::Type::MESSAGE;
+    }
+
     return response;
 }
 
@@ -1377,6 +1395,78 @@ CommandsHandler::createCountry(const IRCMessage &message,
     auto str = Countries::getInstance().createCountry(country);
     
     response.message = message.user + ", created new country \"" + country + "\" (" + str + ") SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::deleteCountry(const IRCMessage &message,
+                               std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if(tokens.size() < 2) {
+        return response;
+    }
+    
+    if(Countries::getInstance().deleteCountry(tokens[1])) {
+        response.message = message.user + ", deleted country " + tokens[1] +" SeemsGood";
+        response.type = Response::Type::MESSAGE;
+    }
+
+    return response;
+}
+
+Response
+CommandsHandler::renameCountry(const IRCMessage &message,
+                               std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if(tokens.size() < 3) {
+        return response;
+    }
+    
+    std::string country;
+    for (int i = 2; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+    
+    if(Countries::getInstance().renameCountry(tokens[1], country)) {
+        response.message = message.user + ", renamed country " + tokens[1] + " to " + country + " SeemsGood";
+        response.type = Response::Type::MESSAGE;
+    }
+
+    return response;
+}
+
+Response
+CommandsHandler::getCountryID(const IRCMessage &message,
+                               std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if(tokens.size() < 2) {
+        return response;
+    }
+    
+    std::string country;
+    for (int i = 1; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+    
+    auto id = Countries::getInstance().getCountryID(country);
+    if(!id.empty()) {
+        response.message = message.user + ", countryID of \"" + country + "\" is " + id + " SeemsGood";
+    } else {
+        response.message = message.user + ", country \"" + country + "\" not found NaM";
+    }
     response.type = Response::Type::MESSAGE;
     return response;
 }

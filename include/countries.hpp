@@ -27,7 +27,11 @@ public:
     void deleteLive(std::string user);
 
     std::string getCountryID(const std::string &country);
+    std::string getCountryName(const std::string &countryID);
     std::string createCountry(const std::string &country);
+    bool existsCountry(const std::string &countryID);
+    bool deleteCountry(const std::string &countryID);
+    bool renameCountry(const std::string &countryID, const std::string &newCountryName);
     
     std::string getFrom(std::string user);
     std::string getLive(std::string user);
@@ -65,6 +69,7 @@ private:
     void redisRemUserCountry(const std::string &userID, const Countries::Type &type);
     bool redisExistsUserCountry(const std::string &userID, const Countries::Type &type);
     void redisAddUserToCountrySet(const std::string &userID, const std::string &countryID, const Countries::Type &type);
+    void deleteUserCountryByID(const std::string &userID, const Countries::Type &type);
 
 };
 

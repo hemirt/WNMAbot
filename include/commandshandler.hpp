@@ -112,6 +112,13 @@ private:
                       std::vector<std::string> &tokens);
     Response createCountry(const IRCMessage &message,
                       std::vector<std::string> &tokens);
+                      Response deleteCountry(const IRCMessage &message,
+                      std::vector<std::string> &tokens);
+                      Response renameCountry(const IRCMessage &message,
+                      std::vector<std::string> &tokens);
+                      Response getCountryID(const IRCMessage &message,
+                      std::vector<std::string> &tokens);
+                  
 
     boost::asio::io_service &ioService;
 
