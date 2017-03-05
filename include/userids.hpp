@@ -2,6 +2,7 @@
 #define USERSIDS_HPP
 
 #include <hiredis/hiredis.h>
+#include <curl/curl.h>
 #include <mutex>
 #include <string>
 
@@ -28,6 +29,8 @@ private:
     static UserIDs instance;
     static std::mutex accessMtx;
     static redisContext *context;
+    struct curl_slist *chunk = NULL;
+    static CURL *curl;
 };
 
 #endif

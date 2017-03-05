@@ -7,6 +7,8 @@ find_package(Boost 1.45.0 REQUIRED COMPONENTS system regex)
 include_directories(${Boost_INCLUDE_DIRS})
 find_package(Hiredis 0.13.3)
 include_directories(${HIREDIS_INCLUDE_DIR})
+find_package(CURL)
+include_directories(${CURL_INCLUDE_DIR})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -32,4 +34,4 @@ set(SOURCE
 )
 
 add_executable(WNMAbot ${SOURCE})
-target_link_libraries(WNMAbot ${Boost_LIBRARIES} ${HIREDIS_LIBRARIES})
+target_link_libraries(WNMAbot ${Boost_LIBRARIES} ${HIREDIS_LIBRARIES} ${CURL_LIBRARIES})
