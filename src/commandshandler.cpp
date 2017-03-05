@@ -34,15 +34,15 @@ CommandsHandler::~CommandsHandler()
 Response
 CommandsHandler::handle(const IRCMessage &message)
 {
-    this->setOfUsers.addUser(message.user);
+    UserIDs::getInstance().addUser(message.user);
     std::vector<std::string> tokens;
     boost::algorithm::split(tokens, message.params,
                             boost::algorithm::is_space(),
                             boost::token_compress_on);
 
     changeToLower(tokens[0]);
-    
-    if(!this->isAdmin(message.user)) {
+
+    if (!this->isAdmin(message.user)) {
         for (int i = 1; i < tokens.size(); i++) {
             this->channelObject->owner->sanitizeMsg(tokens[i]);
         }
@@ -87,25 +87,37 @@ CommandsHandler::handle(const IRCMessage &message)
     } else if (tokens[0] == "!regex") {
         return this->regexTest(message, tokens);
     } else if (tokens[0] == "!setfrom") {
-        return this->setUser(message, tokens);
-    } else if (tokens[0] == "!setliving") {
-        return this->setUserLiving(message, tokens);
+        return this->setUserCountryFrom(message, tokens);
+    } else if (tokens[0] == "!setlive") {
+        return this->setUserCountryLive(message, tokens);
     } else if (tokens[0] == "!where" || tokens[0] == "!country") {
         return this->isFrom(message, tokens);
     } else if (tokens[0] == "!print") {
         return this->printUsersData(message);
     } else if (tokens[0] == "!usersfrom") {
         return this->getUsersFrom(message, tokens);
-    } else if (tokens[0] == "!usersliving") {
+    } else if (tokens[0] == "!userslive") {
         return this->getUsersLiving(message, tokens);
     } else if (tokens[0] == "!deleteuser") {
         return this->deleteUser(message, tokens);
     } else if (tokens[0] == "!myfrom") {
         return this->myFrom(message, tokens);
-    } else if (tokens[0] == "!myliving") {
+    } else if (tokens[0] == "!mylive") {
         return this->myLiving(message, tokens);
     } else if (tokens[0] == "!mydelete") {
         return this->myDelete(message, tokens);
+    } else if (tokens[0] == "!createcountry" && this->isAdmin(message.user)) {
+        return this->createCountry(message, tokens);
+    } else if (tokens[0] == "!deletecountry" && this->isAdmin(message.user)) {
+        return this->deleteCountry(message, tokens);
+    } else if (tokens[0] == "!renamecountry" && this->isAdmin(message.user)) {
+        return this->renameCountry(message, tokens);
+    } else if (tokens[0] == "!getcountryid" && this->isAdmin(message.user)) {
+        return this->getCountryID(message, tokens);
+    } else if (tokens[0] == "!createalias" && this->isAdmin(message.user)) {
+        return this->createAlias(message, tokens);
+    } else if (tokens[0] == "!deletealias" && this->isAdmin(message.user)) {
+        return this->deleteAlias(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -256,15 +268,16 @@ CommandsHandler::makeResponse(const IRCMessage &message,
                 return response;
             }
 
-            //this->channelObject->owner->sanitizeMsg(tokens[i]);
+            // this->channelObject->owner->sanitizeMsg(tokens[i]);
             boost::algorithm::replace_all(responseString, ss.str(), tokens[i]);
         }
     }
 
     boost::algorithm::replace_all(responseString, "{user}", message.user);
     boost::algorithm::replace_all(responseString, "{channel}", message.channel);
-    
-    if (boost::algorithm::find_regex(responseString, boost::regex("{\\d+\\+}"))) {
+
+    if (boost::algorithm::find_regex(responseString,
+                                     boost::regex("{\\d+\\+}"))) {
         std::string msg;
         for (int i = 1; i < tokens.size(); i++) {
             msg += tokens[i] + " ";
@@ -274,9 +287,8 @@ CommandsHandler::makeResponse(const IRCMessage &message,
         } else {
             msg.pop_back();
         }
-        boost::algorithm::replace_all_regex(
-            responseString, boost::regex("{\\d+\\+}"),
-            msg);
+        boost::algorithm::replace_all_regex(responseString,
+                                            boost::regex("{\\d+\\+}"), msg);
     }
 
     if (boost::algorithm::find_regex(responseString, boost::regex("{cirnd}"))) {
@@ -741,7 +753,7 @@ CommandsHandler::remindMe(const IRCMessage &message,
         new boost::asio::steady_timer(ioService, std::chrono::seconds(seconds));
     t->async_wait(remindFunction);
 
-    //this->channelObject->owner->sanitizeMsg(reminderMessage);
+    // this->channelObject->owner->sanitizeMsg(reminderMessage);
 
     std::string msg = message.user + ", reminding you in " +
                       std::to_string(seconds) + " seconds (" + reminderMessage +
@@ -851,7 +863,7 @@ CommandsHandler::remind(const IRCMessage &message,
     this->channelObject->owner->userReminders.addReminder(
         message.user, remindedUser, whichReminder, t);
 
-    //this->channelObject->owner->sanitizeMsg(reminderMessage);
+    // this->channelObject->owner->sanitizeMsg(reminderMessage);
     std::string msg = message.user + ", reminding " + remindedUser + " in " +
                       std::to_string(seconds) + " seconds (" + reminderMessage +
                       ") SeemsGood";
@@ -899,7 +911,7 @@ CommandsHandler::afk(const IRCMessage &message,
         msg.pop_back();
     }
 
-    //this->channelObject->owner->sanitizeMsg(msg);
+    // this->channelObject->owner->sanitizeMsg(msg);
 
     this->channelObject->owner->afkers.setAfker(message.user, msg);
 
@@ -918,11 +930,12 @@ CommandsHandler::goodNight(const IRCMessage &message,
 {
     Response response;
 
-    if(tokens.size() > 1 && this->setOfUsers.isUser(tokens[1])) {
+    if (tokens.size() > 1 && UserIDs::getInstance().isUser(tokens[1])) {
         return response;
     }
 
-    this->channelObject->owner->afkers.setAfker(message.user, "ResidentSleeper");
+    this->channelObject->owner->afkers.setAfker(message.user,
+                                                "ResidentSleeper");
 
     response.type = Response::Type::MESSAGE;
     response.message = message.user + " is now sleeping ResidentSleeper";
@@ -1094,8 +1107,8 @@ CommandsHandler::regexTest(const IRCMessage &message,
 }
 
 Response
-CommandsHandler::setUser(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
+CommandsHandler::setUserCountryFrom(const IRCMessage &message,
+                                    std::vector<std::string> &tokens)
 {
     Response response;
     if (!this->isAdmin(message.user) || tokens.size() < 3) {
@@ -1110,16 +1123,22 @@ CommandsHandler::setUser(const IRCMessage &message,
         country.pop_back();
     }
 
-    this->channelObject->owner->usersData.setUser(tokens[1], country);
-    response.message = message.user + ", set the country where " + tokens[1] +
-                       " comes from to " + country + " SeemsGood";
-    response.type = Response::Type::MESSAGE;
+    auto result = Countries::getInstance().setFrom(tokens[1], country);
+    if (result == Countries::Result::SUCCESS) {
+        response.message = message.user + ", set the country where " +
+                           tokens[1] + " comes from to " + country +
+                           " SeemsGood";
+        response.type = Response::Type::MESSAGE;
+    } else if (result == Countries::Result::NOCOUNTRY) {
+        response.message = message.user + ", you cannot use this country NaM";
+        response.type = Response::Type::MESSAGE;
+    }
     return response;
 }
 
 Response
-CommandsHandler::setUserLiving(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
+CommandsHandler::setUserCountryLive(const IRCMessage &message,
+                                    std::vector<std::string> &tokens)
 {
     Response response;
     if (!this->isAdmin(message.user) || tokens.size() < 3) {
@@ -1134,10 +1153,16 @@ CommandsHandler::setUserLiving(const IRCMessage &message,
         country.pop_back();
     }
 
-    this->channelObject->owner->usersData.setUserLiving(tokens[1], country);
-    response.message = message.user + ", set the country where " + tokens[1] +
-                       " lives to " + country + " SeemsGood";
+    auto result = Countries::getInstance().setLive(tokens[1], country);
     response.type = Response::Type::MESSAGE;
+    if (result == Countries::Result::SUCCESS) {
+        response.message = message.user + ", set the country where " +
+                           tokens[1] + " lives to " + country + " SeemsGood";
+        response.type = Response::Type::MESSAGE;
+    } else if (result == Countries::Result::NOCOUNTRY) {
+        response.message = message.user + ", you cannot use this country NaM";
+        response.type = Response::Type::MESSAGE;
+    }
     return response;
 }
 
@@ -1150,10 +1175,25 @@ CommandsHandler::isFrom(const IRCMessage &message,
         return response;
     }
 
-    auto country =
-        this->channelObject->owner->usersData.getUsersCountry(tokens[1]);
-    response.message =
-        message.user + ", " + country + " SeemsGood";
+    auto from = Countries::getInstance().getFrom(tokens[1]);
+    auto live = Countries::getInstance().getLive(tokens[1]);
+    if (from.empty() && live.empty()) {
+        response.message =
+            message.user + ", there are no data about " + tokens[1] + " eShrug";
+    } else if (!from.empty() && !live.empty() && live != from) {
+        response.message = message.user + ", " + tokens[1] + " comes from " +
+                           from + " and lives in " + live + " SeemsGood";
+    } else if (live.empty()) {
+        response.message = message.user + ", " + tokens[1] + " comes from " +
+                           from + " SeemsGood";
+    } else if (from.empty()) {
+        response.message = message.user + ", " + tokens[1] + " lives in " +
+                           live + " SeemsGood";
+    } else if (live == from) {
+        response.message = message.user + ", " + tokens[1] +
+                           " comes from and lives in " + live + " SeemsGood";
+    }
+
     response.type = Response::Type::MESSAGE;
     return response;
 }
@@ -1175,12 +1215,23 @@ CommandsHandler::getUsersFrom(const IRCMessage &message,
         country.pop_back();
     }
 
-    auto users = this->channelObject->owner->usersData.getUsersFrom(country);
-    if (users.empty()) {
-        response.message = message.user + ", there are no users from " + country + " ForeverAlone";
+    auto pairDisplayUsers = Countries::getInstance().usersFrom(country);
+    if (pairDisplayUsers.first.empty()) {
+        response.message =
+            message.user + ", the country " + country + " doesn't exist NaM";
+    } else if (pairDisplayUsers.second.empty()) {
+        response.message = message.user + ", there are no users from " +
+                           pairDisplayUsers.first + " ForeverAlone";
     } else {
-        response.message = message.user + ", from " + country +
-                       " are these users: " + users + " SeemsGood";
+        response.message = message.user + ", from " + pairDisplayUsers.first +
+                           " are these users: ";
+        for (const auto &i : pairDisplayUsers.second) {
+            response.message += i[0] + std::string("\u05C4") +
+                                i.substr(1, std::string::npos) + ", ";
+        }
+        response.message.pop_back();
+        response.message.pop_back();
+        response.message += " SeemsGood";
     }
 
     response.type = Response::Type::MESSAGE;
@@ -1189,7 +1240,7 @@ CommandsHandler::getUsersFrom(const IRCMessage &message,
 
 Response
 CommandsHandler::getUsersLiving(const IRCMessage &message,
-                              std::vector<std::string> &tokens)
+                                std::vector<std::string> &tokens)
 {
     Response response;
     if (tokens.size() < 2) {
@@ -1204,12 +1255,23 @@ CommandsHandler::getUsersLiving(const IRCMessage &message,
         country.pop_back();
     }
 
-    auto users = this->channelObject->owner->usersData.getUsersLiving(country);
-    if (users.empty()) {
-        response.message = message.user + ", there are no users living in " + country + " ForeverAlone";
-    } else { 
-        response.message = message.user + ", in " + country +
-                           " live users: " + users + " SeemsGood";
+    auto pairDisplayUsers = Countries::getInstance().usersLive(country);
+    if (pairDisplayUsers.first.empty()) {
+        response.message =
+            message.user + ", the country " + country + " doesn't exist NaM";
+    } else if (pairDisplayUsers.second.empty()) {
+        response.message = message.user + ", there are no users living in " +
+                           pairDisplayUsers.first + " ForeverAlone";
+    } else {
+        response.message =
+            message.user + ", in " + pairDisplayUsers.first + " live users: ";
+        for (const auto &i : pairDisplayUsers.second) {
+            response.message += i[0] + std::string("\u05C4") +
+                                i.substr(1, std::string::npos) + ", ";
+        }
+        response.message.pop_back();
+        response.message.pop_back();
+        response.message += " SeemsGood";
     }
     response.type = Response::Type::MESSAGE;
     return response;
@@ -1222,28 +1284,30 @@ CommandsHandler::printUsersData(const IRCMessage &message)
     if (!this->isAdmin(message.user)) {
         return response;
     }
-    this->channelObject->owner->usersData.printAllCout();
+    // Countries::getInstance().printAllCout();
     return response;
 }
 
 Response
 CommandsHandler::deleteUser(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
+                            std::vector<std::string> &tokens)
 {
     Response response;
     if (!this->isAdmin(message.user) || tokens.size() < 2) {
         return response;
     }
 
-    this->channelObject->owner->usersData.deleteUser(tokens[1]);
-    response.message = message.user + ", deleted user " + tokens[1] + " SeemsGood";
+    Countries::getInstance().deleteFrom(tokens[1]);
+    Countries::getInstance().deleteLive(tokens[1]);
+    response.message =
+        message.user + ", deleted user " + tokens[1] + " SeemsGood";
     response.type = Response::Type::MESSAGE;
     return response;
 }
 
 Response
 CommandsHandler::myFrom(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
+                        std::vector<std::string> &tokens)
 {
     Response response;
     if (tokens.size() < 2) {
@@ -1257,18 +1321,23 @@ CommandsHandler::myFrom(const IRCMessage &message,
     if (country.back() == ' ') {
         country.pop_back();
     }
-    
-    
 
-    this->channelObject->owner->usersData.setUser(message.user, country);
-    response.message = message.user + ", set the country you're from to " + country + " SeemsGood";
-    response.type = Response::Type::MESSAGE;
+    auto result = Countries::getInstance().setFrom(message.user, country);
+    if (result == Countries::Result::SUCCESS) {
+        response.message = message.user + ", set the country you're from to " +
+                           country + " SeemsGood";
+        response.type = Response::Type::MESSAGE;
+    } else if (result == Countries::Result::NOCOUNTRY) {
+        response.message = message.user + ", you cannot use this country NaM";
+        response.type = Response::Type::MESSAGE;
+    }
+
     return response;
 }
 
 Response
 CommandsHandler::myLiving(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
+                          std::vector<std::string> &tokens)
 {
     Response response;
     if (tokens.size() < 2) {
@@ -1283,20 +1352,196 @@ CommandsHandler::myLiving(const IRCMessage &message,
         country.pop_back();
     }
 
-    this->channelObject->owner->usersData.setUserLiving(message.user, country);
-    response.message = message.user + ", the country you live was set to " + country + " SeemsGood";
-    response.type = Response::Type::MESSAGE;
+    auto result = Countries::getInstance().setLive(message.user, country);
+    if (result == Countries::Result::SUCCESS) {
+        response.message = message.user + ", the country you live was set to " +
+                           country + " SeemsGood";
+        response.type = Response::Type::MESSAGE;
+    } else if (result == Countries::Result::NOCOUNTRY) {
+        response.message = message.user + ", you cannot use this country NaM";
+        response.type = Response::Type::MESSAGE;
+    }
+
     return response;
 }
 
 Response
 CommandsHandler::myDelete(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
+                          std::vector<std::string> &tokens)
 {
     Response response;
 
-    this->channelObject->owner->usersData.deleteUser(message.user);
+    if (tokens.size() < 2) {
+        return response;
+    }
+
+    if (tokens[1] == "from") {
+        Countries::getInstance().deleteFrom(message.user);
+    } else if (tokens[1] == "live") {
+        Countries::getInstance().deleteLive(message.user);
+    }
+
     response.message = message.user + ", deleted your data SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::createCountry(const IRCMessage &message,
+                               std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if (tokens.size() < 2) {
+        return response;
+    }
+
+    std::string country;
+    for (int i = 1; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+
+    auto str = Countries::getInstance().createCountry(country);
+
+    response.message = message.user + ", created new country \"" + country +
+                       "\" (" + str + ") SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::deleteCountry(const IRCMessage &message,
+                               std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if (tokens.size() < 2) {
+        return response;
+    }
+
+    if (Countries::getInstance().deleteCountry(tokens[1])) {
+        response.message =
+            message.user + ", deleted country " + tokens[1] + " SeemsGood";
+        response.type = Response::Type::MESSAGE;
+    }
+
+    return response;
+}
+
+Response
+CommandsHandler::renameCountry(const IRCMessage &message,
+                               std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if (tokens.size() < 3) {
+        return response;
+    }
+
+    std::string country;
+    for (int i = 2; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+
+    if (Countries::getInstance().renameCountry(tokens[1], country)) {
+        response.message = message.user + ", renamed country " + tokens[1] +
+                           " to " + country + " SeemsGood";
+        response.type = Response::Type::MESSAGE;
+    }
+
+    return response;
+}
+
+Response
+CommandsHandler::getCountryID(const IRCMessage &message,
+                              std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if (tokens.size() < 2) {
+        return response;
+    }
+
+    std::string country;
+    for (int i = 1; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+
+    auto id = Countries::getInstance().getCountryID(country);
+    if (!id.empty()) {
+        response.message = message.user + ", countryID of \"" + country +
+                           "\" is " + id + " SeemsGood";
+    } else {
+        response.message =
+            message.user + ", country \"" + country + "\" not found NaM";
+    }
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::createAlias(const IRCMessage &message,
+                             std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if (tokens.size() < 3) {
+        return response;
+    }
+
+    std::string country;
+    for (int i = 2; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+
+    if (Countries::getInstance().createAlias(tokens[1], country)) {
+        response.message = message.user + ", created alias for " + tokens[1] +
+                           ": " + country + " SeemsGood";
+    } else {
+        response.message =
+            message.user + ", country " + tokens[1] + " not found NaM";
+    }
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::deleteAlias(const IRCMessage &message,
+                             std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if (tokens.size() < 3) {
+        return response;
+    }
+
+    std::string country;
+    for (int i = 2; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+
+    if (Countries::getInstance().deleteAlias(tokens[1], country)) {
+        response.message = message.user + ", deleted alias for " + tokens[1] +
+                           ": " + country + " SeemsGood";
+    } else {
+        response.message =
+            message.user + ", country " + tokens[1] + " not found NaM";
+    }
     response.type = Response::Type::MESSAGE;
     return response;
 }

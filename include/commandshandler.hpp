@@ -4,7 +4,9 @@
 #include "ircmessage.hpp"
 #include "network.hpp"
 #include "redisclient.hpp"
-#include "setofusers.hpp"
+
+#include "countries.hpp"
+#include "userids.hpp"
 
 #include <boost/property_tree/ptree.hpp>
 #include <chrono>
@@ -77,7 +79,8 @@ private:
                     std::vector<std::string> &tokens);
     Response say(const IRCMessage &message, std::vector<std::string> &tokens);
     Response afk(const IRCMessage &message, std::vector<std::string> &tokens);
-    Response goodNight(const IRCMessage &message, std::vector<std::string> &tokens);
+    Response goodNight(const IRCMessage &message,
+                       std::vector<std::string> &tokens);
     Response isAfk(const IRCMessage &message, std::vector<std::string> &tokens);
     Response comeBackMsg(const IRCMessage &message,
                          std::vector<std::string> &tokens);
@@ -88,10 +91,10 @@ private:
     Response whoIsAfk(const IRCMessage &message);
     Response regexTest(const IRCMessage &message,
                        std::vector<std::string> &tokens);
-    Response setUser(const IRCMessage &message,
-                     std::vector<std::string> &tokens);
-    Response setUserLiving(const IRCMessage &message,
-                     std::vector<std::string> &tokens);
+    Response setUserCountryFrom(const IRCMessage &message,
+                                std::vector<std::string> &tokens);
+    Response setUserCountryLive(const IRCMessage &message,
+                                std::vector<std::string> &tokens);
     Response deleteUser(const IRCMessage &message,
                         std::vector<std::string> &tokens);
     Response isFrom(const IRCMessage &message,
@@ -99,21 +102,31 @@ private:
     Response getUsersFrom(const IRCMessage &message,
                           std::vector<std::string> &tokens);
     Response getUsersLiving(const IRCMessage &message,
-                          std::vector<std::string> &tokens);
+                            std::vector<std::string> &tokens);
     Response printUsersData(const IRCMessage &message);
     Response myFrom(const IRCMessage &message,
-                     std::vector<std::string> &tokens);
-    Response myLiving(const IRCMessage &message,
-                        std::vector<std::string> &tokens);
-    Response myDelete(const IRCMessage &message,
                     std::vector<std::string> &tokens);
+    Response myLiving(const IRCMessage &message,
+                      std::vector<std::string> &tokens);
+    Response myDelete(const IRCMessage &message,
+                      std::vector<std::string> &tokens);
+    Response createCountry(const IRCMessage &message,
+                           std::vector<std::string> &tokens);
+    Response deleteCountry(const IRCMessage &message,
+                           std::vector<std::string> &tokens);
+    Response renameCountry(const IRCMessage &message,
+                           std::vector<std::string> &tokens);
+    Response getCountryID(const IRCMessage &message,
+                          std::vector<std::string> &tokens);
+    Response createAlias(const IRCMessage &message,
+                         std::vector<std::string> &tokens);
+    Response deleteAlias(const IRCMessage &message,
+                         std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 
     std::unordered_map<std::string, std::chrono::steady_clock::time_point>
         cooldownsMap;
-        
-    SetOfUsers setOfUsers;
 };
 
 #endif

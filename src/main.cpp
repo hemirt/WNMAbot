@@ -1,11 +1,13 @@
 #include "connectionhandler.hpp"
 
-#include <iostream>
 #include <csignal>
+#include <iostream>
 
 ConnectionHandler *irc;
 
-void signalHandler(int signum) {
+void
+signalHandler(int signum)
+{
     std::cout << "Interrupted " << signum << std::endl;
     irc->shutdown();
 }
@@ -23,7 +25,7 @@ main(int argc, char *argv[])
 
     irc->run();
     delete irc;
-    
+
     std::cout << "Exiting" << std::endl;
     return 0;
 }
