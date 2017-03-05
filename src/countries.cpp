@@ -27,7 +27,7 @@ Countries::~Countries()
     redisFree(this->context);
 }
 
-void
+Countries::Result
 Countries::setFrom(std::string user, std::string from)
 {
     changeToLower(user);
@@ -36,14 +36,11 @@ Countries::setFrom(std::string user, std::string from)
 
     std::string userIDstr = this->userIDs.getID(user);
     if (userIDstr.empty()) {
-        return;
+        return Countries::Result::NOUSER;
     }
     std::string countryIDstr = this->getCountryID(from);
     if (countryIDstr.empty()) {
-        countryIDstr = this->createCountry(from);
-        if (countryIDstr.empty()) {
-            return;
-        }
+        return Countries::Result::NOCOUNTRY;
     }
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
@@ -59,10 +56,11 @@ Countries::setFrom(std::string user, std::string from)
     if(!this->redisExistsUserCountry(userIDstr, Countries::Type::LIVE)) {
         this->redisSetUserCountry(userIDstr, countryIDstr, Countries::Type::LIVE);
         this->redisAddUserToCountrySet(userIDstr, countryIDstr, Countries::Type::LIVE);
-    }   
+    }
+    return Countries::Result::SUCCESS;
 }
 
-void
+Countries::Result
 Countries::setLive(std::string user, std::string living)
 {
     changeToLower(user);
@@ -71,14 +69,11 @@ Countries::setLive(std::string user, std::string living)
 
     std::string userIDstr = this->userIDs.getID(user);
     if (userIDstr.empty()) {
-        return;
+        return Countries::Result::NOUSER;
     }
     std::string countryIDstr = this->getCountryID(living);
     if (countryIDstr.empty()) {
-        countryIDstr = this->createCountry(living);
-        if (countryIDstr.empty()) {
-            return;
-        }
+        return Countries::Result::NOCOUNTRY;
     }
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
@@ -90,6 +85,7 @@ Countries::setLive(std::string user, std::string living)
     
     this->redisSetUserCountry(userIDstr, countryIDstr, Countries::Type::LIVE);
     this->redisAddUserToCountrySet(userIDstr, countryIDstr, Countries::Type::LIVE);
+    return Countries::Result::SUCCESS;
 }
 
 std::vector<std::string>

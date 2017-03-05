@@ -1111,10 +1111,15 @@ CommandsHandler::setUser(const IRCMessage &message,
         country.pop_back();
     }
 
-    Countries::getInstance().setFrom(tokens[1], country);
-    response.message = message.user + ", set the country where " + tokens[1] +
-                       " comes from to " + country + " SeemsGood";
-    response.type = Response::Type::MESSAGE;
+    auto result = Countries::getInstance().setFrom(tokens[1], country);
+    if (result == Countries::Result::SUCCESS) {
+        response.message = message.user + ", set the country where " + tokens[1] +
+                           " comes from to " + country + " SeemsGood";
+        response.type = Response::Type::MESSAGE;
+    } else if (result == Countries::Result::NOCOUNTRY) {
+        response.message = message.user + ", you cannot use this country NaM";
+        response.type = Response::Type::MESSAGE;
+    }
     return response;
 }
 
@@ -1134,11 +1139,17 @@ CommandsHandler::setUserLiving(const IRCMessage &message,
     if (country.back() == ' ') {
         country.pop_back();
     }
-
-    Countries::getInstance().setLive(tokens[1], country);
-    response.message = message.user + ", set the country where " + tokens[1] +
-                       " lives to " + country + " SeemsGood";
+    
+    auto result = Countries::getInstance().setLive(tokens[1], country);
     response.type = Response::Type::MESSAGE;
+    if (result == Countries::Result::SUCCESS) {
+        response.message = message.user + ", set the country where " + tokens[1] +
+                       " lives to " + country + " SeemsGood";
+        response.type = Response::Type::MESSAGE;
+    } else if (result == Countries::Result::NOCOUNTRY) {
+        response.message = message.user + ", you cannot use this country NaM";
+        response.type = Response::Type::MESSAGE;
+    } 
     return response;
 }
 

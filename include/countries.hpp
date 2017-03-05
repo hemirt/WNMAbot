@@ -14,8 +14,14 @@ using std::experimental::optional;
 class Countries
 {
 public:
-    void setFrom(std::string user, std::string country);
-    void setLive(std::string user, std::string living);
+    enum class Result {
+        UNKNOWN,
+        SUCCESS,
+        NOUSER,
+        NOCOUNTRY,
+    };
+    Result setFrom(std::string user, std::string country);
+    Result setLive(std::string user, std::string living);
 
     void deleteFrom(std::string user);
     void deleteLive(std::string user);
