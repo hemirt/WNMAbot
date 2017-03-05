@@ -31,7 +31,7 @@ Countries::Result
 Countries::setFrom(std::string user, std::string from)
 {
     changeToLower(user);
-    
+
     this->deleteFrom(user);
 
     std::string userIDstr = this->userIDs.getID(user);
@@ -44,18 +44,23 @@ Countries::setFrom(std::string user, std::string from)
     }
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
-    
-    auto prevCountryID = this->redisGetUserCountry(userIDstr, Countries::Type::FROM);
+
+    auto prevCountryID =
+        this->redisGetUserCountry(userIDstr, Countries::Type::FROM);
     if (prevCountryID) {
-        this->redisRemUserFromCountry(userIDstr, prevCountryID.value(), Countries::Type::FROM); 
+        this->redisRemUserFromCountry(userIDstr, prevCountryID.value(),
+                                      Countries::Type::FROM);
     }
 
     this->redisSetUserCountry(userIDstr, countryIDstr, Countries::Type::FROM);
-    this->redisAddUserToCountrySet(userIDstr, countryIDstr, Countries::Type::FROM);
-    
-    if(!this->redisExistsUserCountry(userIDstr, Countries::Type::LIVE)) {
-        this->redisSetUserCountry(userIDstr, countryIDstr, Countries::Type::LIVE);
-        this->redisAddUserToCountrySet(userIDstr, countryIDstr, Countries::Type::LIVE);
+    this->redisAddUserToCountrySet(userIDstr, countryIDstr,
+                                   Countries::Type::FROM);
+
+    if (!this->redisExistsUserCountry(userIDstr, Countries::Type::LIVE)) {
+        this->redisSetUserCountry(userIDstr, countryIDstr,
+                                  Countries::Type::LIVE);
+        this->redisAddUserToCountrySet(userIDstr, countryIDstr,
+                                       Countries::Type::LIVE);
     }
     return Countries::Result::SUCCESS;
 }
@@ -64,7 +69,7 @@ Countries::Result
 Countries::setLive(std::string user, std::string living)
 {
     changeToLower(user);
-    
+
     this->deleteLive(user);
 
     std::string userIDstr = this->userIDs.getID(user);
@@ -78,13 +83,16 @@ Countries::setLive(std::string user, std::string living)
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
 
-    auto prevCountryID = this->redisGetUserCountry(userIDstr, Countries::Type::LIVE);
+    auto prevCountryID =
+        this->redisGetUserCountry(userIDstr, Countries::Type::LIVE);
     if (prevCountryID) {
-        this->redisRemUserFromCountry(userIDstr, prevCountryID.value(), Countries::Type::LIVE); 
+        this->redisRemUserFromCountry(userIDstr, prevCountryID.value(),
+                                      Countries::Type::LIVE);
     }
-    
+
     this->redisSetUserCountry(userIDstr, countryIDstr, Countries::Type::LIVE);
-    this->redisAddUserToCountrySet(userIDstr, countryIDstr, Countries::Type::LIVE);
+    this->redisAddUserToCountrySet(userIDstr, countryIDstr,
+                                   Countries::Type::LIVE);
     return Countries::Result::SUCCESS;
 }
 
@@ -180,8 +188,8 @@ Countries::getCountryName(const std::string &countryID)
 
     // get countries name
     redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HGET WNMA:countryIDs %b", countryID.c_str(),
-                     countryID.size()));
+        redisCommand(this->context, "HGET WNMA:countryIDs %b",
+                     countryID.c_str(), countryID.size()));
 
     if (reply == NULL) {
         // error
@@ -216,23 +224,23 @@ Countries::createCountry(const std::string &country)
         this->context, "HSET WNMA:countries %b %b", lcCountry.c_str(),
         lcCountry.size(), countryIDstr.c_str(), countryIDstr.size()));
     freeReplyObject(reply);
-    
+
     // add id record
     reply = static_cast<redisReply *>(redisCommand(
-        this->context, "HSET WNMA:countryIDs %b %b", countryIDstr.c_str(), countryIDstr.size(),
-        lcCountry.c_str(), lcCountry.size()));
+        this->context, "HSET WNMA:countryIDs %b %b", countryIDstr.c_str(),
+        countryIDstr.size(), lcCountry.c_str(), lcCountry.size()));
     freeReplyObject(reply);
 
     // create WNMA:country:ID:displayname
     reply = static_cast<redisReply *>(
         redisCommand(this->context, "SET WNMA:country:%b:displayname %b",
-                     countryIDstr.c_str(), countryIDstr.size(),
-                     country.c_str(), country.size()));
+                     countryIDstr.c_str(), countryIDstr.size(), country.c_str(),
+                     country.size()));
     freeReplyObject(reply);
-    
-    reply = static_cast<redisReply *>(
-        redisCommand(this->context, "SADD WNMA:country:%b:alias %b", countryIDstr.c_str(), countryIDstr.size(),
-        lcCountry.c_str(), lcCountry.size()));
+
+    reply = static_cast<redisReply *>(redisCommand(
+        this->context, "SADD WNMA:country:%b:alias %b", countryIDstr.c_str(),
+        countryIDstr.size(), lcCountry.c_str(), lcCountry.size()));
     freeReplyObject(reply);
 
     return countryIDstr;
@@ -244,21 +252,21 @@ Countries::createAlias(const std::string &countryID, const std::string &country)
     if (!this->existsCountry(countryID)) {
         return false;
     }
-    
+
     std::string lcCountry = changeToLower_copy(country);
-    
+
     std::lock_guard<std::mutex> lock(this->accessMtx);
-    
-    redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "SADD WNMA:country:%b:alias %b", countryID.c_str(), countryID.size(),
-        lcCountry.c_str(), lcCountry.size()));
+
+    redisReply *reply = static_cast<redisReply *>(redisCommand(
+        this->context, "SADD WNMA:country:%b:alias %b", countryID.c_str(),
+        countryID.size(), lcCountry.c_str(), lcCountry.size()));
     freeReplyObject(reply);
-    
-    reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HSET WNMA:countries %b %b", lcCountry.c_str(), lcCountry.size(),
-        countryID.c_str(), countryID.size()));
+
+    reply = static_cast<redisReply *>(redisCommand(
+        this->context, "HSET WNMA:countries %b %b", lcCountry.c_str(),
+        lcCountry.size(), countryID.c_str(), countryID.size()));
     freeReplyObject(reply);
-    
+
     return true;
 }
 
@@ -268,21 +276,21 @@ Countries::deleteAlias(const std::string &countryID, const std::string &country)
     if (!this->existsCountry(countryID)) {
         return false;
     }
-    
+
     std::string lcCountry = changeToLower_copy(country);
-    
+
     std::lock_guard<std::mutex> lock(this->accessMtx);
-    
-    redisReply *reply = static_cast<redisReply *>(
-        redisCommand(this->context, "SREM WNMA:country:%b:alias %b", countryID.c_str(), countryID.size(),
-        lcCountry.c_str(), lcCountry.size()));
+
+    redisReply *reply = static_cast<redisReply *>(redisCommand(
+        this->context, "SREM WNMA:country:%b:alias %b", countryID.c_str(),
+        countryID.size(), lcCountry.c_str(), lcCountry.size()));
     freeReplyObject(reply);
-    
-    reply = static_cast<redisReply *>(
-        redisCommand(this->context, "HDEL WNMA:countries %b %b", lcCountry.c_str(), lcCountry.size(),
-        countryID.c_str(), countryID.size()));
+
+    reply = static_cast<redisReply *>(redisCommand(
+        this->context, "HDEL WNMA:countries %b %b", lcCountry.c_str(),
+        lcCountry.size(), countryID.c_str(), countryID.size()));
     freeReplyObject(reply);
-    
+
     return true;
 }
 
@@ -296,19 +304,22 @@ Countries::deleteFrom(std::string user)
     }
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
-    
-    
-    auto prevCountryID = this->redisGetUserCountry(userIDstr, Countries::Type::FROM);
+
+    auto prevCountryID =
+        this->redisGetUserCountry(userIDstr, Countries::Type::FROM);
     if (!prevCountryID) {
         return;
     }
-    
+
     this->redisRemUserCountry(userIDstr, Countries::Type::FROM);
-    this->redisRemUserFromCountry(userIDstr, prevCountryID.value(), Countries::Type::FROM);
-    
-    auto countryLive = this->redisGetUserCountry(userIDstr, Countries::Type::LIVE);
+    this->redisRemUserFromCountry(userIDstr, prevCountryID.value(),
+                                  Countries::Type::FROM);
+
+    auto countryLive =
+        this->redisGetUserCountry(userIDstr, Countries::Type::LIVE);
     if (countryLive && countryLive.value() == prevCountryID.value()) {
-        this->redisRemUserFromCountry(userIDstr, countryLive.value(), Countries::Type::LIVE);
+        this->redisRemUserFromCountry(userIDstr, countryLive.value(),
+                                      Countries::Type::LIVE);
         this->redisRemUserCountry(userIDstr, Countries::Type::LIVE);
     }
 }
@@ -323,26 +334,31 @@ Countries::deleteLive(std::string user)
     }
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
-    
+
     // get old countryLive value
-    
-    auto countryIDstr = this->redisGetUserCountry(userIDstr, Countries::Type::LIVE);
+
+    auto countryIDstr =
+        this->redisGetUserCountry(userIDstr, Countries::Type::LIVE);
     if (!countryIDstr) {
         return;
     }
-    
+
     this->redisRemUserCountry(userIDstr, Countries::Type::LIVE);
-    this->redisRemUserFromCountry(userIDstr, countryIDstr.value(), Countries::Type::LIVE);
-    
-    auto countryIComeFrom = this->redisGetUserCountry(userIDstr, Countries::Type::FROM);
-    
-    if(countryIComeFrom) {
-        this->redisSetUserCountry(userIDstr, countryIComeFrom.value(), Countries::Type::LIVE);
+    this->redisRemUserFromCountry(userIDstr, countryIDstr.value(),
+                                  Countries::Type::LIVE);
+
+    auto countryIComeFrom =
+        this->redisGetUserCountry(userIDstr, Countries::Type::FROM);
+
+    if (countryIComeFrom) {
+        this->redisSetUserCountry(userIDstr, countryIComeFrom.value(),
+                                  Countries::Type::LIVE);
     }
 }
 
 void
-Countries::deleteUserCountryByID(const std::string &userID, const Countries::Type &type)
+Countries::deleteUserCountryByID(const std::string &userID,
+                                 const Countries::Type &type)
 {
     std::string format = "HDEL WNMA:user:%b country";
     if (type == Countries::Type::FROM) {
@@ -353,8 +369,7 @@ Countries::deleteUserCountryByID(const std::string &userID, const Countries::Typ
         return;
     }
     redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, format.c_str(), userID.c_str(),
-        userID.size()));
+        this->context, format.c_str(), userID.c_str(), userID.size()));
     freeReplyObject(reply);
     return;
 }
@@ -369,17 +384,18 @@ Countries::getFrom(std::string user)
     }
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
-    
-    auto countryIDstr = this->redisGetUserCountry(userIDstr, Countries::Type::FROM);
+
+    auto countryIDstr =
+        this->redisGetUserCountry(userIDstr, Countries::Type::FROM);
     if (!countryIDstr) {
         return std::string();
     }
-    
+
     auto display = this->redisGetDisplayName(countryIDstr.value());
     if (!display) {
         return std::string();
     }
-    
+
     return display.value();
 }
 
@@ -394,16 +410,17 @@ Countries::getLive(std::string user)
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
 
-    auto countryIDstr = this->redisGetUserCountry(userIDstr, Countries::Type::LIVE);    
+    auto countryIDstr =
+        this->redisGetUserCountry(userIDstr, Countries::Type::LIVE);
     if (!countryIDstr) {
         return std::string();
     }
-    
+
     auto display = this->redisGetDisplayName(countryIDstr.value());
     if (!display) {
         return std::string();
     }
-    
+
     return display.value();
 }
 
@@ -411,7 +428,7 @@ bool
 Countries::existsCountry(const std::string &countryID)
 {
     auto countryName = this->getCountryName(countryID);
-    if(countryName.empty()) {
+    if (countryName.empty()) {
         return false;
     } else {
         return true;
@@ -422,23 +439,25 @@ bool
 Countries::deleteCountry(const std::string &countryID)
 {
     auto countryName = this->getCountryName(countryID);
-    if(countryName.empty()) {
+    if (countryName.empty()) {
         return false;
     }
-    
+
     std::lock_guard<std::mutex> lock(this->accessMtx);
-    
-    redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, "HDEL WNMA:countries %b", countryName.c_str(), countryName.size()));
+
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HDEL WNMA:countries %b",
+                     countryName.c_str(), countryName.size()));
     freeReplyObject(reply);
-    
-    reply = static_cast<redisReply *>(redisCommand(
-        this->context, "HDEL WNMA:countryIDs %b", countryID.c_str(), countryID.size()));
+
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HDEL WNMA:countryIDs %b",
+                     countryID.c_str(), countryID.size()));
     freeReplyObject(reply);
-    
-    
-    reply = static_cast<redisReply *>(redisCommand(this->context,
-        "SMEMBERS WNMA:country:%b:live", countryID.c_str(), countryID.size()));
+
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "SMEMBERS WNMA:country:%b:live",
+                     countryID.c_str(), countryID.size()));
 
     if (reply != NULL && reply->type == REDIS_REPLY_ARRAY) {
         for (int i = 0; i < reply->elements; i++) {
@@ -447,9 +466,10 @@ Countries::deleteCountry(const std::string &countryID)
         }
     }
     freeReplyObject(reply);
-    
-    reply = static_cast<redisReply *>(redisCommand(this->context,
-        "SMEMBERS WNMA:country:%b:from", countryID.c_str(), countryID.size()));
+
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "SMEMBERS WNMA:country:%b:from",
+                     countryID.c_str(), countryID.size()));
 
     if (reply != NULL && reply->type == REDIS_REPLY_ARRAY) {
         for (int i = 0; i < reply->elements; i++) {
@@ -458,34 +478,41 @@ Countries::deleteCountry(const std::string &countryID)
         }
     }
     freeReplyObject(reply);
-   
-    reply = static_cast<redisReply *>(redisCommand(
-        this->context, "DEL WNMA:country:%b:live", countryID.c_str(), countryID.size()));
+
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "DEL WNMA:country:%b:live",
+                     countryID.c_str(), countryID.size()));
     freeReplyObject(reply);
-    
-    reply = static_cast<redisReply *>(redisCommand(
-        this->context, "DEL WNMA:country:%b:from", countryID.c_str(), countryID.size()));
+
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "DEL WNMA:country:%b:from",
+                     countryID.c_str(), countryID.size()));
     freeReplyObject(reply);
-    
-    reply = static_cast<redisReply *>(redisCommand(
-        this->context, "DEL WNMA:country:%b:displayname", countryID.c_str(), countryID.size()));
+
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "DEL WNMA:country:%b:displayname",
+                     countryID.c_str(), countryID.size()));
     freeReplyObject(reply);
-    
-    reply = static_cast<redisReply *>(redisCommand(this->context, 
-        "DEL WNMA:country:%b:alias", countryID.c_str(), countryID.size()));
+
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "DEL WNMA:country:%b:alias",
+                     countryID.c_str(), countryID.size()));
     freeReplyObject(reply);
-    
+
     return true;
 }
 
 bool
-Countries::renameCountry(const std::string &countryID, const std::string &newCountryName)
+Countries::renameCountry(const std::string &countryID,
+                         const std::string &newCountryName)
 {
-    if(this->existsCountry(countryID)) {
+    if (this->existsCountry(countryID)) {
         std::lock_guard<std::mutex> lock(this->accessMtx);
-        
-        redisReply *reply = static_cast<redisReply *>(redisCommand(
-            this->context, "SET WNMA:country:%b:displayname %b", countryID.c_str(), countryID.size(), newCountryName.c_str(), newCountryName.size()));
+
+        redisReply *reply = static_cast<redisReply *>(
+            redisCommand(this->context, "SET WNMA:country:%b:displayname %b",
+                         countryID.c_str(), countryID.size(),
+                         newCountryName.c_str(), newCountryName.size()));
         freeReplyObject(reply);
         return true;
     } else {
@@ -511,7 +538,8 @@ Countries::redisGetDisplayName(const std::string &countryIDstr)
 }
 
 optional<std::string>
-Countries::redisGetUserCountry(const std::string &userID, const Countries::Type &type)
+Countries::redisGetUserCountry(const std::string &userID,
+                               const Countries::Type &type)
 {
     std::string format = "HGET WNMA:user:%b country";
     if (type == Countries::Type::FROM) {
@@ -522,25 +550,26 @@ Countries::redisGetUserCountry(const std::string &userID, const Countries::Type 
         return std::experimental::nullopt;
     }
     redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, format.c_str(), userID.c_str(),
-        userID.size()));
+        this->context, format.c_str(), userID.c_str(), userID.size()));
     if (!reply) {
         return std::experimental::nullopt;
     }
-    
+
     if (reply->type != REDIS_REPLY_STRING) {
         freeReplyObject(reply);
         return std::experimental::nullopt;
     }
-    
+
     std::string country(reply->str, reply->len);
     freeReplyObject(reply);
     return country;
 }
 
 void
-Countries::redisRemUserFromCountry(const std::string &userID, const std::string &countryID, const Countries::Type &type)
-{    
+Countries::redisRemUserFromCountry(const std::string &userID,
+                                   const std::string &countryID,
+                                   const Countries::Type &type)
+{
     std::string format = "SREM WNMA:country:%b:";
     if (type == Countries::Type::FROM) {
         format += "from %b";
@@ -549,15 +578,17 @@ Countries::redisRemUserFromCountry(const std::string &userID, const std::string 
     } else {
         return;
     }
-    
-    redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, format.c_str(), countryID.c_str(),
-        countryID.size(), userID.c_str(), userID.size()));
+
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, format.c_str(), countryID.c_str(),
+                     countryID.size(), userID.c_str(), userID.size()));
     freeReplyObject(reply);
 }
 
 void
-Countries::redisSetUserCountry(const std::string &userID, const std::string &countryID, const Countries::Type &type)
+Countries::redisSetUserCountry(const std::string &userID,
+                               const std::string &countryID,
+                               const Countries::Type &type)
 {
     std::string format = "HSET WNMA:user:%b country";
     if (type == Countries::Type::FROM) {
@@ -567,14 +598,15 @@ Countries::redisSetUserCountry(const std::string &userID, const std::string &cou
     } else {
         return;
     }
-    redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, format.c_str(), userID.c_str(),
-        userID.size(), countryID.c_str(), countryID.size()));
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, format.c_str(), userID.c_str(),
+                     userID.size(), countryID.c_str(), countryID.size()));
     freeReplyObject(reply);
 }
 
 void
-Countries::redisRemUserCountry(const std::string &userID, const Countries::Type &type)
+Countries::redisRemUserCountry(const std::string &userID,
+                               const Countries::Type &type)
 {
     std::string format = "HDEL WNMA:user:%b country";
     if (type == Countries::Type::FROM) {
@@ -590,7 +622,8 @@ Countries::redisRemUserCountry(const std::string &userID, const Countries::Type 
 }
 
 bool
-Countries::redisExistsUserCountry(const std::string &userID, const Countries::Type &type)
+Countries::redisExistsUserCountry(const std::string &userID,
+                                  const Countries::Type &type)
 {
     std::string format = "HEXISTS WNMA:user:%b country";
     if (type == Countries::Type::FROM) {
@@ -602,23 +635,25 @@ Countries::redisExistsUserCountry(const std::string &userID, const Countries::Ty
     }
     redisReply *reply = static_cast<redisReply *>(redisCommand(
         this->context, format.c_str(), userID.c_str(), userID.size()));
-        
+
     if (!reply) {
         return false;
     }
-    
+
     if (reply->type != REDIS_REPLY_INTEGER) {
         freeReplyObject(reply);
         return false;
     }
-    
+
     bool ret = reply->integer == 1;
     freeReplyObject(reply);
     return ret;
-}        
-        
+}
+
 void
-Countries::redisAddUserToCountrySet(const std::string &userID, const std::string &countryID, const Countries::Type &type)
+Countries::redisAddUserToCountrySet(const std::string &userID,
+                                    const std::string &countryID,
+                                    const Countries::Type &type)
 {
     std::string format = "SADD WNMA:country:%b:";
     if (type == Countries::Type::FROM) {
@@ -628,10 +663,10 @@ Countries::redisAddUserToCountrySet(const std::string &userID, const std::string
     } else {
         return;
     }
-    
-    redisReply *reply = static_cast<redisReply *>(redisCommand(
-        this->context, format.c_str(), countryID.c_str(),
-        countryID.size(), userID.c_str(), userID.size()));
+
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, format.c_str(), countryID.c_str(),
+                     countryID.size(), userID.c_str(), userID.size()));
     freeReplyObject(reply);
 }
 

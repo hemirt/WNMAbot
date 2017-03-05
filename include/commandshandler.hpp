@@ -92,9 +92,9 @@ private:
     Response regexTest(const IRCMessage &message,
                        std::vector<std::string> &tokens);
     Response setUserCountryFrom(const IRCMessage &message,
-                     std::vector<std::string> &tokens);
+                                std::vector<std::string> &tokens);
     Response setUserCountryLive(const IRCMessage &message,
-                           std::vector<std::string> &tokens);
+                                std::vector<std::string> &tokens);
     Response deleteUser(const IRCMessage &message,
                         std::vector<std::string> &tokens);
     Response isFrom(const IRCMessage &message,
@@ -111,18 +111,17 @@ private:
     Response myDelete(const IRCMessage &message,
                       std::vector<std::string> &tokens);
     Response createCountry(const IRCMessage &message,
-                      std::vector<std::string> &tokens);
-                      Response deleteCountry(const IRCMessage &message,
-                      std::vector<std::string> &tokens);
-                      Response renameCountry(const IRCMessage &message,
-                      std::vector<std::string> &tokens);
-                      Response getCountryID(const IRCMessage &message,
-                      std::vector<std::string> &tokens);
-                      Response createAlias(const IRCMessage &message,
-                      std::vector<std::string> &tokens);
-                      Response deleteAlias(const IRCMessage &message,
-                      std::vector<std::string> &tokens);
-                  
+                           std::vector<std::string> &tokens);
+    Response deleteCountry(const IRCMessage &message,
+                           std::vector<std::string> &tokens);
+    Response renameCountry(const IRCMessage &message,
+                           std::vector<std::string> &tokens);
+    Response getCountryID(const IRCMessage &message,
+                          std::vector<std::string> &tokens);
+    Response createAlias(const IRCMessage &message,
+                         std::vector<std::string> &tokens);
+    Response deleteAlias(const IRCMessage &message,
+                         std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 

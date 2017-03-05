@@ -2,7 +2,6 @@
 #include <iostream>
 #include "utilities.hpp"
 
-
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -27,11 +26,12 @@ UserIDs::UserIDs()
     }
     CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
     this->curl = curl_easy_init();
-    if(curl && !res) {
-        this->chunk = curl_slist_append(chunk, "Accept: application/vnd.twitchtv.v5+json");
-        this->chunk = curl_slist_append(chunk, "Client-ID: i9nh09d5sv612dts3fmrccimhq7yb2");
-    }
-    else {
+    if (curl && !res) {
+        this->chunk = curl_slist_append(
+            chunk, "Accept: application/vnd.twitchtv.v5+json");
+        this->chunk = curl_slist_append(
+            chunk, "Client-ID: i9nh09d5sv612dts3fmrccimhq7yb2");
+    } else {
         std::cerr << "CURL ERROR, USERIDS: \"" << res << "\"" << std::endl;
     }
 }
@@ -76,18 +76,18 @@ UserIDs::isUser(std::string user)
 static size_t
 WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
-    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    ((std::string *)userp)->append((char *)contents, size * nmemb);
     return size * nmemb;
 }
 
 void
 UserIDs::addUser(const std::string &user)
 {
-    if(this->isUser(user)) {
+    if (this->isUser(user)) {
         return;
     }
     std::lock_guard<std::mutex> lock(this->accessMtx);
-    
+
     char *escapedUser = curl_easy_escape(this->curl, user.c_str(), user.size());
     std::string rawurl("https://api.twitch.tv/kraken/users?login=");
     rawurl += escapedUser;
@@ -99,23 +99,27 @@ UserIDs::addUser(const std::string &user)
     curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, &readBuffer);
     CURLcode res = curl_easy_perform(this->curl);
     curl_easy_reset(curl);
-    
+
     if (res) {
-        std::cerr << "UserIDs::addUser(" + user + "): res: \"" << res << "\"" << std::endl;
+        std::cerr << "UserIDs::addUser(" + user + "): res: \"" << res << "\""
+                  << std::endl;
         return;
     }
-    
-    if(readBuffer.empty()) {
-        std::cerr << "UserIDs::addUser(" + user + ") readBuffer empty" << std::endl;
+
+    if (readBuffer.empty()) {
+        std::cerr << "UserIDs::addUser(" + user + ") readBuffer empty"
+                  << std::endl;
         return;
     }
-    
+
     pt::ptree tree;
     std::stringstream ss(readBuffer);
     pt::read_json(ss, tree);
     auto users = tree.get_child("users");
-    if(users.empty()) {
-        std::cout << "rawurl: " << rawurl << "\njsontree child \"users\" empty:\n" << readBuffer << std::endl;
+    if (users.empty()) {
+        std::cout << "rawurl: " << rawurl
+                  << "\njsontree child \"users\" empty:\n"
+                  << readBuffer << std::endl;
         return;
     }
     std::string id;
@@ -123,7 +127,9 @@ UserIDs::addUser(const std::string &user)
         id = user.second.get("_id", "");
     }
     if (id.empty()) {
-        std::cerr << "UserIDs::addUser(" + user + ") couldnt find _id in tree:\n" << readBuffer << std::endl;
+        std::cerr << "UserIDs::addUser(" + user +
+                         ") couldnt find _id in tree:\n"
+                  << readBuffer << std::endl;
         return;
     }
 
@@ -131,9 +137,9 @@ UserIDs::addUser(const std::string &user)
         redisCommand(this->context, "HSETNX WNMA:userids %b %b", user.c_str(),
                      user.size(), id.c_str(), id.size()));
     freeReplyObject(reply);
-    reply = static_cast<redisReply *>(redisCommand(
-        this->context, "HSET WNMA:user:%b username %b", id.c_str(),
-        id.size(), user.c_str(), user.size()));
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HSET WNMA:user:%b username %b", id.c_str(),
+                     id.size(), user.c_str(), user.size()));
     freeReplyObject(reply);
 }
 

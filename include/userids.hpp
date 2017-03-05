@@ -1,8 +1,8 @@
 #ifndef USERSIDS_HPP
 #define USERSIDS_HPP
 
-#include <hiredis/hiredis.h>
 #include <curl/curl.h>
+#include <hiredis/hiredis.h>
 #include <mutex>
 #include <string>
 

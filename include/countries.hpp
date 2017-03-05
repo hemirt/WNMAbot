@@ -4,10 +4,10 @@
 #include "userids.hpp"
 
 #include <hiredis/hiredis.h>
+#include <experimental/optional>
 #include <mutex>
 #include <string>
 #include <vector>
-#include <experimental/optional>
 
 using std::experimental::optional;
 
@@ -31,10 +31,11 @@ public:
     std::string createCountry(const std::string &country);
     bool existsCountry(const std::string &countryID);
     bool deleteCountry(const std::string &countryID);
-    bool renameCountry(const std::string &countryID, const std::string &newCountryName);
+    bool renameCountry(const std::string &countryID,
+                       const std::string &newCountryName);
     bool createAlias(const std::string &countryID, const std::string &country);
     bool deleteAlias(const std::string &countryID, const std::string &country);
-    
+
     std::string getFrom(std::string user);
     std::string getLive(std::string user);
 
@@ -50,7 +51,6 @@ public:
     void operator=(Countries const &) = delete;
 
 private:
-
     Countries();
     ~Countries();
     static redisContext *context;
@@ -63,16 +63,25 @@ private:
         FROM,
         LIVE,
     };
-    
-    optional<std::string> redisGetDisplayName(const std::string &countryIDstr);
-    optional<std::string> redisGetUserCountry(const std::string &userID, const Countries::Type &type);
-    void redisRemUserFromCountry(const std::string &userID, const std::string &countryID, const Countries::Type &type);
-    void redisSetUserCountry(const std::string &userID, const std::string &countryID, const Countries::Type &type);
-    void redisRemUserCountry(const std::string &userID, const Countries::Type &type);
-    bool redisExistsUserCountry(const std::string &userID, const Countries::Type &type);
-    void redisAddUserToCountrySet(const std::string &userID, const std::string &countryID, const Countries::Type &type);
-    void deleteUserCountryByID(const std::string &userID, const Countries::Type &type);
 
+    optional<std::string> redisGetDisplayName(const std::string &countryIDstr);
+    optional<std::string> redisGetUserCountry(const std::string &userID,
+                                              const Countries::Type &type);
+    void redisRemUserFromCountry(const std::string &userID,
+                                 const std::string &countryID,
+                                 const Countries::Type &type);
+    void redisSetUserCountry(const std::string &userID,
+                             const std::string &countryID,
+                             const Countries::Type &type);
+    void redisRemUserCountry(const std::string &userID,
+                             const Countries::Type &type);
+    bool redisExistsUserCountry(const std::string &userID,
+                                const Countries::Type &type);
+    void redisAddUserToCountrySet(const std::string &userID,
+                                  const std::string &countryID,
+                                  const Countries::Type &type);
+    void deleteUserCountryByID(const std::string &userID,
+                               const Countries::Type &type);
 };
 
 #endif
