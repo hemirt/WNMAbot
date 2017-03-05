@@ -110,6 +110,8 @@ private:
                       std::vector<std::string> &tokens);
     Response myDelete(const IRCMessage &message,
                       std::vector<std::string> &tokens);
+    Response createCountry(const IRCMessage &message,
+                      std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 

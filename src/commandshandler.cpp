@@ -106,6 +106,8 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->myLiving(message, tokens);
     } else if (tokens[0] == "!mydelete") {
         return this->myDelete(message, tokens);
+    } else if (tokens[0] == "!createcountry" && this->isAdmin(message.user)) {
+        return this->createCountry(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -1350,6 +1352,31 @@ CommandsHandler::myDelete(const IRCMessage &message,
     }
     
     response.message = message.user + ", deleted your data SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::createCountry(const IRCMessage &message,
+                               std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if(tokens.size() < 2) {
+        return response;
+    }
+    
+    std::string country;
+    for (int i = 1; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+    
+    auto str = Countries::getInstance().createCountry(country);
+    
+    response.message = message.user + ", created new country \"" + country + "\" (" + str + ") SeemsGood";
     response.type = Response::Type::MESSAGE;
     return response;
 }
