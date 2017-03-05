@@ -15,3 +15,4 @@
 2. hiredis - via your distro or https://github.com/redis/hiredis
 3. c++17 compiler support
 4. libcurl
+5. boost
