@@ -114,6 +114,10 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->renameCountry(message, tokens);
     } else if (tokens[0] == "!getcountryid" && this->isAdmin(message.user)) {
         return this->getCountryID(message, tokens);
+    } else if (tokens[0] == "!createalias" && this->isAdmin(message.user)) {
+        return this->createAlias(message, tokens);
+    } else if (tokens[0] == "!deletealias" && this->isAdmin(message.user)) {
+        return this->deleteAlias(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -1466,6 +1470,60 @@ CommandsHandler::getCountryID(const IRCMessage &message,
         response.message = message.user + ", countryID of \"" + country + "\" is " + id + " SeemsGood";
     } else {
         response.message = message.user + ", country \"" + country + "\" not found NaM";
+    }
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::createAlias(const IRCMessage &message,
+                             std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if(tokens.size() < 3) {
+        return response;
+    }
+    
+    std::string country;
+    for (int i = 2; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+    
+    if(Countries::getInstance().createAlias(tokens[1], country)) {
+        response.message = message.user + ", created alias for " + tokens[1] + ": " + country + " SeemsGood";
+    } else {
+        response.message = message.user + ", country " + tokens[1] + " not found NaM";
+    }
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::deleteAlias(const IRCMessage &message,
+                             std::vector<std::string> &tokens)
+{
+    Response response;
+
+    if(tokens.size() < 3) {
+        return response;
+    }
+    
+    std::string country;
+    for (int i = 2; i < tokens.size(); i++) {
+        country += tokens[i] + " ";
+    }
+    if (country.back() == ' ') {
+        country.pop_back();
+    }
+    
+    if(Countries::getInstance().deleteAlias(tokens[1], country)) {
+        response.message = message.user + ", deleted alias for " + tokens[1] + ": " + country + " SeemsGood";
+    } else {
+        response.message = message.user + ", country " + tokens[1] + " not found NaM";
     }
     response.type = Response::Type::MESSAGE;
     return response;

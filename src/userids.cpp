@@ -115,7 +115,7 @@ UserIDs::addUser(const std::string &user)
     pt::read_json(ss, tree);
     auto users = tree.get_child("users");
     if(users.empty()) {
-        std::cout << "jsontree child \"users\" empty:\n" << readBuffer << std::endl;
+        std::cout << "rawurl: " << rawurl << "\njsontree child \"users\" empty:\n" << readBuffer << std::endl;
         return;
     }
     std::string id;

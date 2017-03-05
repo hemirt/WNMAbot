@@ -32,6 +32,8 @@ public:
     bool existsCountry(const std::string &countryID);
     bool deleteCountry(const std::string &countryID);
     bool renameCountry(const std::string &countryID, const std::string &newCountryName);
+    bool createAlias(const std::string &countryID, const std::string &country);
+    bool deleteAlias(const std::string &countryID, const std::string &country);
     
     std::string getFrom(std::string user);
     std::string getLive(std::string user);

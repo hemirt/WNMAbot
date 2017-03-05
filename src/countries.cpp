@@ -198,6 +198,7 @@ Countries::getCountryName(const std::string &countryID)
 std::string
 Countries::createCountry(const std::string &country)
 {
+    std::lock_guard<std::mutex> lock(this->accessMtx);
     std::string lcCountry = changeToLower_copy(country);
     // get next countryID
     redisReply *reply = static_cast<redisReply *>(
@@ -228,8 +229,61 @@ Countries::createCountry(const std::string &country)
                      countryIDstr.c_str(), countryIDstr.size(),
                      country.c_str(), country.size()));
     freeReplyObject(reply);
+    
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "SADD WNMA:country:%b:alias %b", countryIDstr.c_str(), countryIDstr.size(),
+        lcCountry.c_str(), lcCountry.size()));
+    freeReplyObject(reply);
 
     return countryIDstr;
+}
+
+bool
+Countries::createAlias(const std::string &countryID, const std::string &country)
+{
+    if (!this->existsCountry(countryID)) {
+        return false;
+    }
+    
+    std::string lcCountry = changeToLower_copy(country);
+    
+    std::lock_guard<std::mutex> lock(this->accessMtx);
+    
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "SADD WNMA:country:%b:alias %b", countryID.c_str(), countryID.size(),
+        lcCountry.c_str(), lcCountry.size()));
+    freeReplyObject(reply);
+    
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HSET WNMA:countries %b %b", lcCountry.c_str(), lcCountry.size(),
+        countryID.c_str(), countryID.size()));
+    freeReplyObject(reply);
+    
+    return true;
+}
+
+bool
+Countries::deleteAlias(const std::string &countryID, const std::string &country)
+{
+    if (!this->existsCountry(countryID)) {
+        return false;
+    }
+    
+    std::string lcCountry = changeToLower_copy(country);
+    
+    std::lock_guard<std::mutex> lock(this->accessMtx);
+    
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "SREM WNMA:country:%b:alias %b", countryID.c_str(), countryID.size(),
+        lcCountry.c_str(), lcCountry.size()));
+    freeReplyObject(reply);
+    
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HDEL WNMA:countries %b %b", lcCountry.c_str(), lcCountry.size(),
+        countryID.c_str(), countryID.size()));
+    freeReplyObject(reply);
+    
+    return true;
 }
 
 void
@@ -415,6 +469,10 @@ Countries::deleteCountry(const std::string &countryID)
     
     reply = static_cast<redisReply *>(redisCommand(
         this->context, "DEL WNMA:country:%b:displayname", countryID.c_str(), countryID.size()));
+    freeReplyObject(reply);
+    
+    reply = static_cast<redisReply *>(redisCommand(this->context, 
+        "DEL WNMA:country:%b:alias", countryID.c_str(), countryID.size()));
     freeReplyObject(reply);
     
     return true;
