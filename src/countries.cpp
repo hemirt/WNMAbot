@@ -106,9 +106,9 @@ Countries::usersFrom(const std::string &country)
     }
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
-    
+
     auto display = this->redisGetDisplayName(countryIDstr);
-    if(!display) {
+    if (!display) {
         return pair;
     } else {
         pair.first = display.value();
@@ -145,12 +145,12 @@ Countries::usersLive(const std::string &country)
     std::lock_guard<std::mutex> lock(this->accessMtx);
 
     auto display = this->redisGetDisplayName(countryIDstr);
-    if(!display) {
+    if (!display) {
         return pair;
     } else {
         pair.first = display.value();
     }
-    
+
     redisReply *reply = static_cast<redisReply *>(
         redisCommand(this->context, "SMEMBERS WNMA:country:%b:live",
                      countryIDstr.c_str(), countryIDstr.size()));
@@ -507,7 +507,7 @@ Countries::deleteCountry(const std::string &countryID)
         redisCommand(this->context, "DEL WNMA:country:%b:displayname",
                      countryID.c_str(), countryID.size()));
     freeReplyObject(reply);
-    
+
     reply = static_cast<redisReply *>(
         redisCommand(this->context, "SMEMBERS WNMA:country:%b:alias",
                      countryID.c_str(), countryID.size()));
@@ -516,8 +516,9 @@ Countries::deleteCountry(const std::string &countryID)
         redisReply *reply2;
         for (int i = 0; i < reply->elements; i++) {
             std::string alias(reply->element[i]->str, reply->element[i]->len);
-            reply2 = static_cast<redisReply *>(redisCommand(
-                this->context, "HDEL WNMA:countries %b", alias.c_str(), alias.size()));
+            reply2 = static_cast<redisReply *>(
+                redisCommand(this->context, "HDEL WNMA:countries %b",
+                             alias.c_str(), alias.size()));
             freeReplyObject(reply2);
         }
     }
