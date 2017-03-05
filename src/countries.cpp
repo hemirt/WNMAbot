@@ -493,6 +493,21 @@ Countries::deleteCountry(const std::string &countryID)
         redisCommand(this->context, "DEL WNMA:country:%b:displayname",
                      countryID.c_str(), countryID.size()));
     freeReplyObject(reply);
+    
+    reply = static_cast<redisReply *>(
+        redisCommand(this->context, "SMEMBERS WNMA:country:%b:alias",
+                     countryID.c_str(), countryID.size()));
+
+    if (reply != NULL && reply->type == REDIS_REPLY_ARRAY) {
+        redisReply *reply2;
+        for (int i = 0; i < reply->elements; i++) {
+            std::string alias(reply->element[i]->str, reply->element[i]->len);
+            reply2 = static_cast<redisReply *>(redisCommand(
+                this->context, "HDEL WNMA:countries %b", alias.c_str(), alias.size()));
+            freeReplyObject(reply2);
+        }
+    }
+    freeReplyObject(reply);
 
     reply = static_cast<redisReply *>(
         redisCommand(this->context, "DEL WNMA:country:%b:alias",
