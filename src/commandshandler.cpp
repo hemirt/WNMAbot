@@ -87,9 +87,9 @@ CommandsHandler::handle(const IRCMessage &message)
     } else if (tokens[0] == "!regex") {
         return this->regexTest(message, tokens);
     } else if (tokens[0] == "!setfrom") {
-        return this->setUser(message, tokens);
+        return this->setUserCountryFrom(message, tokens);
     } else if (tokens[0] == "!setlive") {
-        return this->setUserLiving(message, tokens);
+        return this->setUserCountryLive(message, tokens);
     } else if (tokens[0] == "!where" || tokens[0] == "!country") {
         return this->isFrom(message, tokens);
     } else if (tokens[0] == "!print") {
@@ -1095,7 +1095,7 @@ CommandsHandler::regexTest(const IRCMessage &message,
 }
 
 Response
-CommandsHandler::setUser(const IRCMessage &message,
+CommandsHandler::setUserCountryFrom(const IRCMessage &message,
                          std::vector<std::string> &tokens)
 {
     Response response;
@@ -1124,7 +1124,7 @@ CommandsHandler::setUser(const IRCMessage &message,
 }
 
 Response
-CommandsHandler::setUserLiving(const IRCMessage &message,
+CommandsHandler::setUserCountryLive(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
     Response response;

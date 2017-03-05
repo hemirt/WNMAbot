@@ -91,9 +91,9 @@ private:
     Response whoIsAfk(const IRCMessage &message);
     Response regexTest(const IRCMessage &message,
                        std::vector<std::string> &tokens);
-    Response setUser(const IRCMessage &message,
+    Response setUserCountryFrom(const IRCMessage &message,
                      std::vector<std::string> &tokens);
-    Response setUserLiving(const IRCMessage &message,
+    Response setUserCountryLive(const IRCMessage &message,
                            std::vector<std::string> &tokens);
     Response deleteUser(const IRCMessage &message,
                         std::vector<std::string> &tokens);
