@@ -32,8 +32,6 @@ Countries::setFrom(std::string user, std::string from)
 {
     changeToLower(user);
 
-    this->deleteFrom(user);
-
     std::string userIDstr = this->userIDs.getID(user);
     if (userIDstr.empty()) {
         return Countries::Result::NOUSER;
@@ -43,6 +41,8 @@ Countries::setFrom(std::string user, std::string from)
         return Countries::Result::NOCOUNTRY;
     }
 
+    this->deleteFrom(user);
+    
     std::lock_guard<std::mutex> lock(this->accessMtx);
 
     auto prevCountryID =
@@ -70,8 +70,6 @@ Countries::setLive(std::string user, std::string living)
 {
     changeToLower(user);
 
-    this->deleteLive(user);
-
     std::string userIDstr = this->userIDs.getID(user);
     if (userIDstr.empty()) {
         return Countries::Result::NOUSER;
@@ -80,6 +78,8 @@ Countries::setLive(std::string user, std::string living)
     if (countryIDstr.empty()) {
         return Countries::Result::NOCOUNTRY;
     }
+    
+    this->deleteLive(user);
 
     std::lock_guard<std::mutex> lock(this->accessMtx);
 

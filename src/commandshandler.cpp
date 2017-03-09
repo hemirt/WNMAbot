@@ -1328,7 +1328,7 @@ CommandsHandler::myFrom(const IRCMessage &message,
                            country + " SeemsGood";
         response.type = Response::Type::MESSAGE;
     } else if (result == Countries::Result::NOCOUNTRY) {
-        response.message = message.user + ", you cannot use this country NaM";
+        response.message = message.user + ", no such country found in the database NaM";
         response.type = Response::Type::MESSAGE;
     }
 
@@ -1358,7 +1358,7 @@ CommandsHandler::myLiving(const IRCMessage &message,
                            country + " SeemsGood";
         response.type = Response::Type::MESSAGE;
     } else if (result == Countries::Result::NOCOUNTRY) {
-        response.message = message.user + ", you cannot use this country NaM";
+        response.message = message.user + ", no such country found in the database NaM";
         response.type = Response::Type::MESSAGE;
     }
 
