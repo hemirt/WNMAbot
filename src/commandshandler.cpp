@@ -118,6 +118,10 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->createAlias(message, tokens);
     } else if (tokens[0] == "!deletealias" && this->isAdmin(message.user)) {
         return this->deleteAlias(message, tokens);
+    } else if (tokens[0] == "!reminders") {
+        return this->myReminders(message, tokens);
+    } else if (tokens[0] == "!reminder") {
+        return this->checkReminder(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -1559,6 +1563,62 @@ CommandsHandler::deleteAlias(const IRCMessage &message,
         response.message =
             message.user + ", country " + tokens[1] + " not found NaM";
     }
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::myReminders(const IRCMessage &message,
+                             std::vector<std::string> &tokens)
+{
+    Response response;
+    
+    auto remindTree = this->redisClient.getRemindersOfUser(message.user);
+    std::string whichReminders;
+    for (const auto &kv : remindTree) {
+        // kv.first == name of the child
+        // kv.second == child tree
+        whichReminders += kv.first + ", ";
+    }
+    
+    if (whichReminders.empty()) {
+        response.message = message.user + ", there are no reminders for you eShrug";
+    } else {
+        whichReminders.pop_back();
+        whichReminders.pop_back();
+        response.message = message.user + ", there are these reminders for you: " + whichReminders + ". Use !reminder number to check it out SeemsGood";
+    }
+    
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::checkReminder(const IRCMessage &message,
+                             std::vector<std::string> &tokens)
+{
+    Response response;
+    if (tokens.size() < 2) {
+        return response;
+    }
+    
+    auto reminderTree = this->redisClient.getRemindersOfUser(message.user);
+
+    if (reminderTree.count(tokens[1])) {
+        std::string what =  reminderTree.get(tokens[1] + ".what", "");
+        std::string timeSinceEpoch = reminderTree.get(tokens[1] + ".when", "");
+        if (what.empty() || timeSinceEpoch.empty()) {
+            return response;
+        }
+        int64_t sec = std::atoll(timeSinceEpoch.c_str());
+        auto whentimepoint = std::chrono::time_point<std::chrono::system_clock>(std::chrono::seconds(sec));
+        auto dur = whentimepoint - std::chrono::system_clock::now();
+        std::string msg = makeTimeString(std::chrono::duration_cast<std::chrono::seconds>(dur).count());
+        response.message = message.user + ", reminder " + tokens[1] + ": " + what + " in " + msg + " SeemsGood"; 
+    } else {
+        response.message = message.user + ", no such reminder NaM";
+    }
+
     response.type = Response::Type::MESSAGE;
     return response;
 }
