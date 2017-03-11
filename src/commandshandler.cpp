@@ -1218,16 +1218,19 @@ CommandsHandler::getUsersFrom(const IRCMessage &message,
     auto pairDisplayUsers = Countries::getInstance().usersFrom(country);
     if (pairDisplayUsers.first.empty()) {
         response.message =
-            message.user + ", the country " + country + " doesn't exist NaM";
+            message.user + ", no such country found in the database NaM";
     } else if (pairDisplayUsers.second.empty()) {
         response.message = message.user + ", there are no users from " +
                            pairDisplayUsers.first + " ForeverAlone";
     } else {
         response.message = message.user + ", from " + pairDisplayUsers.first +
                            " are these users: ";
-        for (const auto &i : pairDisplayUsers.second) {
-            response.message += i[0] + std::string("\u05C4") +
-                                i.substr(1, std::string::npos) + ", ";
+        for (auto &i : pairDisplayUsers.second) {
+            // insert special character at pos 1
+            // and at pos before last
+            i.insert(1, std::string("\u05C4"));
+            i.insert(i.size() - 1, std::string("\u05C4"));
+            response.message += i + ", ";
         }
         response.message.pop_back();
         response.message.pop_back();
@@ -1258,16 +1261,17 @@ CommandsHandler::getUsersLiving(const IRCMessage &message,
     auto pairDisplayUsers = Countries::getInstance().usersLive(country);
     if (pairDisplayUsers.first.empty()) {
         response.message =
-            message.user + ", the country " + country + " doesn't exist NaM";
+            message.user + ", no such country found in the database NaM";
     } else if (pairDisplayUsers.second.empty()) {
         response.message = message.user + ", there are no users living in " +
                            pairDisplayUsers.first + " ForeverAlone";
     } else {
         response.message =
             message.user + ", in " + pairDisplayUsers.first + " live users: ";
-        for (const auto &i : pairDisplayUsers.second) {
-            response.message += i[0] + std::string("\u05C4") +
-                                i.substr(1, std::string::npos) + ", ";
+        for (auto &i : pairDisplayUsers.second) {
+            i.insert(1, std::string("\u05C4"));
+            i.insert(i.size() - 1, std::string("\u05C4"));
+            response.message += i + ", ";
         }
         response.message.pop_back();
         response.message.pop_back();
