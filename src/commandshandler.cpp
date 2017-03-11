@@ -933,9 +933,22 @@ CommandsHandler::goodNight(const IRCMessage &message,
     if (tokens.size() > 1 && UserIDs::getInstance().isUser(tokens[1])) {
         return response;
     }
-
-    this->channelObject->owner->afkers.setAfker(message.user,
+    
+    std::string gnmsg;
+    if (tokens.size() > 1) {
+        for (int i = 1; i < tokens.size(); i++) {
+            gnmsg += tokens[i] + " ";
+        }
+    }
+    
+    if (gnmsg.empty()) {
+        this->channelObject->owner->afkers.setAfker(message.user,
                                                 "ResidentSleeper");
+    } else {
+        gnmsg.pop_back();
+        this->channelObject->owner->afkers.setAfker(message.user,
+                                                gnmsg);
+    }    
 
     response.type = Response::Type::MESSAGE;
     response.message = message.user + " is now sleeping ResidentSleeper";
