@@ -28,6 +28,7 @@ private:
     ~UserIDs();
     static UserIDs instance;
     static std::mutex accessMtx;
+    static std::mutex curlMtx;
     static redisContext *context;
     struct curl_slist *chunk = NULL;
     static CURL *curl;

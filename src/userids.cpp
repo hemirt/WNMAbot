@@ -9,6 +9,7 @@ namespace pt = boost::property_tree;
 
 redisContext *UserIDs::context = nullptr;
 std::mutex UserIDs::accessMtx;
+std::mutex UserIDs::curlMtx;
 UserIDs UserIDs::instance;
 CURL *UserIDs::curl = nullptr;
 
@@ -86,7 +87,7 @@ UserIDs::addUser(const std::string &user)
     if (this->isUser(user)) {
         return;
     }
-    std::lock_guard<std::mutex> lock(this->accessMtx);
+    std::unique_lock<std::mutex> lock(this->curlMtx);
 
     char *escapedUser = curl_easy_escape(this->curl, user.c_str(), user.size());
     std::string rawurl("https://api.twitch.tv/kraken/users?login=");
@@ -133,6 +134,8 @@ UserIDs::addUser(const std::string &user)
         return;
     }
 
+    lock = std::unique_lock<std::mutex>(this->accessMtx);
+    
     redisReply *reply = static_cast<redisReply *>(
         redisCommand(this->context, "HSETNX WNMA:userids %b %b", user.c_str(),
                      user.size(), id.c_str(), id.size()));
