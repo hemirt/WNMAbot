@@ -6,6 +6,7 @@
 #include "credentials.hpp"
 #include "messagehandler.hpp"
 #include "network.hpp"
+#include "messenger.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -66,15 +67,14 @@ private:
     // XXX: This doesn't even seem to be used
     std::atomic<bool> pingReplied;
 
-    // Used in anti-spam measure so we don't get globally banned
-    std::chrono::high_resolution_clock::time_point lastMessageTime;
-
     boost::asio::io_service &ioService;
 
     Credentials credentials;
 
     std::chrono::steady_clock::time_point connectedTime =
         std::chrono::steady_clock::now();
+        
+    Messenger messenger;
 };
 
 #endif
