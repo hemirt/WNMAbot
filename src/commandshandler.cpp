@@ -92,6 +92,10 @@ CommandsHandler::handle(const IRCMessage &message)
         }
     }
 
+    if (!this->channelObject->messenger.able()) {
+        return Response();
+    }
+
     if (tokens[0] == "!chns") {
         return this->printChannels(message, tokens);
     } else if (tokens[0] == "!remindme") {

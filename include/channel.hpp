@@ -53,6 +53,7 @@ public:
     ConnectionHandler *owner;
 
     CommandsHandler commandsHandler;
+    Messenger messenger;
 
 private:
     // Create a new connection add it to the connections vector
@@ -73,8 +74,6 @@ private:
 
     std::chrono::steady_clock::time_point connectedTime =
         std::chrono::steady_clock::now();
-
-    Messenger messenger;
 };
 
 #endif

@@ -76,6 +76,15 @@ Messenger::empty() const
     return empty;
 }
 
+bool
+Messenger::able() const
+{
+    this->lk.lock();
+    bool b = this->deque.size() < this->maxMsgsInQueue;
+    this->lk.unlock();
+    return b;
+}
+
 std::string
 Messenger::extract_front()
 {

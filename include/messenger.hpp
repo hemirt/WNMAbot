@@ -20,6 +20,7 @@ public:
     size_t size() const;
     bool empty() const;
     void startSending();
+    bool able() const;
 
 private:
     std::function<bool(const std::string &)> f;
