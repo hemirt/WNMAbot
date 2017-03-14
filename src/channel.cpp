@@ -209,57 +209,10 @@ Channel::handleMessage(const IRCMessage &message)
                         std::chrono::duration_cast<std::chrono::seconds>(
                             now - connectedTime);
 
-                    auto convert = [](std::chrono::seconds T) -> std::string {
-                        std::string str;
-                        int seconds = T.count() % 60;
-                        int minutes = T.count() / 60;
-                        int hours = minutes / 60;
-                        minutes %= 60;
-                        int days = hours / 24;
-                        hours %= 24;
-                        std::stringstream ss;
-                        ss << " ";
-                        if (days != 0) {
-                            ss << days;
-                            if (days == 1) {
-                                ss << " day ";
-                            } else {
-                                ss << " days ";
-                            }
-                        }
-                        if (hours != 0) {
-                            ss << hours;
-                            if (hours == 1) {
-                                ss << " hour ";
-                            } else {
-                                ss << " hours ";
-                            }
-                        }
-                        if (minutes != 0) {
-                            ss << minutes;
-                            if (minutes == 1) {
-                                ss << " minute ";
-                            } else {
-                                ss << " minutes ";
-                            }
-                        }
-                        if (seconds != 0) {
-                            ss << seconds;
-                            if (seconds == 1) {
-                                ss << " second ";
-                            } else {
-                                ss << " seconds ";
-                            }
-                        }
-                        str = ss.str();
-                        str.pop_back();
-                        return str;
-                    };
-
-                    auto running = convert(runT);
-                    auto connected = convert(conT);
-                    sent = this->say("Running for" + running +
-                                     ". Connected to this channel for" +
+                    auto running = makeTimeString(runT.count());
+                    auto connected = makeTimeString(conT.count());
+                    sent = this->say("Running for " + running +
+                                     ". Connected to this channel for " +
                                      connected + ".");
                 }
             }
