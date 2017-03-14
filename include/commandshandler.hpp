@@ -29,7 +29,8 @@ public:
     } type = Type::UNKNOWN;
 
     Response() = default;
-    Response(bool _priority) : priority(_priority) {};
+    Response(bool _priority)
+        : priority(_priority){};
     bool priority = false;
     std::string message;
     std::string whisperReceiver;
@@ -125,8 +126,8 @@ private:
     Response myReminders(const IRCMessage &message,
                          std::vector<std::string> &tokens);
     Response checkReminder(const IRCMessage &message,
-                         std::vector<std::string> &tokens);
-                         
+                           std::vector<std::string> &tokens);
+
     boost::asio::io_service &ioService;
 
     std::unordered_map<std::string, std::chrono::steady_clock::time_point>

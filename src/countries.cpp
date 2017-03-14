@@ -42,7 +42,7 @@ Countries::setFrom(std::string user, std::string from)
     }
 
     this->deleteFrom(user);
-    
+
     std::lock_guard<std::mutex> lock(this->accessMtx);
 
     auto prevCountryID =
@@ -78,7 +78,7 @@ Countries::setLive(std::string user, std::string living)
     if (countryIDstr.empty()) {
         return Countries::Result::NOCOUNTRY;
     }
-    
+
     this->deleteLive(user);
 
     std::lock_guard<std::mutex> lock(this->accessMtx);

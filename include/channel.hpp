@@ -5,8 +5,8 @@
 #include "connection.hpp"
 #include "credentials.hpp"
 #include "messagehandler.hpp"
-#include "network.hpp"
 #include "messenger.hpp"
+#include "network.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -73,7 +73,7 @@ private:
 
     std::chrono::steady_clock::time_point connectedTime =
         std::chrono::steady_clock::now();
-        
+
     Messenger messenger;
 };
 

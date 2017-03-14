@@ -47,8 +47,8 @@ CommandsHandler::handle(const IRCMessage &message)
             this->channelObject->owner->sanitizeMsg(tokens[i]);
         }
     }
-    
-    if(this->isAdmin(message.user)) {
+
+    if (this->isAdmin(message.user)) {
         if (tokens[0] == "!raweditcmd") {
             return this->rawEditCommand(message, tokens);
         } else if (tokens[0] == "!addcmd") {
@@ -89,7 +89,7 @@ CommandsHandler::handle(const IRCMessage &message)
             return this->createAlias(message, tokens);
         } else if (tokens[0] == "!deletealias") {
             return this->deleteAlias(message, tokens);
-        } 
+        }
     }
 
     if (tokens[0] == "!chns") {
@@ -901,22 +901,21 @@ CommandsHandler::goodNight(const IRCMessage &message,
     if (tokens.size() > 1 && UserIDs::getInstance().isUser(tokens[1])) {
         return response;
     }
-    
+
     std::string gnmsg;
     if (tokens.size() > 1) {
         for (int i = 1; i < tokens.size(); i++) {
             gnmsg += tokens[i] + " ";
         }
     }
-    
+
     if (gnmsg.empty()) {
         this->channelObject->owner->afkers.setAfker(message.user,
-                                                "ResidentSleeper");
+                                                    "ResidentSleeper");
     } else {
         gnmsg.pop_back();
-        this->channelObject->owner->afkers.setAfker(message.user,
-                                                gnmsg);
-    }    
+        this->channelObject->owner->afkers.setAfker(message.user, gnmsg);
+    }
 
     response.type = Response::Type::MESSAGE;
     response.message = message.user + " is now sleeping ResidentSleeper";
@@ -1293,7 +1292,8 @@ CommandsHandler::myFrom(const IRCMessage &message,
                            country + " SeemsGood";
         response.type = Response::Type::MESSAGE;
     } else if (result == Countries::Result::NOCOUNTRY) {
-        response.message = message.user + ", no such country found in the database NaM";
+        response.message =
+            message.user + ", no such country found in the database NaM";
         response.type = Response::Type::MESSAGE;
     }
 
@@ -1323,7 +1323,8 @@ CommandsHandler::myLiving(const IRCMessage &message,
                            country + " SeemsGood";
         response.type = Response::Type::MESSAGE;
     } else if (result == Countries::Result::NOCOUNTRY) {
-        response.message = message.user + ", no such country found in the database NaM";
+        response.message =
+            message.user + ", no such country found in the database NaM";
         response.type = Response::Type::MESSAGE;
     }
 
@@ -1516,7 +1517,7 @@ CommandsHandler::myReminders(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
     Response response;
-    
+
     auto remindTree = this->redisClient.getRemindersOfUser(message.user);
     std::string whichReminders;
     for (const auto &kv : remindTree) {
@@ -1524,41 +1525,47 @@ CommandsHandler::myReminders(const IRCMessage &message,
         // kv.second == child tree
         whichReminders += kv.first + ", ";
     }
-    
+
     if (whichReminders.empty()) {
-        response.message = message.user + ", there are no reminders for you eShrug";
+        response.message =
+            message.user + ", there are no reminders for you eShrug";
     } else {
         whichReminders.pop_back();
         whichReminders.pop_back();
-        response.message = message.user + ", there are these reminders for you: " + whichReminders + ". Use !reminder number to check it out SeemsGood";
+        response.message =
+            message.user + ", there are these reminders for you: " +
+            whichReminders + ". Use !reminder number to check it out SeemsGood";
     }
-    
+
     response.type = Response::Type::MESSAGE;
     return response;
 }
 
 Response
 CommandsHandler::checkReminder(const IRCMessage &message,
-                             std::vector<std::string> &tokens)
+                               std::vector<std::string> &tokens)
 {
     Response response;
     if (tokens.size() < 2) {
         return response;
     }
-    
+
     auto reminderTree = this->redisClient.getRemindersOfUser(message.user);
 
     if (reminderTree.count(tokens[1])) {
-        std::string what =  reminderTree.get(tokens[1] + ".what", "");
+        std::string what = reminderTree.get(tokens[1] + ".what", "");
         std::string timeSinceEpoch = reminderTree.get(tokens[1] + ".when", "");
         if (what.empty() || timeSinceEpoch.empty()) {
             return response;
         }
         int64_t sec = std::atoll(timeSinceEpoch.c_str());
-        auto whentimepoint = std::chrono::time_point<std::chrono::system_clock>(std::chrono::seconds(sec));
+        auto whentimepoint = std::chrono::time_point<std::chrono::system_clock>(
+            std::chrono::seconds(sec));
         auto dur = whentimepoint - std::chrono::system_clock::now();
-        std::string msg = makeTimeString(std::chrono::duration_cast<std::chrono::seconds>(dur).count());
-        response.message = message.user + ", reminder " + tokens[1] + ": " + what + " in " + msg + " SeemsGood"; 
+        std::string msg = makeTimeString(
+            std::chrono::duration_cast<std::chrono::seconds>(dur).count());
+        response.message = message.user + ", reminder " + tokens[1] + ": " +
+                           what + " in " + msg + " SeemsGood";
     } else {
         response.message = message.user + ", no such reminder NaM";
     }

@@ -135,7 +135,7 @@ UserIDs::addUser(const std::string &user)
     }
 
     lock = std::unique_lock<std::mutex>(this->accessMtx);
-    
+
     redisReply *reply = static_cast<redisReply *>(
         redisCommand(this->context, "HSETNX WNMA:userids %b %b", user.c_str(),
                      user.size(), id.c_str(), id.size()));

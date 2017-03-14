@@ -1,12 +1,12 @@
 #include "messenger.hpp"
 
-Messenger::Messenger(boost::asio::io_service &_ioService, std::function<bool(const std::string&)> _f)
+Messenger::Messenger(boost::asio::io_service &_ioService,
+                     std::function<bool(const std::string &)> _f)
     : lk(mtx, std::defer_lock)
     , ioService(_ioService)
     , f(_f)
 {
 }
-
 
 bool
 Messenger::push_front(const std::string &value)
@@ -18,7 +18,6 @@ Messenger::push_front(const std::string &value)
     return true;
 }
 
-
 bool
 Messenger::push_front(std::string &&value)
 {
@@ -28,7 +27,6 @@ Messenger::push_front(std::string &&value)
     this->startSending();
     return true;
 }
-
 
 bool
 Messenger::push_back(const std::string &value)
@@ -45,7 +43,6 @@ Messenger::push_back(const std::string &value)
     return true;
 }
 
-
 bool
 Messenger::push_back(std::string &&value)
 {
@@ -61,7 +58,6 @@ Messenger::push_back(std::string &&value)
     return true;
 }
 
-
 size_t
 Messenger::size() const
 {
@@ -70,7 +66,6 @@ Messenger::size() const
     this->lk.unlock();
     return size;
 }
-
 
 bool
 Messenger::empty() const
@@ -89,31 +84,30 @@ Messenger::extract_front()
     return value;
 }
 
-
 void
 Messenger::startSending()
 {
     this->lk.lock();
-    if(this->ready) {
+    if (this->ready) {
         this->ready = false;
         std::string value = this->extract_front();
         this->f(value);
-        auto t = new boost::asio::steady_timer(
-                                ioService, std::chrono::milliseconds(1550));
+        auto t = new boost::asio::steady_timer(ioService,
+                                               std::chrono::milliseconds(1550));
         t->async_wait([this](const boost::system::error_code &er) {
-                if (er) {
-                    return;
-                }
-                this->lk.lock();
-                if (this->deque.empty()) {
-                    this->ready = true;
-                    this->lk.unlock();
-                } else {
-                    this->ready = true;
-                    this->lk.unlock();
-                    this->startSending();
-                }
-            });
+            if (er) {
+                return;
+            }
+            this->lk.lock();
+            if (this->deque.empty()) {
+                this->ready = true;
+                this->lk.unlock();
+            } else {
+                this->ready = true;
+                this->lk.unlock();
+                this->startSending();
+            }
+        });
     }
     this->lk.unlock();
 }

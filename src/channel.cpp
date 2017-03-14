@@ -3,11 +3,11 @@
 #include "utilities.hpp"
 
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <functional>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -25,7 +25,8 @@ Channel::Channel(const std::string &_channelName,
     , credentials(owner->nick, owner->pass)
     , messageCount(0)
     , commandsHandler(_ioService, this)
-    , messenger(_ioService, std::bind(&Channel::say, this, std::placeholders::_1))
+    , messenger(_ioService,
+                std::bind(&Channel::say, this, std::placeholders::_1))
 {
     // Create initial connection
     this->createConnection();
@@ -84,20 +85,26 @@ Channel::handleMessage(const IRCMessage &message)
             auto afk = owner->afkers.getAfker(message.user);
             if (afk.exists) {
                 auto now = std::chrono::steady_clock::now();
-                if (std::chrono::duration_cast<std::chrono::seconds>(
-                        now - afk.time)
+                if (std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                                     afk.time)
                             .count() > 10 ||
                     boost::iequals(message.params.substr(0, 5), "!back")) {
                     owner->afkers.removeAfker(message.user);
 
-                    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(
-                        std::chrono::steady_clock::now() - afk.time).count();
+                    auto seconds =
+                        std::chrono::duration_cast<std::chrono::seconds>(
+                            std::chrono::steady_clock::now() - afk.time)
+                            .count();
                     std::string howLongWasGone = makeTimeString(seconds);
 
-                    if(afk.message.empty()) {
-                        this->messenger.push_back(message.user + " is back(" + howLongWasGone + " ago) HeyGuys");
+                    if (afk.message.empty()) {
+                        this->messenger.push_back(message.user + " is back(" +
+                                                  howLongWasGone +
+                                                  " ago) HeyGuys");
                     } else {
-                        this->messenger.push_back(message.user + " is back(" + howLongWasGone + " ago): " + afk.message);
+                        this->messenger.push_back(message.user + " is back(" +
+                                                  howLongWasGone + " ago): " +
+                                                  afk.message);
                     }
                 } else {
                     afk.time = now;
@@ -109,13 +116,13 @@ Channel::handleMessage(const IRCMessage &message)
 
             auto response = this->commandsHandler.handle(message);
 
-            if (response.type == Response::Type::MESSAGE){
+            if (response.type == Response::Type::MESSAGE) {
                 if (response.priority == true) {
                     this->messenger.push_front(std::move(response.message));
                 } else {
                     this->messenger.push_back(std::move(response.message));
                 }
-                
+
             } else if (response.type == Response::Type::WHISPER) {
                 this->whisper(response.message, response.whisperReceiver);
             } else {
@@ -141,9 +148,9 @@ Channel::handleMessage(const IRCMessage &message)
 
                     auto running = makeTimeString(runT.count());
                     auto connected = makeTimeString(conT.count());
-                    this->messenger.push_back("Running for " + running +
-                                     ". Connected to this channel for " +
-                                     connected + ".");
+                    this->messenger.push_back(
+                        "Running for " + running +
+                        ". Connected to this channel for " + connected + ".");
                 }
             }
 
