@@ -31,6 +31,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/comebackmsg.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/userids.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/countries.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/messenger.cpp
 )
 
 add_executable(WNMAbot ${SOURCE})

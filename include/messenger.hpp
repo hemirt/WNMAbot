@@ -4,22 +4,33 @@
 #include <deque>
 #include <mutex>
 #include <condition_variable>
+#include <chrono>
+#include <boost/asio/steady_timer.hpp>
+#include <functional>
 
-template <typename T>
+
 class Messenger
 {
 public:
-    Messenger();
-    void push_front(const T &value);
-    void push_front(T &&value);
-    void push_back(const T &value);
-    void push_back(T &&value);
-    size_t size();
-    bool empty();
-    T extract_front();
+    Messenger(boost::asio::io_service &_ioService, std::function<bool(const std::string&)> _f);
+    bool push_front(const std::string &value);
+    bool push_front(std::string &&value);
+    bool push_back(const std::string &value);
+    bool push_back(std::string &&value);
+    size_t size() const;
+    bool empty() const;
+    void startSending();
 
 private:
-    std::deque<T> deque;
-    std::mutex mtx;
-    std::unique_lock<std::mutex> lk;
+    std::function<bool(const std::string&)> f;
+    bool ready = true;
+    std::deque<std::string> deque;
+    mutable std::mutex mtx;
+    mutable std::unique_lock<std::mutex> lk;
+    boost::asio::io_service &ioService;
+    std::string extract_front();
+    constexpr static int maxMsgsInQueue = 3;
+
 };
+
+#endif

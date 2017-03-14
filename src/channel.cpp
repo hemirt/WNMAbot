@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <functional>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -24,6 +25,7 @@ Channel::Channel(const std::string &_channelName,
     , credentials(owner->nick, owner->pass)
     , messageCount(0)
     , commandsHandler(_ioService, this)
+    , messenger(_ioService, std::bind(&Channel::say, this, std::placeholders::_1))
 {
     // Create initial connection
     this->createConnection();
@@ -43,6 +45,10 @@ Channel::createConnection()
 bool
 Channel::say(const std::string &message)
 {
+    if (messageCount >= 19) {
+        // Too many messages sent recently
+        return false;
+    }
     std::string rawMessage = "PRIVMSG #" + this->channelName + " :";
 
     // Message length at most 350 characters
@@ -75,121 +81,39 @@ Channel::handleMessage(const IRCMessage &message)
 {
     switch (message.type) {
         case IRCMessage::Type::PRIVMSG: {
-            // std::cout << '#' << message.channel << ": " << message.user << ":
-            // " << message.params << std::endl;
+            auto afk = owner->afkers.getAfker(message.user);
+            if (afk.exists) {
+                auto now = std::chrono::steady_clock::now();
+                if (std::chrono::duration_cast<std::chrono::seconds>(
+                        now - afk.time)
+                            .count() > 10 ||
+                    boost::iequals(message.params.substr(0, 5), "!back")) {
+                    owner->afkers.removeAfker(message.user);
 
-            auto timeNow = std::chrono::high_resolution_clock::now();
-            auto msSinceLastMessage =
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                    timeNow - lastMessageTime);
+                    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(
+                        std::chrono::steady_clock::now() - afk.time).count();
+                    std::string howLongWasGone = makeTimeString(seconds);
 
-            bool sent = false;
-            {
-                auto afk = owner->afkers.getAfker(message.user);
-                if (afk.exists) {
-                    auto now = std::chrono::steady_clock::now();
-                    if (std::chrono::duration_cast<std::chrono::seconds>(
-                            now - afk.time)
-                                .count() > 10 ||
-                        boost::iequals(message.params.substr(0, 5), "!back")) {
-                        owner->afkers.removeAfker(message.user);
-
-                        if (msSinceLastMessage.count() <= 1500) {
-                            auto t = new boost::asio::steady_timer(
-                                ioService, std::chrono::milliseconds(1500));
-                            t->async_wait([
-                                user = message.user, message = afk.message,
-                                this, time = afk.time
-                            ](const boost::system::error_code &er) {
-                                if (er) {
-                                    return;
-                                }
-                                if (std::chrono::duration_cast<
-                                        std::chrono::milliseconds>(
-                                        std::chrono::high_resolution_clock::
-                                            now() -
-                                        this->lastMessageTime)
-                                        .count() <= 1500) {
-                                    return;
-                                }
-                                auto now = std::chrono::steady_clock::now();
-                                auto seconds =
-                                    std::chrono::duration_cast<
-                                        std::chrono::seconds>(now - time)
-                                        .count();
-                                std::string when = makeTimeString(seconds);
-                                if (message.empty()) {
-                                    this->say(user + " is back(" + when +
-                                              " ago) HeyGuys");
-                                } else {
-                                    this->say(user + " is back(" + when +
-                                              " ago): " + message);
-                                }
-
-                            });
-                        } else {
-                            auto now = std::chrono::steady_clock::now();
-                            auto seconds =
-                                std::chrono::duration_cast<
-                                    std::chrono::seconds>(now - afk.time)
-                                    .count();
-                            std::string when = makeTimeString(seconds);
-                            if (afk.message.empty()) {
-                                sent = this->say(message.user + " is back(" +
-                                                 when + " ago) HeyGuys");
-                            } else {
-                                sent =
-                                    this->say(message.user + " is back(" +
-                                              when + " ago): " + afk.message);
-                            }
-                        }
+                    if(afk.message.empty()) {
+                        this->messenger.push_back(message.user + " is back(" + howLongWasGone + " ago) HeyGuys");
                     } else {
-                        afk.time = now;
-                        owner->afkers.updateAfker(message.user, afk);
+                        this->messenger.push_back(message.user + " is back(" + howLongWasGone + " ago): " + afk.message);
                     }
+                } else {
+                    afk.time = now;
+                    owner->afkers.updateAfker(message.user, afk);
                 }
             }
 
             owner->comebacks.sendMsgs(message.user);
 
-            if (messageCount >= 19) {
-                // Too many messages sent recently
-                return false;
-            }
+            auto response = this->commandsHandler.handle(message);
 
-            if (msSinceLastMessage.count() <= 1500) {
-                // Last message was sent less than 1.5 seconds ago
-                return false;
-            }
-
-            const auto response = this->commandsHandler.handle(message);
-
-            if (response.type == Response::Type::MESSAGE) {
-                if (sent) {
-                    auto t = new boost::asio::steady_timer(
-                        ioService, std::chrono::milliseconds(1550));
-                    t->async_wait([
-                        user = message.user, message = response.message, this
-                    ](const boost::system::error_code &er) {
-                        if (er) {
-                            return;
-                        }
-                        if (std::chrono::duration_cast<
-                                std::chrono::milliseconds>(
-                                std::chrono::high_resolution_clock::now() -
-                                this->lastMessageTime)
-                                .count() <= 1500) {
-                            return;
-                        }
-                        this->say(message);
-                    });
-                } else {
-                    sent = this->say(response.message);
-                }
+            if (response.type == Response::Type::MESSAGE){
+                this->messenger.push_back(std::move(response.message));
             } else if (response.type == Response::Type::WHISPER) {
                 this->whisper(response.message, response.whisperReceiver);
-            }
-            if (!sent) {
+            } else {
                 std::vector<std::string> tokens;
                 boost::algorithm::split(tokens, message.params,
                                         boost::algorithm::is_space(),
@@ -198,7 +122,8 @@ Channel::handleMessage(const IRCMessage &message)
                 changeToLower(tokens[0]);
 
                 if (tokens[0] == "zululending" && message.user == "hemirt") {
-                    sent = this->say("Shutting down FeelsBadMan");
+                    // push_front - its a priority message
+                    this->messenger.push_front("Shutting down FeelsBadMan");
                     this->owner->shutdown();
                 } else if (tokens[0] == "!peng") {
                     auto now = std::chrono::steady_clock::now();
@@ -211,14 +136,10 @@ Channel::handleMessage(const IRCMessage &message)
 
                     auto running = makeTimeString(runT.count());
                     auto connected = makeTimeString(conT.count());
-                    sent = this->say("Running for " + running +
+                    this->messenger.push_back("Running for " + running +
                                      ". Connected to this channel for " +
                                      connected + ".");
                 }
-            }
-
-            if (sent) {
-                lastMessageTime = timeNow;
             }
 
             return true;
