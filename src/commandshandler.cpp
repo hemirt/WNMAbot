@@ -47,77 +47,77 @@ CommandsHandler::handle(const IRCMessage &message)
             this->channelObject->owner->sanitizeMsg(tokens[i]);
         }
     }
+    
+    if(this->isAdmin(message.user)) {
+        if (tokens[0] == "!raweditcmd") {
+            return this->rawEditCommand(message, tokens);
+        } else if (tokens[0] == "!addcmd") {
+            return this->addCommand(message, tokens);
+        } else if (tokens[0] == "!editcmd") {
+            return this->editCommand(message, tokens);
+        } else if (tokens[0] == "!deletecmd") {
+            return this->deleteCommand(message, tokens);
+        } else if (tokens[0] == "!deletefullcommand") {
+            return this->deleteFullCommand(message, tokens);
+        } else if (tokens[0] == "!joinchn") {
+            return this->joinChannel(message, tokens);
+        } else if (tokens[0] == "!leavechn") {
+            return this->leaveChannel(message, tokens);
+        } else if (tokens[0] == "!asay") {
+            return this->say(message, tokens);
+        } else if (tokens[0] == "!comebackmsg") {
+            return this->comeBackMsg(message, tokens);
+        } else if (tokens[0] == "!addblacklist") {
+            return this->addBlacklist(message, tokens);
+        } else if (tokens[0] == "!removeblacklist") {
+            return this->removeBlacklist(message, tokens);
+        } else if (tokens[0] == "!setfrom") {
+            return this->setUserCountryFrom(message, tokens);
+        } else if (tokens[0] == "!setlive") {
+            return this->setUserCountryLive(message, tokens);
+        } else if (tokens[0] == "!deleteuser") {
+            return this->deleteUser(message, tokens);
+        } else if (tokens[0] == "!createcountry") {
+            return this->createCountry(message, tokens);
+        } else if (tokens[0] == "!deletecountry") {
+            return this->deleteCountry(message, tokens);
+        } else if (tokens[0] == "!renamecountry") {
+            return this->renameCountry(message, tokens);
+        } else if (tokens[0] == "!getcountryid") {
+            return this->getCountryID(message, tokens);
+        } else if (tokens[0] == "!createalias") {
+            return this->createAlias(message, tokens);
+        } else if (tokens[0] == "!deletealias") {
+            return this->deleteAlias(message, tokens);
+        } 
+    }
 
-    if (tokens[0] == "!raweditcmd") {
-        return this->rawEditCommand(message, tokens);
-    } else if (tokens[0] == "!addcmd") {
-        return this->addCommand(message, tokens);
-    } else if (tokens[0] == "!editcmd") {
-        return this->editCommand(message, tokens);
-    } else if (tokens[0] == "!deletecmd") {
-        return this->deleteCommand(message, tokens);
-    } else if (tokens[0] == "!deletefullcommand") {
-        return this->deleteFullCommand(message, tokens);
-    } else if (tokens[0] == "!joinchn") {
-        return this->joinChannel(message, tokens);
-    } else if (tokens[0] == "!leavechn") {
-        return this->leaveChannel(message, tokens);
-    } else if (tokens[0] == "!chns") {
+    if (tokens[0] == "!chns") {
         return this->printChannels(message, tokens);
     } else if (tokens[0] == "!remindme") {
         return this->remindMe(message, tokens);
     } else if (tokens[0] == "!remind") {
         return this->remind(message, tokens);
-    } else if (tokens[0] == "!asay") {
-        return this->say(message, tokens);
     } else if (tokens[0] == "!afk") {
         return this->afk(message, tokens);
     } else if (tokens[0] == "!gn") {
         return this->goodNight(message, tokens);
     } else if (tokens[0] == "!isafk") {
         return this->isAfk(message, tokens);
-    } else if (tokens[0] == "!comebackmsg") {
-        return this->comeBackMsg(message, tokens);
-    } else if (tokens[0] == "!addblacklist") {
-        return this->addBlacklist(message, tokens);
-    } else if (tokens[0] == "!removeblacklist") {
-        return this->removeBlacklist(message, tokens);
     } else if (tokens[0] == "!whoisafk") {
         return this->whoIsAfk(message);
-    } else if (tokens[0] == "!regex") {
-        return this->regexTest(message, tokens);
-    } else if (tokens[0] == "!setfrom") {
-        return this->setUserCountryFrom(message, tokens);
-    } else if (tokens[0] == "!setlive") {
-        return this->setUserCountryLive(message, tokens);
     } else if (tokens[0] == "!where" || tokens[0] == "!country") {
         return this->isFrom(message, tokens);
-    } else if (tokens[0] == "!print") {
-        return this->printUsersData(message);
     } else if (tokens[0] == "!usersfrom") {
         return this->getUsersFrom(message, tokens);
     } else if (tokens[0] == "!userslive") {
         return this->getUsersLiving(message, tokens);
-    } else if (tokens[0] == "!deleteuser") {
-        return this->deleteUser(message, tokens);
     } else if (tokens[0] == "!myfrom") {
         return this->myFrom(message, tokens);
     } else if (tokens[0] == "!mylive") {
         return this->myLiving(message, tokens);
     } else if (tokens[0] == "!mydelete") {
         return this->myDelete(message, tokens);
-    } else if (tokens[0] == "!createcountry" && this->isAdmin(message.user)) {
-        return this->createCountry(message, tokens);
-    } else if (tokens[0] == "!deletecountry" && this->isAdmin(message.user)) {
-        return this->deleteCountry(message, tokens);
-    } else if (tokens[0] == "!renamecountry" && this->isAdmin(message.user)) {
-        return this->renameCountry(message, tokens);
-    } else if (tokens[0] == "!getcountryid" && this->isAdmin(message.user)) {
-        return this->getCountryID(message, tokens);
-    } else if (tokens[0] == "!createalias" && this->isAdmin(message.user)) {
-        return this->createAlias(message, tokens);
-    } else if (tokens[0] == "!deletealias" && this->isAdmin(message.user)) {
-        return this->deleteAlias(message, tokens);
     } else if (tokens[0] == "!reminders") {
         return this->myReminders(message, tokens);
     } else if (tokens[0] == "!reminder") {
@@ -169,12 +169,7 @@ Response
 CommandsHandler::joinChannel(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
-    Response response;
-    if (this->isAdmin(message.user) == false) {
-        this->channelObject->whisper("You are not an admin NaM", message.user);
-        return response;
-    }
-
+    Response response(true);
     if (tokens.size() < 2) {
         this->channelObject->whisper("Usage: !joinchn <channel>", message.user);
         return response;
@@ -193,12 +188,7 @@ Response
 CommandsHandler::leaveChannel(const IRCMessage &message,
                               std::vector<std::string> &tokens)
 {
-    Response response;
-    if (this->isAdmin(message.user) == false) {
-        this->channelObject->whisper("You are not an admin NaM", message.user);
-        return response;
-    }
-
+    Response response(true);
     if (tokens.size() < 2) {
         this->channelObject->whisper("Usage: !leavechn <channel>",
                                      message.user);
@@ -374,12 +364,7 @@ Response
 CommandsHandler::addCommand(const IRCMessage &message,
                             std::vector<std::string> &tokens)
 {
-    Response response;
-    if (!this->isAdmin(message.user)) {
-        response.message = message.user + ", you are not an admin NaM";
-        response.type = Response::Type::MESSAGE;
-        return response;
-    }
+    Response response(true);
     if (tokens.size() < 4) {
         response.message = "Invalid use of command NaM";
         response.type = Response::Type::MESSAGE;
@@ -440,11 +425,7 @@ Response
 CommandsHandler::editCommand(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
-    Response response;
-    if (!this->isAdmin(message.user)) {
-        return response;
-    }
-
+    Response response(true);
     if (tokens.size() < 4) {
         response.message = "Invalid use of command NaM";
         response.type = Response::Type::MESSAGE;
@@ -504,10 +485,7 @@ Response
 CommandsHandler::rawEditCommand(const IRCMessage &message,
                                 std::vector<std::string> &tokens)
 {
-    Response response;
-    if (!this->isAdmin(message.user)) {
-        return response;
-    }
+    Response response(true);
     if (tokens.size() < 5) {
         response.message = "Invalid use of command NaM";
         response.type = Response::Type::MESSAGE;
@@ -552,12 +530,7 @@ Response
 CommandsHandler::deleteCommand(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
-    Response response;
-    if (!this->isAdmin(message.user)) {
-        response.message = message.user + ", you are not an admin NaM";
-        response.type = Response::Type::MESSAGE;
-        return response;
-    }
+    Response response(true);
     if (tokens.size() < 3) {
         response.message = "Invalid use of command NaM";
         response.type = Response::Type::MESSAGE;
@@ -611,12 +584,7 @@ Response
 CommandsHandler::deleteFullCommand(const IRCMessage &message,
                                    std::vector<std::string> &tokens)
 {
-    Response response;
-    if (!this->isAdmin(message.user)) {
-        response.message = message.user + ", you are not an admin NaM";
-        response.type = Response::Type::MESSAGE;
-        return response;
-    }
+    Response response(true);
     if (tokens.size() < 2) {
         response.message = "Invalid use of command NaM";
         response.type = Response::Type::MESSAGE;
@@ -884,12 +852,8 @@ Response
 CommandsHandler::say(const IRCMessage &message,
                      std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(true);
     if (tokens.size() < 2) {
-        return response;
-    }
-
-    if (this->isAdmin(message.user) == false) {
         return response;
     }
 
@@ -1003,10 +967,7 @@ Response
 CommandsHandler::comeBackMsg(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
-    Response response;
-    if (this->isAdmin(message.user) == false) {
-        return response;
-    }
+    Response response(true);
     if (tokens.size() < 3) {
         return response;
     }
@@ -1036,10 +997,7 @@ Response
 CommandsHandler::addBlacklist(const IRCMessage &message,
                               std::vector<std::string> &tokens)
 {
-    Response response;
-    if (this->isAdmin(message.user) == false) {
-        return response;
-    }
+    Response response(true);
     if (tokens.size() == 2) {
         tokens.push_back("*");
     } else if (tokens.size() < 3) {
@@ -1060,10 +1018,7 @@ Response
 CommandsHandler::removeBlacklist(const IRCMessage &message,
                                  std::vector<std::string> &tokens)
 {
-    Response response;
-    if (this->isAdmin(message.user) == false) {
-        return response;
-    }
+    Response response(true);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1127,8 +1082,8 @@ Response
 CommandsHandler::setUserCountryFrom(const IRCMessage &message,
                                     std::vector<std::string> &tokens)
 {
-    Response response;
-    if (!this->isAdmin(message.user) || tokens.size() < 3) {
+    Response response(true);
+    if (tokens.size() < 3) {
         return response;
     }
 
@@ -1157,8 +1112,8 @@ Response
 CommandsHandler::setUserCountryLive(const IRCMessage &message,
                                     std::vector<std::string> &tokens)
 {
-    Response response;
-    if (!this->isAdmin(message.user) || tokens.size() < 3) {
+    Response response(true);
+    if (tokens.size() < 3) {
         return response;
     }
 
@@ -1299,22 +1254,11 @@ CommandsHandler::getUsersLiving(const IRCMessage &message,
 }
 
 Response
-CommandsHandler::printUsersData(const IRCMessage &message)
-{
-    Response response;
-    if (!this->isAdmin(message.user)) {
-        return response;
-    }
-    // Countries::getInstance().printAllCout();
-    return response;
-}
-
-Response
 CommandsHandler::deleteUser(const IRCMessage &message,
                             std::vector<std::string> &tokens)
 {
-    Response response;
-    if (!this->isAdmin(message.user) || tokens.size() < 2) {
+    Response response(true);
+    if (tokens.size() < 2) {
         return response;
     }
 
@@ -1411,7 +1355,7 @@ Response
 CommandsHandler::createCountry(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(true);
 
     if (tokens.size() < 2) {
         return response;
@@ -1437,7 +1381,7 @@ Response
 CommandsHandler::deleteCountry(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(true);
 
     if (tokens.size() < 2) {
         return response;
@@ -1456,7 +1400,7 @@ Response
 CommandsHandler::renameCountry(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(true);
 
     if (tokens.size() < 3) {
         return response;
@@ -1483,7 +1427,7 @@ Response
 CommandsHandler::getCountryID(const IRCMessage &message,
                               std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(true);
 
     if (tokens.size() < 2) {
         return response;
@@ -1513,7 +1457,7 @@ Response
 CommandsHandler::createAlias(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(true);
 
     if (tokens.size() < 3) {
         return response;
@@ -1542,7 +1486,7 @@ Response
 CommandsHandler::deleteAlias(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(true);
 
     if (tokens.size() < 3) {
         return response;

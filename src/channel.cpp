@@ -110,7 +110,12 @@ Channel::handleMessage(const IRCMessage &message)
             auto response = this->commandsHandler.handle(message);
 
             if (response.type == Response::Type::MESSAGE){
-                this->messenger.push_back(std::move(response.message));
+                if (response.priority == true) {
+                    this->messenger.push_front(std::move(response.message));
+                } else {
+                    this->messenger.push_back(std::move(response.message));
+                }
+                
             } else if (response.type == Response::Type::WHISPER) {
                 this->whisper(response.message, response.whisperReceiver);
             } else {

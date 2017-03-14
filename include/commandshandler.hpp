@@ -29,7 +29,8 @@ public:
     } type = Type::UNKNOWN;
 
     Response() = default;
-
+    Response(bool _priority) : priority(_priority) {};
+    bool priority = false;
     std::string message;
     std::string whisperReceiver;
 
@@ -103,7 +104,6 @@ private:
                           std::vector<std::string> &tokens);
     Response getUsersLiving(const IRCMessage &message,
                             std::vector<std::string> &tokens);
-    Response printUsersData(const IRCMessage &message);
     Response myFrom(const IRCMessage &message,
                     std::vector<std::string> &tokens);
     Response myLiving(const IRCMessage &message,
