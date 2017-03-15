@@ -10,8 +10,8 @@ namespace pt = boost::property_tree;
 redisContext *UserIDs::context = nullptr;
 std::mutex UserIDs::accessMtx;
 std::mutex UserIDs::curlMtx;
-UserIDs UserIDs::instance;
 CURL *UserIDs::curl = nullptr;
+UserIDs UserIDs::instance;
 
 UserIDs::UserIDs()
 {

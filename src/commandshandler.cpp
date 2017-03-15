@@ -126,6 +126,8 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->myReminders(message, tokens);
     } else if (tokens[0] == "!reminder") {
         return this->checkReminder(message, tokens);
+    } else if (tokens[0] == "!pingme") {
+        return this->pingMeCommand(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -1574,6 +1576,29 @@ CommandsHandler::checkReminder(const IRCMessage &message,
         response.message = message.user + ", no such reminder NaM";
     }
 
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::pingMeCommand(const IRCMessage &message,
+                               std::vector<std::string> &tokens)
+{
+    Response response;
+    if (tokens.size() < 2) {
+        return response;
+    }
+
+    changeToLower(tokens[1]);
+
+    if (!UserIDs::getInstance().isUser(tokens[1])) {
+        return response;
+    }
+
+    this->channelObject->pingMe.addPing(message.user, tokens[1],
+                                        this->channelObject->channelName);
+    response.message = message.user + ", you will be pinged when " + tokens[1] +
+                       " writes something in chat SeemsGood";
     response.type = Response::Type::MESSAGE;
     return response;
 }

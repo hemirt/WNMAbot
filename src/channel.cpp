@@ -27,6 +27,7 @@ Channel::Channel(const std::string &_channelName,
     , commandsHandler(_ioService, this)
     , messenger(_ioService,
                 std::bind(&Channel::say, this, std::placeholders::_1))
+    , pingMe(PingMe::getInstance())
 {
     // Create initial connection
     this->createConnection();
@@ -151,6 +152,42 @@ Channel::handleMessage(const IRCMessage &message)
                     this->messenger.push_back(
                         "Running for " + running +
                         ". Connected to this channel for " + connected + ".");
+                }
+            }
+
+            if (this->pingMe.isPinger(message.user)) {
+                auto map = this->pingMe.ping(message.user);
+                if (!map.empty()) {
+                    std::string users;
+
+                    for (const auto &i : map) {
+                        // i.first == channel
+                        // i.second == vector of users to ping
+                        if (this->owner->ofChannelCount(i.first) == 1 &&
+                            !i.second.empty()) {
+                            std::string users;
+                            for (const auto &i : i.second) {
+                                users += i + ", ";
+                            }
+                            if (users.empty()) {
+                                continue;
+                            }
+                            users.pop_back();
+                            users.pop_back();
+                            if (i.first != this->channelName) {
+                                users +=
+                                    ". At channel " + this->channelName + ".";
+                            }
+                            try {
+                                this->owner->channels.at(i.first)
+                                    .messenger.push_front(message.user +
+                                                          " is back: " + users);
+                            } catch (std::exception &e) {
+                                std::cerr << "Ping me exception " << i.first
+                                          << " " << e.what() << std::endl;
+                            }
+                        }
+                    }
                 }
             }
 
