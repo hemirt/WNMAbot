@@ -104,6 +104,7 @@ ConnectionHandler::~ConnectionHandler()
     std::cout << "destructing" << std::endl;
     this->channels.clear();
     Ayah::deinit();
+    Bible::deinit();
     std::cout << "cleared end destr" << std::endl;
 }
 
