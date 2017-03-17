@@ -3,6 +3,7 @@
 #include "connectionhandler.hpp"
 #include "mtrandom.hpp"
 #include "utilities.hpp"
+#include "ayah.hpp"
 
 #include <stdint.h>
 #include <vector>
@@ -128,6 +129,8 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->checkReminder(message, tokens);
     } else if (tokens[0] == "!pingme") {
         return this->pingMeCommand(message, tokens);
+    } else if (tokens[0] == "!ri") {
+        return this->randomIslamicQuote(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -238,8 +241,9 @@ CommandsHandler::makeResponse(const IRCMessage &message,
     Response response;
     boost::optional<int> cooldown =
         commandTree.get_optional<int>(path + ".cooldown");
-    if (cooldown || *cooldown != 0) {
-        auto it = this->cooldownsMap.find(path);
+    if (cooldown && *cooldown != 0) {
+        std::lock_guard<std::mutex> lk(this->cooldownsMtx);
+        auto it = this->cooldownsMap.find(tokens[0] + path);
         auto now = std::chrono::steady_clock::now();
         if (it != cooldownsMap.end()) {
             if (std::chrono::duration_cast<std::chrono::seconds>(now -
@@ -248,7 +252,12 @@ CommandsHandler::makeResponse(const IRCMessage &message,
                 return response;
             }
         }
-        cooldownsMap[path] = now;
+        cooldownsMap[tokens[0] + path] = now;
+        auto t = new boost::asio::steady_timer(ioService, std::chrono::seconds(*cooldown));
+        t->async_wait([this, key = tokens[0] + path](const boost::system::error_code &er) {
+            std::lock_guard<std::mutex> lk(this->cooldownsMtx);
+            this->cooldownsMap.erase(key);
+        });
     }
 
     boost::optional<int> numParams =
@@ -1599,6 +1608,52 @@ CommandsHandler::pingMeCommand(const IRCMessage &message,
                                         this->channelObject->channelName);
     response.message = message.user + ", you will be pinged when " + tokens[1] +
                        " writes something in chat SeemsGood";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::randomIslamicQuote(const IRCMessage &message,
+                                    std::vector<std::string> &tokens)
+{
+    Response response;
+    
+    if(!this->isAdmin(message.user)) {
+        std::lock_guard<std::mutex> lk(this->cooldownsMtx);
+        auto it = this->cooldownsMap.find(tokens[0] + message.user);
+        auto now = std::chrono::steady_clock::now();
+        if (it != cooldownsMap.end()) {
+            if (std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                                 it->second)
+                    .count() < 3) {
+                return response;
+            }
+        }
+        cooldownsMap[tokens[0] + message.user] = now;
+        auto t = new boost::asio::steady_timer(ioService, std::chrono::seconds(3));
+        t->async_wait([this, key = tokens[0] + message.user](const boost::system::error_code &er) {
+            std::lock_guard<std::mutex> lk(this->cooldownsMtx);
+            this->cooldownsMap.erase(key);
+        });
+    }
+    
+    std::string str;
+    if (tokens.size() < 2) {
+        str =  Ayah::getRandomAyah();
+    } else {
+        int number = std::atoi(tokens[1].c_str());
+        if (number == 0) {
+            str = Ayah::getRandomAyah();
+        } else {
+            str = Ayah::getAyah(number);
+        }
+    }
+
+    if (str.empty()) {
+        return response;
+    }
+    
+    response.message = str;
     response.type = Response::Type::MESSAGE;
     return response;
 }

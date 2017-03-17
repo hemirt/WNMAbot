@@ -25,25 +25,24 @@ UserIDs::UserIDs()
             std::cerr << "UserIDs can't allocate redis context" << std::endl;
         }
     }
-    CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
     this->curl = curl_easy_init();
-    if (curl && !res) {
+    if (curl) {
         this->chunk = curl_slist_append(
             chunk, "Accept: application/vnd.twitchtv.v5+json");
         this->chunk = curl_slist_append(
             chunk, "Client-ID: i9nh09d5sv612dts3fmrccimhq7yb2");
     } else {
-        std::cerr << "CURL ERROR, USERIDS: \"" << res << "\"" << std::endl;
+        std::cerr << "CURL ERROR" << std::endl;
     }
 }
 
 UserIDs::~UserIDs()
 {
-    if (!this->context)
-        return;
-    redisFree(this->context);
+    if (this->context) {
+        redisFree(this->context);
+    }
     curl_slist_free_all(this->chunk);
-    curl_global_cleanup();
+    curl_easy_cleanup(this->curl);
 }
 
 bool

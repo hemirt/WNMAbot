@@ -1,6 +1,7 @@
 #include "connectionhandler.hpp"
 #include <boost/algorithm/string/replace.hpp>
 #include "channel.hpp"
+#include "ayah.hpp"
 
 static const char *IRC_HOST = "irc.chat.twitch.tv";
 static const char *IRC_PORT = "6667";
@@ -64,6 +65,8 @@ ConnectionHandler::start()
     this->loadAllReminders();
 
     this->blacklist = this->authFromRedis.getBlacklist();
+    
+    Ayah::init();
 }
 
 void
@@ -98,6 +101,7 @@ ConnectionHandler::~ConnectionHandler()
 {
     std::cout << "destructing" << std::endl;
     this->channels.clear();
+    Ayah::deinit();
     std::cout << "cleared end destr" << std::endl;
 }
 

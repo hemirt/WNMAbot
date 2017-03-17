@@ -119,9 +119,33 @@ Channel::handleMessage(const IRCMessage &message)
 
             if (response.type == Response::Type::MESSAGE) {
                 if (response.priority == true) {
-                    this->messenger.push_front(std::move(response.message));
+                    for (int i = 0; i < 3; i++) {
+                        if (response.message.size() > 350) {
+                            auto pos = response.message.find_last_of(' ', 350);
+                            if (pos == std::string::npos) {
+                                pos = 350;
+                            }
+                            this->messenger.push_front(response.message.substr(0, pos));
+                            response.message.erase(0, pos);
+                        } else {
+                            this->messenger.push_front(response.message.substr(0, std::string::npos));
+                            break;
+                        }
+                    }
                 } else {
-                    this->messenger.push_back(std::move(response.message));
+                    for (int i = 0; i < 3; i++) {
+                        if (response.message.size() > 350) {
+                            auto pos = response.message.find_last_of(' ', 350);
+                            if (pos == std::string::npos) {
+                                pos = 350;
+                            }
+                            this->messenger.push_back(response.message.substr(0, pos));
+                            response.message.erase(0, pos);
+                        } else {
+                            this->messenger.push_back(response.message.substr(0, std::string::npos));
+                            break;
+                        }
+                    }
                 }
 
             } else if (response.type == Response::Type::WHISPER) {

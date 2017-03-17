@@ -2,6 +2,7 @@
 
 #include <csignal>
 #include <iostream>
+#include <curl/curl.h>
 
 ConnectionHandler *irc;
 
@@ -15,6 +16,7 @@ signalHandler(int signum)
 int
 main(int argc, char *argv[])
 {
+    CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
     std::signal(SIGINT, signalHandler);
     // Make sure the user is passing through the required arguments
     if (argc < 3) {
@@ -26,6 +28,7 @@ main(int argc, char *argv[])
     irc->run();
     delete irc;
 
+    curl_global_cleanup();
     std::cout << "Exiting" << std::endl;
     return 0;
 }

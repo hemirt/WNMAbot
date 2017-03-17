@@ -129,11 +129,14 @@ private:
                            std::vector<std::string> &tokens);
     Response pingMeCommand(const IRCMessage &message,
                            std::vector<std::string> &tokens);
+    Response randomIslamicQuote(const IRCMessage &message,
+                                std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 
     std::unordered_map<std::string, std::chrono::steady_clock::time_point>
         cooldownsMap;
+    std::mutex cooldownsMtx;
 };
 
 #endif
