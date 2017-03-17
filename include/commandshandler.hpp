@@ -131,6 +131,8 @@ private:
                            std::vector<std::string> &tokens);
     Response randomIslamicQuote(const IRCMessage &message,
                                 std::vector<std::string> &tokens);
+    Response randomChristianQuote(const IRCMessage &message,
+                                std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 

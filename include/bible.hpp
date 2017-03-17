@@ -1,17 +1,16 @@
-#ifndef AYAH_HPP
-#define AYAH_HPP
+#ifndef BIBLE_HPP
+#define BIBLE_HPP
 
 #include <curl/curl.h>
 #include <mutex>
 #include <string>
 
-class Ayah
+class Bible
 {
 public:
     static void init();
     static void deinit();
-    static std::string getRandomAyah();
-    static std::string getAyah(int number);
+    static std::string getRandomVerse();
 
 private:
     static std::mutex curlMtx;

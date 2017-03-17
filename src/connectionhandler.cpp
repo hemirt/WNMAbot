@@ -2,6 +2,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include "channel.hpp"
 #include "ayah.hpp"
+#include "bible.hpp"
 
 static const char *IRC_HOST = "irc.chat.twitch.tv";
 static const char *IRC_PORT = "6667";
@@ -67,6 +68,7 @@ ConnectionHandler::start()
     this->blacklist = this->authFromRedis.getBlacklist();
     
     Ayah::init();
+    Bible::init();
 }
 
 void

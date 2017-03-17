@@ -4,6 +4,7 @@
 #include "mtrandom.hpp"
 #include "utilities.hpp"
 #include "ayah.hpp"
+#include "bible.hpp"
 
 #include <stdint.h>
 #include <vector>
@@ -131,6 +132,8 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->pingMeCommand(message, tokens);
     } else if (tokens[0] == "!ri") {
         return this->randomIslamicQuote(message, tokens);
+    } else if (tokens[0] == "!rb") {
+        return this->randomChristianQuote(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -1648,6 +1651,42 @@ CommandsHandler::randomIslamicQuote(const IRCMessage &message,
             str = Ayah::getAyah(number);
         }
     }
+
+    if (str.empty()) {
+        return response;
+    }
+    
+    response.message = str;
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::randomChristianQuote(const IRCMessage &message,
+                                    std::vector<std::string> &tokens)
+{
+    Response response;
+    
+    if(!this->isAdmin(message.user)) {
+        std::lock_guard<std::mutex> lk(this->cooldownsMtx);
+        auto it = this->cooldownsMap.find(tokens[0] + message.user);
+        auto now = std::chrono::steady_clock::now();
+        if (it != cooldownsMap.end()) {
+            if (std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                                 it->second)
+                    .count() < 3) {
+                return response;
+            }
+        }
+        cooldownsMap[tokens[0] + message.user] = now;
+        auto t = new boost::asio::steady_timer(ioService, std::chrono::seconds(3));
+        t->async_wait([this, key = tokens[0] + message.user](const boost::system::error_code &er) {
+            std::lock_guard<std::mutex> lk(this->cooldownsMtx);
+            this->cooldownsMap.erase(key);
+        });
+    }
+    
+    std::string str = Bible::getRandomVerse();
 
     if (str.empty()) {
         return response;

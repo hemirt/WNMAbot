@@ -18,7 +18,7 @@ Ayah::init()
     Ayah::curl = curl_easy_init();
     if (Ayah::curl) {
         Ayah::chunk = curl_slist_append(
-            chunk, "Accept: application/vnd.twitchtv.v5+json");
+            chunk, "Accept: application/json");
     } else {
         std::cerr << "CURL ERROR, AYAH" << std::endl;
     }
