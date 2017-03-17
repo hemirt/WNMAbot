@@ -3,6 +3,7 @@
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/algorithm/string/erase.hpp>
 #include <iostream>
 
 namespace pt = boost::property_tree;
@@ -81,6 +82,9 @@ Bible::getRandomVerse()
                   << std::endl;
         return text;
     }
+    
+    boost::algorithm::erase_all(text, "<b>");
+    boost::algorithm::erase_all(text, "<\\b>");
     
     std::string ret;
     
