@@ -84,7 +84,7 @@ Bible::getRandomVerse()
     }
     
     boost::algorithm::erase_all(text, "<b>");
-    boost::algorithm::erase_all(text, "<\\b>");
+    boost::algorithm::erase_all(text, "</b>");
     
     std::string ret;
     
