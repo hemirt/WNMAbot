@@ -35,6 +35,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pingme.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ayah.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bible.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/encryption.cpp
 )
 
 add_executable(WNMAbot ${SOURCE})

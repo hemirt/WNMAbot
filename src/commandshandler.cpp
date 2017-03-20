@@ -134,6 +134,10 @@ CommandsHandler::handle(const IRCMessage &message)
         return this->randomIslamicQuote(message, tokens);
     } else if (tokens[0] == "!rb") {
         return this->randomChristianQuote(message, tokens);
+    } else if (tokens[0] == "!encrypt") {
+        return this->encrypt(message, tokens);
+    } else if (tokens[0] == "!decrypt") {
+        return this->decrypt(message, tokens);
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
@@ -1693,6 +1697,46 @@ CommandsHandler::randomChristianQuote(const IRCMessage &message,
     }
     
     response.message = str;
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::encrypt(const IRCMessage &message,
+                                    std::vector<std::string> &tokens)
+{
+    Response response;
+    if (tokens.size() < 2) {
+        return response;
+    }
+    
+    std::string valueString;
+    for (size_t i = 1; i < tokens.size(); ++i) {
+        valueString += tokens[i] + ' ';
+    }
+    valueString.pop_back();
+    
+    response.message = this->crypto.encrypt(valueString);
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::decrypt(const IRCMessage &message,
+                                    std::vector<std::string> &tokens)
+{
+    Response response;
+    if (tokens.size() < 2) {
+        return response;
+    }
+    
+    std::string valueString;
+    for (size_t i = 1; i < tokens.size(); ++i) {
+        valueString += tokens[i] + ' ';
+    }
+    valueString.pop_back();
+    
+    response.message = this->crypto.decrypt(valueString);
     response.type = Response::Type::MESSAGE;
     return response;
 }

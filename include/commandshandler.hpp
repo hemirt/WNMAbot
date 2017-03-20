@@ -4,6 +4,7 @@
 #include "ircmessage.hpp"
 #include "network.hpp"
 #include "redisclient.hpp"
+#include "encryption.hpp"
 
 #include "countries.hpp"
 #include "userids.hpp"
@@ -52,6 +53,8 @@ public:
     RedisClient redisClient;
 
     bool isAdmin(const std::string &user);
+    
+    Encryption crypto;
 
 private:
     Response addCommand(const IRCMessage &message,
@@ -133,6 +136,10 @@ private:
                                 std::vector<std::string> &tokens);
     Response randomChristianQuote(const IRCMessage &message,
                                 std::vector<std::string> &tokens);
+    Response encrypt(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response decrypt(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
 
     boost::asio::io_service &ioService;
 
