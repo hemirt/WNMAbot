@@ -49,100 +49,113 @@ CommandsHandler::handle(const IRCMessage &message)
             this->channelObject->owner->sanitizeMsg(tokens[i]);
         }
     }
+    
+    Response response;
 
     if (this->isAdmin(message.user)) {
         if (tokens[0] == "!raweditcmd") {
-            return this->rawEditCommand(message, tokens);
+            response = this->rawEditCommand(message, tokens);
         } else if (tokens[0] == "!addcmd") {
-            return this->addCommand(message, tokens);
+            response = this->addCommand(message, tokens);
         } else if (tokens[0] == "!editcmd") {
-            return this->editCommand(message, tokens);
+            response = this->editCommand(message, tokens);
         } else if (tokens[0] == "!deletecmd") {
-            return this->deleteCommand(message, tokens);
+            response = this->deleteCommand(message, tokens);
         } else if (tokens[0] == "!deletefullcommand") {
-            return this->deleteFullCommand(message, tokens);
+            response = this->deleteFullCommand(message, tokens);
         } else if (tokens[0] == "!joinchn") {
-            return this->joinChannel(message, tokens);
+            response = this->joinChannel(message, tokens);
         } else if (tokens[0] == "!leavechn") {
-            return this->leaveChannel(message, tokens);
+            response = this->leaveChannel(message, tokens);
         } else if (tokens[0] == "!asay") {
-            return this->say(message, tokens);
+            response = this->say(message, tokens);
         } else if (tokens[0] == "!comebackmsg") {
-            return this->comeBackMsg(message, tokens);
+            response = this->comeBackMsg(message, tokens);
         } else if (tokens[0] == "!addblacklist") {
-            return this->addBlacklist(message, tokens);
+            response = this->addBlacklist(message, tokens);
         } else if (tokens[0] == "!removeblacklist") {
-            return this->removeBlacklist(message, tokens);
+            response = this->removeBlacklist(message, tokens);
         } else if (tokens[0] == "!setfrom") {
-            return this->setUserCountryFrom(message, tokens);
+            response = this->setUserCountryFrom(message, tokens);
         } else if (tokens[0] == "!setlive") {
-            return this->setUserCountryLive(message, tokens);
+            response = this->setUserCountryLive(message, tokens);
         } else if (tokens[0] == "!deleteuser") {
-            return this->deleteUser(message, tokens);
+            response = this->deleteUser(message, tokens);
         } else if (tokens[0] == "!createcountry") {
-            return this->createCountry(message, tokens);
+            response = this->createCountry(message, tokens);
         } else if (tokens[0] == "!deletecountry") {
-            return this->deleteCountry(message, tokens);
+            response = this->deleteCountry(message, tokens);
         } else if (tokens[0] == "!renamecountry") {
-            return this->renameCountry(message, tokens);
+            response = this->renameCountry(message, tokens);
         } else if (tokens[0] == "!getcountryid") {
-            return this->getCountryID(message, tokens);
+            response = this->getCountryID(message, tokens);
         } else if (tokens[0] == "!createalias") {
-            return this->createAlias(message, tokens);
+            response = this->createAlias(message, tokens);
         } else if (tokens[0] == "!deletealias") {
-            return this->deleteAlias(message, tokens);
+            response = this->deleteAlias(message, tokens);
         }
     }
+    
+    // a valid response
+    if (response.type != Response::Type::UNKNOWN) {
+        return response;
+    }
 
+    // messenger queue is full
     if (!this->channelObject->messenger.able()) {
-        return Response();
+        return response;
     }
 
     if (tokens[0] == "!chns") {
-        return this->printChannels(message, tokens);
+        response = this->printChannels(message, tokens);
     } else if (tokens[0] == "!remindme") {
-        return this->remindMe(message, tokens);
+        response = this->remindMe(message, tokens);
     } else if (tokens[0] == "!remind") {
-        return this->remind(message, tokens);
+        response = this->remind(message, tokens);
     } else if (tokens[0] == "!afk") {
-        return this->afk(message, tokens);
+        response = this->afk(message, tokens);
     } else if (tokens[0] == "!gn") {
-        return this->goodNight(message, tokens);
+        response = this->goodNight(message, tokens);
     } else if (tokens[0] == "!isafk") {
-        return this->isAfk(message, tokens);
+        response = this->isAfk(message, tokens);
     } else if (tokens[0] == "!whoisafk") {
-        return this->whoIsAfk(message);
+        response = this->whoIsAfk(message);
     } else if (tokens[0] == "!where" || tokens[0] == "!country") {
-        return this->isFrom(message, tokens);
+        response = this->isFrom(message, tokens);
     } else if (tokens[0] == "!usersfrom") {
-        return this->getUsersFrom(message, tokens);
+        response = this->getUsersFrom(message, tokens);
     } else if (tokens[0] == "!userslive") {
-        return this->getUsersLiving(message, tokens);
+        response = this->getUsersLiving(message, tokens);
     } else if (tokens[0] == "!myfrom") {
-        return this->myFrom(message, tokens);
+        response = this->myFrom(message, tokens);
     } else if (tokens[0] == "!mylive") {
-        return this->myLiving(message, tokens);
+        response = this->myLiving(message, tokens);
     } else if (tokens[0] == "!mydelete") {
-        return this->myDelete(message, tokens);
+        response = this->myDelete(message, tokens);
     } else if (tokens[0] == "!reminders") {
-        return this->myReminders(message, tokens);
+        response = this->myReminders(message, tokens);
     } else if (tokens[0] == "!reminder") {
-        return this->checkReminder(message, tokens);
+        response = this->checkReminder(message, tokens);
     } else if (tokens[0] == "!pingme") {
-        return this->pingMeCommand(message, tokens);
+        response = this->pingMeCommand(message, tokens);
     } else if (tokens[0] == "!ri") {
-        return this->randomIslamicQuote(message, tokens);
+        response = this->randomIslamicQuote(message, tokens);
     } else if (tokens[0] == "!rb") {
-        return this->randomChristianQuote(message, tokens);
+        response = this->randomChristianQuote(message, tokens);
     } else if (tokens[0] == "!encrypt") {
-        return this->encrypt(message, tokens);
+        response = this->encrypt(message, tokens);
     } else if (tokens[0] == "!decrypt") {
-        return this->decrypt(message, tokens);
+        response = this->decrypt(message, tokens);
+    }
+    
+    // response valid
+    if (response.type != Response::Type::UNKNOWN) {
+        return response;
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
     if (commandTree.empty()) {
-        return Response();
+        return response;
     }
 
     // channel user command
@@ -178,7 +191,7 @@ CommandsHandler::handle(const IRCMessage &message)
                                   "default");
     }
 
-    return Response();
+    return response;
 }
 
 Response
