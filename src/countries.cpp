@@ -2,6 +2,8 @@
 #include <iostream>
 #include "utilities.hpp"
 
+using std::experimental::optional;
+
 redisContext *Countries::context = NULL;
 std::mutex Countries::accessMtx;
 Countries Countries::instance;

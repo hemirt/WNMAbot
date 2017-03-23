@@ -10,8 +10,6 @@
 #include <utility>
 #include <vector>
 
-using std::experimental::optional;
-
 class Countries
 {
 public:
@@ -67,8 +65,8 @@ private:
         LIVE,
     };
 
-    optional<std::string> redisGetDisplayName(const std::string &countryIDstr);
-    optional<std::string> redisGetUserCountry(const std::string &userID,
+    std::experimental::optional<std::string> redisGetDisplayName(const std::string &countryIDstr);
+    std::experimental::optional<std::string> redisGetUserCountry(const std::string &userID,
                                               const Countries::Type &type);
     void redisRemUserFromCountry(const std::string &userID,
                                  const std::string &countryID,
