@@ -141,7 +141,23 @@ private:
                      std::vector<std::string> &tokens);
     Response decrypt(const IRCMessage &message,
                      std::vector<std::string> &tokens);
-
+    Response createModule(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response setModuleType(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response setModuleSubtype(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response setModuleName(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response setModuleFormat(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response setModuleStatus(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response getModuleInfo(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response getUserData(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+                                      
     boost::asio::io_service &ioService;
 
     std::unordered_map<std::string, std::chrono::steady_clock::time_point>

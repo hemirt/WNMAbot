@@ -7,6 +7,7 @@
 #include "redisauth.hpp"
 #include "remindusers.hpp"
 #include "userids.hpp"
+#include "modules.hpp"
 
 #include <boost/asio/basic_waitable_timer.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -62,6 +63,8 @@ public:
     void removeBlacklist(const std::string &search);
     void sanitizeMsg(std::string &msg);
     bool isBlacklisted(const std::string &msg);
+    
+    ModulesManager modulesManager;
 
 private:
     std::mutex channelMtx;

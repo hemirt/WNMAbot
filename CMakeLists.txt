@@ -36,6 +36,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ayah.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bible.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/encryption.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/modules.cpp
 )
 
 add_executable(WNMAbot ${SOURCE})

@@ -71,8 +71,8 @@ PingMe::ping(const std::string &bywhom)
         map[i.second].push_back(i.first);
     }
 
-    this->pingMap.erase(search);
-
+    
+    
     redisReply *reply = static_cast<redisReply *>(
         redisCommand(this->context, "SREM WNMA:pingers %b",
                      search->first.c_str(), search->first.size()));
@@ -81,7 +81,8 @@ PingMe::ping(const std::string &bywhom)
         redisCommand(this->context, "DEL WNMA:ping:%b", search->first.c_str(),
                      search->first.size()));
     freeReplyObject(reply);
-
+    
+    this->pingMap.erase(search);
     return map;
 }
 

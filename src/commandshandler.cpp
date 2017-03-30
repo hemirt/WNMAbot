@@ -95,6 +95,18 @@ CommandsHandler::handle(const IRCMessage &message)
             response = this->deleteAlias(message, tokens);
         } else if (tokens[0] == "!clearqueue") {
             this->channelObject->messenger.clearQueue();
+        } else if (tokens[0] == "!createmodule") {
+            response = this->createModule(message, tokens);
+        } else if (tokens[0] == "!moduletype") {
+            response = this->setModuleType(message, tokens);
+        } else if (tokens[0] == "!modulesubtype") {
+            response = this->setModuleSubtype(message, tokens);
+        } else if (tokens[0] == "!modulename") {
+            response = this->setModuleName(message, tokens);
+        } else if (tokens[0] == "!modulestatus") {
+            response = this->setModuleStatus(message, tokens);
+        } else if (tokens[0] == "!moduleformat") {
+            response = this->setModuleFormat(message, tokens);
         }
     }
 
@@ -148,6 +160,10 @@ CommandsHandler::handle(const IRCMessage &message)
         response = this->encrypt(message, tokens);
     } else if (tokens[0] == "!decrypt") {
         response = this->decrypt(message, tokens);
+    } else if (tokens[0] == "!moduleinfo") {
+        response = this->getModuleInfo(message, tokens);
+    } else if (tokens[0] == "!userdata") {
+        response = this->getUserData(message, tokens);
     }
 
     // response valid
@@ -1760,6 +1776,138 @@ CommandsHandler::decrypt(const IRCMessage &message,
     valueString.pop_back();
 
     response.message = this->crypto.decrypt(valueString);
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::createModule(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() < 2) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    
+    response.message = message.user + ", " + std::to_string(this->channelObject->owner->modulesManager.createModule(tokens[1]));
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::setModuleType(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() < 3) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    changeToLower(tokens[2]);
+    
+    response.message = message.user + ", " + std::to_string(this->channelObject->owner->modulesManager.setType(tokens[1], tokens[2]));
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::setModuleSubtype(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() < 3) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    changeToLower(tokens[2]);
+    
+    response.message = message.user + ", " + std::to_string(this->channelObject->owner->modulesManager.setSubtype(tokens[1], tokens[2]));
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::setModuleName(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() < 3) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    changeToLower(tokens[2]);
+    
+    response.message = message.user + ", " + std::to_string(this->channelObject->owner->modulesManager.setName(tokens[1], tokens[2]));
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::setModuleFormat(const IRCMessage &message,
+                 std::vector<std::string> &tokens) 
+{
+    Response response(1);
+    if (tokens.size() < 3) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    
+    std::string valueString;
+    for (size_t i = 2; i < tokens.size(); ++i) {
+        valueString += tokens[i] + ' ';
+    }
+    valueString.pop_back();
+    
+    response.message = message.user + ", " + std::to_string(this->channelObject->owner->modulesManager.setFormat(tokens[1], valueString));
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::setModuleStatus(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() < 3) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    changeToLower(tokens[2]);
+    
+    response.message = message.user + ", " + std::to_string(this->channelObject->owner->modulesManager.setStatus(tokens[1], tokens[2]));
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::getModuleInfo(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(0);
+    if (tokens.size() < 2) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    
+    response.message = message.user + ", " + this->channelObject->owner->modulesManager.getInfo(tokens[1]);
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::getUserData(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(0);
+    if (tokens.size() < 3) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    changeToLower(tokens[2]);
+    
+    // !data user module
+    response.message = message.user + ", " + this->channelObject->owner->modulesManager.getData(tokens[1], tokens[2]);
     response.type = Response::Type::MESSAGE;
     return response;
 }
