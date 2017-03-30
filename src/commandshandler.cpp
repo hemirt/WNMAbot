@@ -5,6 +5,7 @@
 #include "connectionhandler.hpp"
 #include "mtrandom.hpp"
 #include "utilities.hpp"
+#include "randomquote.hpp"
 
 #include <stdint.h>
 #include <vector>
@@ -164,12 +165,12 @@ CommandsHandler::handle(const IRCMessage &message)
         response = this->getModuleInfo(message, tokens);
     } else if (tokens[0] == "!userdata") {
         response = this->getUserData(message, tokens);
+    } else if (tokens[0] == "!arq") {
+        response = this->getRandomQuote(message, tokens);
     }
 
     // response valid
     if (response.type != Response::Type::UNKNOWN) {
-        // put to back
-        response.priority = 0;
         return response;
     }
 
@@ -257,7 +258,7 @@ Response
 CommandsHandler::printChannels(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
 
     std::string channels;
     for (const auto &i : this->channelObject->owner->channels) {
@@ -278,7 +279,7 @@ CommandsHandler::makeResponse(const IRCMessage &message,
                               const boost::property_tree::ptree &commandTree,
                               const std::string &path)
 {
-    Response response;
+    Response response(0);
     boost::optional<int> cooldown =
         commandTree.get_optional<int>(path + ".cooldown");
     if (cooldown && *cooldown != 0) {
@@ -713,7 +714,7 @@ Response
 CommandsHandler::remindMe(const IRCMessage &message,
                           std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
     auto inPos = findLastIn(tokens);
     if (inPos == 0 || inPos + 1 >= tokens.size()) {
         response.type = Response::Type::WHISPER;
@@ -797,7 +798,7 @@ Response
 CommandsHandler::remind(const IRCMessage &message,
                         std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
     if (tokens.size() < 2) {
         response.type = Response::Type::WHISPER;
         response.whisperReceiver = message.user;
@@ -926,7 +927,7 @@ Response
 CommandsHandler::afk(const IRCMessage &message,
                      std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
     std::string msg;
     for (int i = 1; i < tokens.size(); ++i) {
         msg += tokens[i] + ' ';
@@ -953,7 +954,7 @@ Response
 CommandsHandler::goodNight(const IRCMessage &message,
                            std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
 
     if (tokens.size() > 1 && UserIDs::getInstance().isUser(tokens[1])) {
         return response;
@@ -984,7 +985,7 @@ Response
 CommandsHandler::isAfk(const IRCMessage &message,
                        std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1091,7 +1092,7 @@ CommandsHandler::removeBlacklist(const IRCMessage &message,
 Response
 CommandsHandler::whoIsAfk(const IRCMessage &message)
 {
-    Response response;
+    Response response(0);
     std::string afkers = this->channelObject->owner->afkers.getAfkers();
     if (afkers.empty()) {
         response.message =
@@ -1107,7 +1108,7 @@ Response
 CommandsHandler::regexTest(const IRCMessage &message,
                            std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
     if (!this->isAdmin(message.user)) {
         return response;
     }
@@ -1198,7 +1199,7 @@ Response
 CommandsHandler::isFrom(const IRCMessage &message,
                         std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1230,7 +1231,7 @@ Response
 CommandsHandler::getUsersFrom(const IRCMessage &message,
                               std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1273,7 +1274,7 @@ Response
 CommandsHandler::getUsersLiving(const IRCMessage &message,
                                 std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1330,7 +1331,7 @@ Response
 CommandsHandler::myFrom(const IRCMessage &message,
                         std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1361,7 +1362,7 @@ Response
 CommandsHandler::myLiving(const IRCMessage &message,
                           std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1392,7 +1393,7 @@ Response
 CommandsHandler::myDelete(const IRCMessage &message,
                           std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
 
     if (tokens.size() < 2) {
         return response;
@@ -1573,7 +1574,7 @@ Response
 CommandsHandler::myReminders(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
 
     auto remindTree = this->redisClient.getRemindersOfUser(message.user);
     std::string whichReminders;
@@ -1602,7 +1603,7 @@ Response
 CommandsHandler::checkReminder(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1635,7 +1636,7 @@ Response
 CommandsHandler::pingMeCommand(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(0);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1658,7 +1659,7 @@ Response
 CommandsHandler::randomIslamicQuote(const IRCMessage &message,
                                     std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(-1);
 
     if (!this->isAdmin(message.user)) {
         std::lock_guard<std::mutex> lk(this->cooldownsMtx);
@@ -1706,7 +1707,7 @@ Response
 CommandsHandler::randomChristianQuote(const IRCMessage &message,
                                       std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(-1);
 
     if (!this->isAdmin(message.user)) {
         std::lock_guard<std::mutex> lk(this->cooldownsMtx);
@@ -1744,7 +1745,7 @@ Response
 CommandsHandler::encrypt(const IRCMessage &message,
                          std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(-1);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1764,7 +1765,7 @@ Response
 CommandsHandler::decrypt(const IRCMessage &message,
                          std::vector<std::string> &tokens)
 {
-    Response response;
+    Response response(-1);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1910,4 +1911,21 @@ CommandsHandler::getUserData(const IRCMessage &message,
     response.message = message.user + ", " + this->channelObject->owner->modulesManager.getData(tokens[1], tokens[2]);
     response.type = Response::Type::MESSAGE;
     return response;
+}
+
+Response
+CommandsHandler::getRandomQuote(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(-1);
+    if (tokens.size() > 1 && UserIDs::getInstance().isUser(tokens[1])) {
+        changeToLower(tokens[1]);
+        response.message = RandomQuote::getRandomQuote(this->channelObject->channelName, tokens[1]);
+        response.type = Response::Type::MESSAGE;
+        return response;
+    } else {
+        response.message = RandomQuote::getRandomQuote(this->channelObject->channelName, message.user);
+        response.type = Response::Type::MESSAGE;
+        return response;
+    }
 }

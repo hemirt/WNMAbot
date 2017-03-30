@@ -3,6 +3,7 @@
 #include "ayah.hpp"
 #include "bible.hpp"
 #include "channel.hpp"
+#include "randomquote.hpp"
 
 static const char *IRC_HOST = "irc.chat.twitch.tv";
 static const char *IRC_PORT = "6667";
@@ -69,6 +70,7 @@ ConnectionHandler::start()
 
     Ayah::init();
     Bible::init();
+    RandomQuote::init();
 }
 
 void
@@ -105,6 +107,7 @@ ConnectionHandler::~ConnectionHandler()
     this->channels.clear();
     Ayah::deinit();
     Bible::deinit();
+    RandomQuote::deinit();
     std::cout << "cleared end destr" << std::endl;
 }
 

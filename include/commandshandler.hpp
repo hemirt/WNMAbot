@@ -157,7 +157,8 @@ private:
                      std::vector<std::string> &tokens);
     Response getUserData(const IRCMessage &message,
                      std::vector<std::string> &tokens);
-                                      
+    Response getRandomQuote(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
     boost::asio::io_service &ioService;
 
     std::unordered_map<std::string, std::chrono::steady_clock::time_point>
