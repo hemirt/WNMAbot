@@ -65,9 +65,10 @@ private:
         LIVE,
     };
 
-    std::experimental::optional<std::string> redisGetDisplayName(const std::string &countryIDstr);
-    std::experimental::optional<std::string> redisGetUserCountry(const std::string &userID,
-                                              const Countries::Type &type);
+    std::experimental::optional<std::string> redisGetDisplayName(
+        const std::string &countryIDstr);
+    std::experimental::optional<std::string> redisGetUserCountry(
+        const std::string &userID, const Countries::Type &type);
     void redisRemUserFromCountry(const std::string &userID,
                                  const std::string &countryID,
                                  const Countries::Type &type);

@@ -1,8 +1,8 @@
 #include "connectionhandler.hpp"
 #include <boost/algorithm/string/replace.hpp>
-#include "channel.hpp"
 #include "ayah.hpp"
 #include "bible.hpp"
+#include "channel.hpp"
 
 static const char *IRC_HOST = "irc.chat.twitch.tv";
 static const char *IRC_PORT = "6667";
@@ -66,7 +66,7 @@ ConnectionHandler::start()
     this->loadAllReminders();
 
     this->blacklist = this->authFromRedis.getBlacklist();
-    
+
     Ayah::init();
     Bible::init();
 }

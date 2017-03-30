@@ -1,61 +1,47 @@
 #include "messenger.hpp"
 
 Messenger::Messenger(boost::asio::io_service &_ioService,
-                     std::function<bool(const std::string &)> _f)
+                     std::function<bool(const std::string &)> _sendFunc)
     : lk(mtx, std::defer_lock)
     , ioService(_ioService)
-    , f(_f)
+    , sendFunc(_sendFunc)
 {
 }
 
-bool
+void
 Messenger::push_front(const std::string &value)
 {
     this->lk.lock();
     this->deque.push_front(value);
     this->lk.unlock();
     this->startSending();
-    return true;
 }
 
-bool
+void
 Messenger::push_front(std::string &&value)
 {
     this->lk.lock();
     this->deque.push_front(std::move(value));
     this->lk.unlock();
     this->startSending();
-    return true;
 }
 
-bool
+void
 Messenger::push_back(const std::string &value)
 {
     this->lk.lock();
-    if (this->deque.size() >= this->maxMsgsInQueue) {
-        this->lk.unlock();
-        this->startSending();
-        return false;
-    }
     this->deque.push_back(value);
     this->lk.unlock();
     this->startSending();
-    return true;
 }
 
-bool
+void
 Messenger::push_back(std::string &&value)
 {
     this->lk.lock();
-    if (this->deque.size() >= this->maxMsgsInQueue) {
-        this->lk.unlock();
-        this->startSending();
-        return false;
-    }
     this->deque.push_back(std::move(value));
     this->lk.unlock();
     this->startSending();
-    return true;
 }
 
 size_t
@@ -94,13 +80,21 @@ Messenger::extract_front()
 }
 
 void
+Messenger::clearQueue()
+{
+    this->lk.lock();
+    this->deque.clear();
+    this->lk.unlock();
+}
+
+void
 Messenger::startSending()
 {
     this->lk.lock();
     if (this->ready) {
         this->ready = false;
         std::string value = this->extract_front();
-        this->f(value);
+        this->sendFunc(value);
         auto t = new boost::asio::steady_timer(ioService,
                                                std::chrono::milliseconds(1550));
         t->async_wait([this](const boost::system::error_code &er) {

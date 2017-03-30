@@ -1,6 +1,6 @@
 #include "ayah.hpp"
-#include "utilities.hpp"
 #include "mtrandom.hpp"
+#include "utilities.hpp"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -17,8 +17,7 @@ Ayah::init()
 {
     Ayah::curl = curl_easy_init();
     if (Ayah::curl) {
-        Ayah::chunk = curl_slist_append(
-            chunk, "Accept: application/json");
+        Ayah::chunk = curl_slist_append(chunk, "Accept: application/json");
     } else {
         std::cerr << "CURL ERROR, AYAH" << std::endl;
     }
@@ -50,8 +49,9 @@ Ayah::getAyah(int number)
     if (number <= 0 || number > 6236) {
         return "Pick Ayah between 1 - 6236 including ANELE";
     }
-    std::string rawurl("http://api.alquran.cloud/ayah/" + std::to_string(number) + "/en.asad");
-    
+    std::string rawurl("http://api.alquran.cloud/ayah/" +
+                       std::to_string(number) + "/en.asad");
+
     std::lock_guard<std::mutex> lk(Ayah::curlMtx);
     std::string readBuffer;
     curl_easy_setopt(Ayah::curl, CURLOPT_HTTPHEADER, Ayah::chunk);
@@ -60,29 +60,26 @@ Ayah::getAyah(int number)
     curl_easy_setopt(Ayah::curl, CURLOPT_WRITEDATA, &readBuffer);
     CURLcode res = curl_easy_perform(Ayah::curl);
     curl_easy_reset(curl);
-    
+
     if (res) {
-        std::cerr << "Ayah res: \"" << res << "\""
-                  << std::endl;
+        std::cerr << "Ayah res: \"" << res << "\"" << std::endl;
         return std::string();
     }
 
     if (readBuffer.empty()) {
-        std::cerr << "Ayah readBuffer empty"
-                  << std::endl;
+        std::cerr << "Ayah readBuffer empty" << std::endl;
         return readBuffer;
     }
 
     pt::ptree tree;
     std::stringstream ss(readBuffer);
     pt::read_json(ss, tree);
-    
+
     std::string text = tree.get("data.text", "");
     if (text.empty()) {
-        std::cerr << "Ayah text empty\n" << readBuffer
-                  << std::endl;
+        std::cerr << "Ayah text empty\n" << readBuffer << std::endl;
         return text;
     }
-    
+
     return "ANELE Ayah " + std::to_string(number) + ": " + text + " ANELE";
 }

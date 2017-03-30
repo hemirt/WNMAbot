@@ -118,33 +118,24 @@ Channel::handleMessage(const IRCMessage &message)
             auto response = this->commandsHandler.handle(message);
 
             if (response.type == Response::Type::MESSAGE) {
-                if (response.priority == true) {
-                    for (int i = 0; i < 3; i++) {
-                        if (response.message.size() > 350) {
-                            auto pos = response.message.find_last_of(' ', 350);
-                            if (pos == std::string::npos) {
-                                pos = 350;
-                            }
-                            this->messenger.push_front(response.message.substr(0, pos));
-                            response.message.erase(0, pos);
-                        } else {
-                            this->messenger.push_front(response.message.substr(0, std::string::npos));
-                            break;
-                        }
+                if (response.priority == 1) {
+                    auto vec =
+                        this->splitIntoChunks(std::move(response.message));
+                    for (auto &i : vec) {
+                        this->messenger.push_front(std::move(i));
                     }
-                } else {
-                    for (int i = 0; i < 3; i++) {
-                        if (response.message.size() > 350) {
-                            auto pos = response.message.find_last_of(' ', 350);
-                            if (pos == std::string::npos) {
-                                pos = 350;
-                            }
-                            this->messenger.push_back(response.message.substr(0, pos));
-                            response.message.erase(0, pos);
-                        } else {
-                            this->messenger.push_back(response.message.substr(0, std::string::npos));
-                            break;
-                        }
+                } else if (response.priority == 0) {
+                    auto vec =
+                        this->splitIntoChunks(std::move(response.message));
+                    for (int i = 0; i < 3 && i < vec.size(); i++) {
+                        this->messenger.push_back(std::move(vec[i]));
+                    }
+                } else if (this->messenger
+                               .able() /* && message.priority == -1 */) {
+                    auto vec =
+                        this->splitIntoChunks(std::move(response.message));
+                    for (int i = 0; i < 3 && i < vec.size(); i++) {
+                        this->messenger.push_back(std::move(vec[i]));
                     }
                 }
 
@@ -202,10 +193,15 @@ Channel::handleMessage(const IRCMessage &message)
                                 users +=
                                     ". At channel " + this->channelName + ".";
                             }
+
+                            auto vec = this->splitIntoChunks(
+                                message.user + " is back: " + users);
+
                             try {
-                                this->owner->channels.at(i.first)
-                                    .messenger.push_front(message.user +
-                                                          " is back: " + users);
+                                for (auto &msg : vec) {
+                                    this->owner->channels.at(i.first)
+                                        .messenger.push_back(std::move(msg));
+                                }
                             } catch (std::exception &e) {
                                 std::cerr << "Ping me exception " << i.first
                                           << " " << e.what() << std::endl;
@@ -259,4 +255,24 @@ Channel::sendToAll(const std::string &message)
     for (auto &connection : this->connections) {
         connection.writeMessage(message);
     }
+}
+
+std::vector<std::string>
+Channel::splitIntoChunks(std::string &&str)
+{
+    std::vector<std::string> vec;
+    for (;;) {
+        if (str.size() > 350) {
+            auto pos = str.find_last_of(' ', 350);
+            if (pos == std::string::npos) {
+                pos = 350;
+            }
+            vec.push_back(str.substr(0, pos));
+            str.erase(0, pos);
+        } else {
+            vec.push_back(str.substr(0, std::string::npos));
+            break;
+        }
+    }
+    return vec;
 }

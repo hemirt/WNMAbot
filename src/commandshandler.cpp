@@ -1,10 +1,10 @@
 #include "commandshandler.hpp"
+#include "ayah.hpp"
+#include "bible.hpp"
 #include "channel.hpp"
 #include "connectionhandler.hpp"
 #include "mtrandom.hpp"
 #include "utilities.hpp"
-#include "ayah.hpp"
-#include "bible.hpp"
 
 #include <stdint.h>
 #include <vector>
@@ -49,7 +49,7 @@ CommandsHandler::handle(const IRCMessage &message)
             this->channelObject->owner->sanitizeMsg(tokens[i]);
         }
     }
-    
+
     Response response;
 
     if (this->isAdmin(message.user)) {
@@ -93,9 +93,11 @@ CommandsHandler::handle(const IRCMessage &message)
             response = this->createAlias(message, tokens);
         } else if (tokens[0] == "!deletealias") {
             response = this->deleteAlias(message, tokens);
+        } else if (tokens[0] == "!clearqueue") {
+            this->channelObject->messenger.clearQueue();
         }
     }
-    
+
     // a valid response
     if (response.type != Response::Type::UNKNOWN) {
         return response;
@@ -147,9 +149,11 @@ CommandsHandler::handle(const IRCMessage &message)
     } else if (tokens[0] == "!decrypt") {
         response = this->decrypt(message, tokens);
     }
-    
+
     // response valid
     if (response.type != Response::Type::UNKNOWN) {
+        // put to back
+        response.priority = 0;
         return response;
     }
 
@@ -198,7 +202,7 @@ Response
 CommandsHandler::joinChannel(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 2) {
         this->channelObject->whisper("Usage: !joinchn <channel>", message.user);
         return response;
@@ -217,7 +221,7 @@ Response
 CommandsHandler::leaveChannel(const IRCMessage &message,
                               std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 2) {
         this->channelObject->whisper("Usage: !leavechn <channel>",
                                      message.user);
@@ -273,8 +277,10 @@ CommandsHandler::makeResponse(const IRCMessage &message,
             }
         }
         cooldownsMap[tokens[0] + path] = now;
-        auto t = new boost::asio::steady_timer(ioService, std::chrono::seconds(*cooldown));
-        t->async_wait([this, key = tokens[0] + path](const boost::system::error_code &er) {
+        auto t = new boost::asio::steady_timer(ioService,
+                                               std::chrono::seconds(*cooldown));
+        t->async_wait([ this, key = tokens[0] + path ](
+            const boost::system::error_code &er) {
             std::lock_guard<std::mutex> lk(this->cooldownsMtx);
             this->cooldownsMap.erase(key);
         });
@@ -399,7 +405,7 @@ Response
 CommandsHandler::addCommand(const IRCMessage &message,
                             std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 4) {
         response.message = "Invalid use of command NaM";
         response.type = Response::Type::MESSAGE;
@@ -460,7 +466,7 @@ Response
 CommandsHandler::editCommand(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 4) {
         response.message = "Invalid use of command NaM";
         response.type = Response::Type::MESSAGE;
@@ -520,7 +526,7 @@ Response
 CommandsHandler::rawEditCommand(const IRCMessage &message,
                                 std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 5) {
         response.message = "Invalid use of command NaM";
         response.type = Response::Type::MESSAGE;
@@ -565,7 +571,7 @@ Response
 CommandsHandler::deleteCommand(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 3) {
         response.message = "Invalid use of command NaM";
         response.type = Response::Type::MESSAGE;
@@ -619,7 +625,7 @@ Response
 CommandsHandler::deleteFullCommand(const IRCMessage &message,
                                    std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 2) {
         response.message = "Invalid use of command NaM";
         response.type = Response::Type::MESSAGE;
@@ -887,7 +893,7 @@ Response
 CommandsHandler::say(const IRCMessage &message,
                      std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1001,7 +1007,7 @@ Response
 CommandsHandler::comeBackMsg(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 3) {
         return response;
     }
@@ -1031,7 +1037,7 @@ Response
 CommandsHandler::addBlacklist(const IRCMessage &message,
                               std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() == 2) {
         tokens.push_back("*");
     } else if (tokens.size() < 3) {
@@ -1052,7 +1058,7 @@ Response
 CommandsHandler::removeBlacklist(const IRCMessage &message,
                                  std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1116,7 +1122,7 @@ Response
 CommandsHandler::setUserCountryFrom(const IRCMessage &message,
                                     std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 3) {
         return response;
     }
@@ -1146,7 +1152,7 @@ Response
 CommandsHandler::setUserCountryLive(const IRCMessage &message,
                                     std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 3) {
         return response;
     }
@@ -1291,7 +1297,7 @@ Response
 CommandsHandler::deleteUser(const IRCMessage &message,
                             std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
     if (tokens.size() < 2) {
         return response;
     }
@@ -1391,7 +1397,7 @@ Response
 CommandsHandler::createCountry(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
 
     if (tokens.size() < 2) {
         return response;
@@ -1417,7 +1423,7 @@ Response
 CommandsHandler::deleteCountry(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
 
     if (tokens.size() < 2) {
         return response;
@@ -1436,7 +1442,7 @@ Response
 CommandsHandler::renameCountry(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
 
     if (tokens.size() < 3) {
         return response;
@@ -1463,7 +1469,7 @@ Response
 CommandsHandler::getCountryID(const IRCMessage &message,
                               std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
 
     if (tokens.size() < 2) {
         return response;
@@ -1493,7 +1499,7 @@ Response
 CommandsHandler::createAlias(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
 
     if (tokens.size() < 3) {
         return response;
@@ -1522,7 +1528,7 @@ Response
 CommandsHandler::deleteAlias(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
-    Response response(true);
+    Response response(1);
 
     if (tokens.size() < 3) {
         return response;
@@ -1637,8 +1643,8 @@ CommandsHandler::randomIslamicQuote(const IRCMessage &message,
                                     std::vector<std::string> &tokens)
 {
     Response response;
-    
-    if(!this->isAdmin(message.user)) {
+
+    if (!this->isAdmin(message.user)) {
         std::lock_guard<std::mutex> lk(this->cooldownsMtx);
         auto it = this->cooldownsMap.find(tokens[0] + message.user);
         auto now = std::chrono::steady_clock::now();
@@ -1650,16 +1656,18 @@ CommandsHandler::randomIslamicQuote(const IRCMessage &message,
             }
         }
         cooldownsMap[tokens[0] + message.user] = now;
-        auto t = new boost::asio::steady_timer(ioService, std::chrono::seconds(3));
-        t->async_wait([this, key = tokens[0] + message.user](const boost::system::error_code &er) {
+        auto t =
+            new boost::asio::steady_timer(ioService, std::chrono::seconds(3));
+        t->async_wait([ this, key = tokens[0] + message.user ](
+            const boost::system::error_code &er) {
             std::lock_guard<std::mutex> lk(this->cooldownsMtx);
             this->cooldownsMap.erase(key);
         });
     }
-    
+
     std::string str;
     if (tokens.size() < 2) {
-        str =  Ayah::getRandomAyah();
+        str = Ayah::getRandomAyah();
     } else {
         int number = std::atoi(tokens[1].c_str());
         if (number == 0) {
@@ -1672,7 +1680,7 @@ CommandsHandler::randomIslamicQuote(const IRCMessage &message,
     if (str.empty()) {
         return response;
     }
-    
+
     response.message = str;
     response.type = Response::Type::MESSAGE;
     return response;
@@ -1680,11 +1688,11 @@ CommandsHandler::randomIslamicQuote(const IRCMessage &message,
 
 Response
 CommandsHandler::randomChristianQuote(const IRCMessage &message,
-                                    std::vector<std::string> &tokens)
+                                      std::vector<std::string> &tokens)
 {
     Response response;
-    
-    if(!this->isAdmin(message.user)) {
+
+    if (!this->isAdmin(message.user)) {
         std::lock_guard<std::mutex> lk(this->cooldownsMtx);
         auto it = this->cooldownsMap.find(tokens[0] + message.user);
         auto now = std::chrono::steady_clock::now();
@@ -1696,19 +1704,21 @@ CommandsHandler::randomChristianQuote(const IRCMessage &message,
             }
         }
         cooldownsMap[tokens[0] + message.user] = now;
-        auto t = new boost::asio::steady_timer(ioService, std::chrono::seconds(3));
-        t->async_wait([this, key = tokens[0] + message.user](const boost::system::error_code &er) {
+        auto t =
+            new boost::asio::steady_timer(ioService, std::chrono::seconds(3));
+        t->async_wait([ this, key = tokens[0] + message.user ](
+            const boost::system::error_code &er) {
             std::lock_guard<std::mutex> lk(this->cooldownsMtx);
             this->cooldownsMap.erase(key);
         });
     }
-    
+
     std::string str = Bible::getRandomVerse();
 
     if (str.empty()) {
         return response;
     }
-    
+
     response.message = str;
     response.type = Response::Type::MESSAGE;
     return response;
@@ -1716,19 +1726,19 @@ CommandsHandler::randomChristianQuote(const IRCMessage &message,
 
 Response
 CommandsHandler::encrypt(const IRCMessage &message,
-                                    std::vector<std::string> &tokens)
+                         std::vector<std::string> &tokens)
 {
     Response response;
     if (tokens.size() < 2) {
         return response;
     }
-    
+
     std::string valueString;
     for (size_t i = 1; i < tokens.size(); ++i) {
         valueString += tokens[i] + ' ';
     }
     valueString.pop_back();
-    
+
     response.message = this->crypto.encrypt(valueString);
     response.type = Response::Type::MESSAGE;
     return response;
@@ -1736,19 +1746,19 @@ CommandsHandler::encrypt(const IRCMessage &message,
 
 Response
 CommandsHandler::decrypt(const IRCMessage &message,
-                                    std::vector<std::string> &tokens)
+                         std::vector<std::string> &tokens)
 {
     Response response;
     if (tokens.size() < 2) {
         return response;
     }
-    
+
     std::string valueString;
     for (size_t i = 1; i < tokens.size(); ++i) {
         valueString += tokens[i] + ' ';
     }
     valueString.pop_back();
-    
+
     response.message = this->crypto.decrypt(valueString);
     response.type = Response::Type::MESSAGE;
     return response;

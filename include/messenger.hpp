@@ -12,25 +12,26 @@ class Messenger
 {
 public:
     Messenger(boost::asio::io_service &_ioService,
-              std::function<bool(const std::string &)> _f);
-    bool push_front(const std::string &value);
-    bool push_front(std::string &&value);
-    bool push_back(const std::string &value);
-    bool push_back(std::string &&value);
+              std::function<bool(const std::string &)> _sendFunc);
+    void push_front(const std::string &value);
+    void push_front(std::string &&value);
+    void push_back(const std::string &value);
+    void push_back(std::string &&value);
     size_t size() const;
     bool empty() const;
     void startSending();
     bool able() const;
+    void clearQueue();
 
 private:
-    std::function<bool(const std::string &)> f;
+    std::function<bool(const std::string &)> sendFunc;
     bool ready = true;
     std::deque<std::string> deque;
     mutable std::mutex mtx;
     mutable std::unique_lock<std::mutex> lk;
     boost::asio::io_service &ioService;
     std::string extract_front();
-    constexpr static int maxMsgsInQueue = 3;
+    constexpr static int maxMsgsInQueue = 2;
 };
 
 #endif

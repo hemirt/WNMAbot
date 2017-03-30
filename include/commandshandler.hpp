@@ -1,10 +1,10 @@
 #ifndef COMMANDSHANDLER_HPP
 #define COMMANDSHANDLER_HPP
 
+#include "encryption.hpp"
 #include "ircmessage.hpp"
 #include "network.hpp"
 #include "redisclient.hpp"
-#include "encryption.hpp"
 
 #include "countries.hpp"
 #include "userids.hpp"
@@ -30,9 +30,10 @@ public:
     } type = Type::UNKNOWN;
 
     Response() = default;
-    Response(bool _priority)
+    Response(int _priority)
         : priority(_priority){};
-    bool priority = false;
+    // -1 dont send msg if full, 0 put to back, 1 put to front
+    int priority = -1;
     std::string message;
     std::string whisperReceiver;
 
@@ -53,7 +54,7 @@ public:
     RedisClient redisClient;
 
     bool isAdmin(const std::string &user);
-    
+
     Encryption crypto;
 
 private:
@@ -135,7 +136,7 @@ private:
     Response randomIslamicQuote(const IRCMessage &message,
                                 std::vector<std::string> &tokens);
     Response randomChristianQuote(const IRCMessage &message,
-                                std::vector<std::string> &tokens);
+                                  std::vector<std::string> &tokens);
     Response encrypt(const IRCMessage &message,
                      std::vector<std::string> &tokens);
     Response decrypt(const IRCMessage &message,

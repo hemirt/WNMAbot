@@ -1,8 +1,8 @@
 #include "connectionhandler.hpp"
 
+#include <curl/curl.h>
 #include <csignal>
 #include <iostream>
-#include <curl/curl.h>
 
 ConnectionHandler *irc;
 

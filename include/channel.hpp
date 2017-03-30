@@ -49,6 +49,8 @@ public:
         return channelName == r.channelName;
     }
 
+    std::vector<std::string> splitIntoChunks(std::string &&str);
+
     // The ConnectionHandler managin this channel, should be only one in whole
     // app
     ConnectionHandler *owner;
