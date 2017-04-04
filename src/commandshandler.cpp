@@ -108,6 +108,16 @@ CommandsHandler::handle(const IRCMessage &message)
             response = this->setModuleStatus(message, tokens);
         } else if (tokens[0] == "!moduleformat") {
             response = this->setModuleFormat(message, tokens);
+        } else if (tokens[0] == "!ignore") {
+            response = this->ignore(message, tokens);
+        } else if (tokens[0] == "!unignore") {
+            response = this->unignore(message, tokens);
+        } else if (tokens[0] == "!savemodule") {
+            response = this->saveModule(message, tokens);
+        } else if (tokens[0] == "!asetdata") {
+            response = this->setDataAdmin(message, tokens);
+        } else if (tokens[0] == "!deletemodule") {
+            response = this->deleteModule(message, tokens);
         }
     }
 
@@ -121,52 +131,56 @@ CommandsHandler::handle(const IRCMessage &message)
         return response;
     }
 
-    if (tokens[0] == "!chns") {
+    if (tokens[0] == "!chns" || tokens[0] == "!1") {
         response = this->printChannels(message, tokens);
-    } else if (tokens[0] == "!remindme") {
+    } else if (tokens[0] == "!remindme" || tokens[0] == "!2") {
         response = this->remindMe(message, tokens);
-    } else if (tokens[0] == "!remind") {
+    } else if (tokens[0] == "!remind" || tokens[0] == "!3") {
         response = this->remind(message, tokens);
-    } else if (tokens[0] == "!afk") {
+    } else if (tokens[0] == "!afk" || tokens[0] == "!4") {
         response = this->afk(message, tokens);
-    } else if (tokens[0] == "!gn") {
+    } else if (tokens[0] == "!gn" || tokens[0] == "!5") {
         response = this->goodNight(message, tokens);
-    } else if (tokens[0] == "!isafk") {
+    } else if (tokens[0] == "!isafk" || tokens[0] == "!6") {
         response = this->isAfk(message, tokens);
-    } else if (tokens[0] == "!whoisafk") {
+    } else if (tokens[0] == "!whoisafk" || tokens[0] == "!7") {
         response = this->whoIsAfk(message);
-    } else if (tokens[0] == "!where" || tokens[0] == "!country") {
+    } else if (tokens[0] == "!where" || tokens[0] == "!country" || tokens[0] == "!8") {
         response = this->isFrom(message, tokens);
-    } else if (tokens[0] == "!usersfrom") {
+    } else if (tokens[0] == "!usersfrom" || tokens[0] == "!9") {
         response = this->getUsersFrom(message, tokens);
-    } else if (tokens[0] == "!userslive") {
+    } else if (tokens[0] == "!userslive" || tokens[0] == "!10") {
         response = this->getUsersLiving(message, tokens);
-    } else if (tokens[0] == "!myfrom") {
+    } else if (tokens[0] == "!myfrom" || tokens[0] == "!11") {
         response = this->myFrom(message, tokens);
-    } else if (tokens[0] == "!mylive") {
+    } else if (tokens[0] == "!mylive" || tokens[0] == "!12") {
         response = this->myLiving(message, tokens);
-    } else if (tokens[0] == "!mydelete") {
+    } else if (tokens[0] == "!mydelete" || tokens[0] == "!13") {
         response = this->myDelete(message, tokens);
-    } else if (tokens[0] == "!reminders") {
+    } else if (tokens[0] == "!reminders" || tokens[0] == "!14") {
         response = this->myReminders(message, tokens);
-    } else if (tokens[0] == "!reminder") {
+    } else if (tokens[0] == "!reminder" || tokens[0] == "!15") {
         response = this->checkReminder(message, tokens);
-    } else if (tokens[0] == "!pingme") {
+    } else if (tokens[0] == "!pingme" || tokens[0] == "!16") {
         response = this->pingMeCommand(message, tokens);
-    } else if (tokens[0] == "!ri") {
+    } else if (tokens[0] == "!ri" || tokens[0] == "!17") {
         response = this->randomIslamicQuote(message, tokens);
-    } else if (tokens[0] == "!rb") {
+    } else if (tokens[0] == "!rb" || tokens[0] == "!18") {
         response = this->randomChristianQuote(message, tokens);
-    } else if (tokens[0] == "!encrypt") {
+    } else if (tokens[0] == "!encrypt" || tokens[0] == "!19") {
         response = this->encrypt(message, tokens);
-    } else if (tokens[0] == "!decrypt") {
+    } else if (tokens[0] == "!decrypt" || tokens[0] == "!20") {
         response = this->decrypt(message, tokens);
-    } else if (tokens[0] == "!moduleinfo") {
+    } else if (tokens[0] == "!moduleinfo" || tokens[0] == "!21") {
         response = this->getModuleInfo(message, tokens);
-    } else if (tokens[0] == "!userdata") {
+    } else if (tokens[0] == "!userdata" || tokens[0] == "!data" || tokens[0] == "!info" || tokens[0] == "!getdata" || tokens[0] == "!22") {
         response = this->getUserData(message, tokens);
-    } else if (tokens[0] == "!arq") {
+    } else if (tokens[0] == "!arq" || tokens[0] == "!23") {
         response = this->getRandomQuote(message, tokens);
+    } else if (tokens[0] == "!setdata" || tokens[0] == "!set" || tokens[0] == "!24") {
+        response = this->setData(message, tokens);
+    } else if (tokens[0] == "!modules" || tokens[0] == "!25") {
+        response = this->modules(message, tokens);
     }
 
     // response valid
@@ -1921,11 +1935,133 @@ CommandsHandler::getRandomQuote(const IRCMessage &message,
     if (tokens.size() > 1 && UserIDs::getInstance().isUser(tokens[1])) {
         changeToLower(tokens[1]);
         response.message = RandomQuote::getRandomQuote(this->channelObject->channelName, tokens[1]);
+        this->channelObject->owner->sanitizeMsg(response.message);
         response.type = Response::Type::MESSAGE;
         return response;
     } else {
         response.message = RandomQuote::getRandomQuote(this->channelObject->channelName, message.user);
+        this->channelObject->owner->sanitizeMsg(response.message);
         response.type = Response::Type::MESSAGE;
         return response;
     }
+}
+
+Response
+CommandsHandler::ignore(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() > 1 && UserIDs::getInstance().isUser(tokens[1]) && !this->isAdmin(tokens[1])) {
+        changeToLower(tokens[1]);
+        this->channelObject->ignore.addUser(tokens[1]);
+        response.message = message.user + ", ignored user " + tokens[1] + " NaM";
+        response.type = Response::Type::MESSAGE;
+        return response;
+    }
+    return response;
+}
+
+Response
+CommandsHandler::unignore(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() > 1 && UserIDs::getInstance().isUser(tokens[1]) && !this->isAdmin(tokens[1])) {
+        changeToLower(tokens[1]);
+        this->channelObject->ignore.removeUser(tokens[1]);
+        response.message = message.user + ", unignored user " + tokens[1] + " NaM";
+        response.type = Response::Type::MESSAGE;
+        return response;
+    }
+    return response;
+}
+
+Response
+CommandsHandler::saveModule(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() < 1) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    
+    if (this->channelObject->owner->modulesManager.saveModule(tokens[1])) {
+        response.message = message.user + ", saved module " + tokens[1];
+    } else {
+        response.message = message.user + ", did not save module " + tokens[1] + " (does it exist?)";
+    }
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::deleteModule(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() < 1) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    
+    this->channelObject->owner->modulesManager.deleteModule(tokens[1]);
+    response.message = message.user + ", deleted module " + tokens[1];
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::setData(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(0);
+    if (tokens.size() < 3) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    std::string valueString;
+    for (size_t i = 2; i < tokens.size(); ++i) {
+        valueString += tokens[i] + ' ';
+    }
+    valueString.pop_back();
+
+    response.message = message.user + ", " + this->channelObject->owner->modulesManager.setData(message.user, tokens[1], valueString);
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::setDataAdmin(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() < 4) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    changeToLower(tokens[2]);
+    if(!UserIDs::getInstance().isUser(tokens[2])) {
+        return response;
+    }
+    std::string valueString;
+    for (size_t i = 3; i < tokens.size(); ++i) {
+        valueString += tokens[i] + ' ';
+    }
+    valueString.pop_back();
+
+    response.message = message.user + ", " + this->channelObject->owner->modulesManager.setData(tokens[2], tokens[1], valueString);
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::modules(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(0);
+
+    response.message = message.user + ", " + this->channelObject->owner->modulesManager.getAllModules();
+    response.type = Response::Type::MESSAGE;
+    return response;
 }

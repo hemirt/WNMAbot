@@ -159,6 +159,20 @@ private:
                      std::vector<std::string> &tokens);
     Response getRandomQuote(const IRCMessage &message,
                      std::vector<std::string> &tokens);
+    Response ignore(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response unignore(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response saveModule(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response setData(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response setDataAdmin(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response modules(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response deleteModule(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
     boost::asio::io_service &ioService;
 
     std::unordered_map<std::string, std::chrono::steady_clock::time_point>

@@ -13,13 +13,15 @@ class Module
 {
 public:  
     Module(const std::string &_name);
+    Module(const std::string &name, const std::string &type, const std::string &subtype
+        , const std::string &format, bool status) : name(name), type(type), subtype(subtype), format(format), status(status) {};
     ~Module() = default;
     
     void setName(const std::string &newName);
     bool setType(const std::string &newType);
     bool setSubtype(const std::string &newSubtype);
-    bool setStatus(bool newStatus);
     void setFormat(const std::string &newFormat);
+    bool setStatus(bool newStatus);
     
     const std::string &getName() const {
         return this->name;
@@ -30,11 +32,11 @@ public:
     const std::string &getSubtype() const {
         return this->subtype;
     }
-    bool getStatus() const {
-        return this->status;
-    }
     const std::string &getFormat() const {
         return this->format;
+    }
+    bool getStatus() const {
+        return this->status;
     }
     
 
@@ -63,12 +65,17 @@ public:
     bool setName(const std::string &moduleName, const std::string &newName);
     bool setFormat(const std::string &moduleName, const std::string &format);
     bool setStatus(const std::string &moduleName, const std::string &status);
+    bool saveModule(const std::string &moduleName);
+    void deleteModule(const std::string &moduleName);
     
     std::string getInfo(const std::string &moduleName);
+    std::string getAllModules();
     
     std::string getData(const std::string &user, const std::string &moduleName);
+    std::string setData(const std::string &user, const std::string &moduleName, const std::string &data);
 
 private:
+    void loadAllModules();
     redisContext *context;
     mutable std::mutex access;
 

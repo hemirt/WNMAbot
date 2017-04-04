@@ -38,6 +38,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/encryption.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/modules.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/randomquote.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ignore.cpp
 )
 
 add_executable(WNMAbot ${SOURCE})

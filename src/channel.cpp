@@ -114,62 +114,66 @@ Channel::handleMessage(const IRCMessage &message)
             }
 
             owner->comebacks.sendMsgs(message.user);
+            
+            if (!this->ignore.isIgnored(message.user)) {
+                // user is not ignored
+                auto response = this->commandsHandler.handle(message);
 
-            auto response = this->commandsHandler.handle(message);
+                if (response.type == Response::Type::MESSAGE) {
+                    if (response.priority == 1) {
+                        auto vec =
+                            this->splitIntoChunks(std::move(response.message));
+                        for (auto &i : vec) {
+                            this->messenger.push_front(std::move(i));
+                        }
+                    } else if (response.priority == 0) {
+                        auto vec =
+                            this->splitIntoChunks(std::move(response.message));
+                        for (int i = 0; i < 3 && i < vec.size(); i++) {
+                            this->messenger.push_back(std::move(vec[i]));
+                        }
+                    } else if (this->messenger
+                                   .able() /* && message.priority == -1 */) {
+                        auto vec =
+                            this->splitIntoChunks(std::move(response.message));
+                        for (int i = 0; i < 3 && i < vec.size(); i++) {
+                            this->messenger.push_back(std::move(vec[i]));
+                        }
+                    }
 
-            if (response.type == Response::Type::MESSAGE) {
-                if (response.priority == 1) {
-                    auto vec =
-                        this->splitIntoChunks(std::move(response.message));
-                    for (auto &i : vec) {
-                        this->messenger.push_front(std::move(i));
-                    }
-                } else if (response.priority == 0) {
-                    auto vec =
-                        this->splitIntoChunks(std::move(response.message));
-                    for (int i = 0; i < 3 && i < vec.size(); i++) {
-                        this->messenger.push_back(std::move(vec[i]));
-                    }
-                } else if (this->messenger
-                               .able() /* && message.priority == -1 */) {
-                    auto vec =
-                        this->splitIntoChunks(std::move(response.message));
-                    for (int i = 0; i < 3 && i < vec.size(); i++) {
-                        this->messenger.push_back(std::move(vec[i]));
+                } else if (response.type == Response::Type::WHISPER) {
+                    this->whisper(response.message, response.whisperReceiver);
+                } else {
+                    std::vector<std::string> tokens;
+                    boost::algorithm::split(tokens, message.params,
+                                            boost::algorithm::is_space(),
+                                            boost::token_compress_on);
+
+                    changeToLower(tokens[0]);
+
+                    if (tokens[0] == "zululending" && message.user == "hemirt") {
+                        // push_front - its a priority message
+                        this->messenger.push_front("Shutting down FeelsBadMan");
+                        this->owner->shutdown();
+                    } else if (tokens[0] == "!peng") {
+                        auto now = std::chrono::steady_clock::now();
+                        auto runT =
+                            std::chrono::duration_cast<std::chrono::seconds>(
+                                now - owner->runTime);
+                        auto conT =
+                            std::chrono::duration_cast<std::chrono::seconds>(
+                                now - connectedTime);
+
+                        auto running = makeTimeString(runT.count());
+                        auto connected = makeTimeString(conT.count());
+                        this->messenger.push_back(
+                            "Running for " + running +
+                            ". Connected to this channel for " + connected + ".");
                     }
                 }
+            } // end of not ignored user
 
-            } else if (response.type == Response::Type::WHISPER) {
-                this->whisper(response.message, response.whisperReceiver);
-            } else {
-                std::vector<std::string> tokens;
-                boost::algorithm::split(tokens, message.params,
-                                        boost::algorithm::is_space(),
-                                        boost::token_compress_on);
-
-                changeToLower(tokens[0]);
-
-                if (tokens[0] == "zululending" && message.user == "hemirt") {
-                    // push_front - its a priority message
-                    this->messenger.push_front("Shutting down FeelsBadMan");
-                    this->owner->shutdown();
-                } else if (tokens[0] == "!peng") {
-                    auto now = std::chrono::steady_clock::now();
-                    auto runT =
-                        std::chrono::duration_cast<std::chrono::seconds>(
-                            now - owner->runTime);
-                    auto conT =
-                        std::chrono::duration_cast<std::chrono::seconds>(
-                            now - connectedTime);
-
-                    auto running = makeTimeString(runT.count());
-                    auto connected = makeTimeString(conT.count());
-                    this->messenger.push_back(
-                        "Running for " + running +
-                        ". Connected to this channel for " + connected + ".");
-                }
-            }
-
+            
             if (this->pingMe.isPinger(message.user)) {
                 auto map = this->pingMe.ping(message.user);
                 if (!map.empty()) {

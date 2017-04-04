@@ -8,6 +8,7 @@
 #include "messenger.hpp"
 #include "network.hpp"
 #include "pingme.hpp"
+#include "ignore.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -58,6 +59,7 @@ public:
     CommandsHandler commandsHandler;
     Messenger messenger;
     PingMe &pingMe;
+    Ignore ignore;
 
 private:
     // Create a new connection add it to the connections vector

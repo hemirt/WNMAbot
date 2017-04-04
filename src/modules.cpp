@@ -1,5 +1,10 @@
 #include "modules.hpp"
 #include <iostream>
+#include <sstream>
+
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+namespace pt = boost::property_tree;
 
 Module::Module(const std::string &_name)
     : name(_name)
@@ -37,7 +42,7 @@ Module::setSubtype(const std::string &newSubtype)
 bool
 Module::setStatus(bool newStatus)
 {
-    if (newStatus && this->type.size() != 0 && this->subtype.size() != 0 && this->name.size() != 0 && this->format.size() != 0) {
+    if (newStatus && this->type.size() != 0 /*&& this->subtype.size() != 0*/ && this->name.size() != 0 && this->format.size() != 0) {
         this->status = newStatus;
         return true;
     }
@@ -65,6 +70,7 @@ ModulesManager::ModulesManager()
                       << std::endl;
         }
     }
+    this->loadAllModules();
 }
 
 ModulesManager::~ModulesManager()
@@ -164,7 +170,177 @@ ModulesManager::getData(const std::string &user, const std::string &moduleName)
     std::lock_guard<std::mutex> lock(this->access);
     auto search = this->modules.find(moduleName);
     if (search != this->modules.end()) {
-        return "here be data NaM";
+        std::string userIDstr = this->userIDs.getID(user);
+        if(userIDstr.empty()) {
+            return "user " + user + " not found";
+        }
+        redisReply *reply = static_cast<redisReply *>(redisCommand(this->context,
+            "HGET WNMA:modulesData:%b %b", userIDstr.c_str(), userIDstr.size(), moduleName.c_str(), moduleName.size()));
+        if (reply && reply->type == REDIS_REPLY_STRING) {
+            std::string data(reply->str, reply->len);
+            return user + search->second.getFormat() + " " + data;;
+        } else {
+            return "no " + moduleName + " data found for " + user;
+        }
     }
     return "no such module found";
+}
+
+std::string
+ModulesManager::setData(const std::string &user, const std::string &moduleName, const std::string &data)
+{
+    std::lock_guard<std::mutex> lock(this->access);
+    auto search = this->modules.find(moduleName);
+    if (search != this->modules.end()) {
+        std::string userIDstr = this->userIDs.getID(user);
+        if(userIDstr.empty()) {
+            return "user " + user + " not found";
+        }
+        
+        if (search->second.getType() == "string") {
+            redisReply *reply = static_cast<redisReply *>(redisCommand(this->context,
+                "HSET WNMA:modulesData:%b %b %b", userIDstr.c_str(), userIDstr.size(), moduleName.c_str(), moduleName.size(), data.c_str(), data.size()));
+            freeReplyObject(reply);
+            return "module " + moduleName + " data for user " + user + " was set to " + data;
+        } else if (search->second.getType() == "double") {
+            redisReply *reply;
+            try {
+                double value = std::stod(data);
+                std::string strVal = std::to_string(value);
+                reply = static_cast<redisReply *>(redisCommand(this->context,
+                    "HSET WNMA:modulesData:%b %b %b", userIDstr.c_str(), userIDstr.size(), moduleName.c_str(), moduleName.size(), strVal.c_str(), strVal.size()));
+                freeReplyObject(reply);
+                return "module " + moduleName + " data for user " + user + " was set to " + strVal;
+            } catch (const std::invalid_argument &ex) {
+                freeReplyObject(reply);
+                return "invalid argument";
+            } catch (const std::out_of_range &ex) {
+                freeReplyObject(reply);
+                return "out of range";
+            } catch (const std::exception &ex) {
+                freeReplyObject(reply);
+                return ex.what();
+            } catch (...) {
+                freeReplyObject(reply);
+                return "unknown exception";
+            }
+        } else if (search->second.getType() == "int") {
+            redisReply *reply;
+            try {
+                int value = std::stoi(data);
+                std::string strVal = std::to_string(value);
+                reply = static_cast<redisReply *>(redisCommand(this->context,
+                    "HSET WNMA:modulesData:%b %b %b", userIDstr.c_str(), userIDstr.size(), moduleName.c_str(), moduleName.size(), strVal.c_str(), strVal.size()));
+                freeReplyObject(reply);
+                return "module " + moduleName + " data for user " + user + " was set to " + strVal;
+            } catch (const std::invalid_argument &ex) {
+                freeReplyObject(reply);
+                return "invalid argument";
+            } catch (const std::out_of_range &ex) {
+                freeReplyObject(reply);
+                return "out of range";
+            } catch (const std::exception &ex) {
+                freeReplyObject(reply);
+                return ex.what();
+            } catch (...) {
+                freeReplyObject(reply);
+                return "unknown exception";
+            }
+        } else {
+            return "unknown type";
+        }
+    }
+    return "no such module found";
+}
+
+bool
+ModulesManager::saveModule(const std::string &moduleName)
+{
+    std::lock_guard<std::mutex> lock(this->access);
+    auto search = this->modules.find(moduleName);
+    if (search != this->modules.end()) {
+        const auto &name = search->second.getName();
+        const auto &type = search->second.getType();
+        const auto &subtype = search->second.getSubtype();
+        const auto &format = search->second.getFormat();
+        const auto &status = search->second.getStatus();
+        
+        pt::ptree tree;
+        tree.put("name", name);
+        tree.put("type", type);
+        tree.put("subtype", subtype);
+        tree.put("format", format);
+        tree.put("status", status);
+        
+        std::stringstream ss;
+        pt::write_json(ss, tree, false);
+        std::string moduleInfo = ss.str();
+        
+        redisReply *reply = static_cast<redisReply *>(redisCommand(this->context,
+            "HSET WNMA:modules %b %b", moduleName.c_str(), moduleName.size(), moduleInfo.c_str(), moduleInfo.size()));
+        freeReplyObject(reply);
+        return true;
+    }
+    return false;
+}
+
+void
+ModulesManager::deleteModule(const std::string &moduleName)
+{
+    std::lock_guard<std::mutex> lock(this->access);
+    auto search = this->modules.find(moduleName);
+    if (search != this->modules.end()) {
+        redisReply *reply = static_cast<redisReply *>(redisCommand(this->context,
+            "HDEL WNMA:modules %b", moduleName.c_str(), moduleName.size()));
+        freeReplyObject(reply);
+        this->modules.erase(search);
+    }
+}
+
+void
+ModulesManager::loadAllModules()
+{
+    std::lock_guard<std::mutex> lock(this->access);
+    redisReply *reply = static_cast<redisReply *>(
+        redisCommand(this->context, "HGETALL WNMA:modules"));
+    if (reply->type != REDIS_REPLY_ARRAY) {
+        freeReplyObject(reply);
+        return;
+    }
+    
+    for (int i = 0; i < reply->elements; i += 2) {
+        pt::ptree tree;
+        std::string moduleName(reply->element[i]->str, reply->element[i]->len);
+        std::string module(reply->element[i + 1]->str, reply->element[i + 1]->len);
+        std::stringstream ss(module);
+        pt::read_json(ss, tree);
+        
+        std::string name = tree.get("name", "");
+        std::string type = tree.get("type", "");
+        std::string subtype = tree.get("subtype", "");
+        std::string format = tree.get("format", "");
+        bool status = tree.get("status", false);
+        
+        if(name == "") {
+            continue;
+        }
+        
+        this->modules.emplace(std::make_pair(moduleName, Module(name, type, subtype, format, status)));
+    }
+    freeReplyObject(reply);
+}
+
+std::string
+ModulesManager::getAllModules()
+{
+    std::string ret;
+    std::lock_guard<std::mutex> lock(this->access);
+    for (const auto &i : this->modules) {
+        ret += i.first + ", ";
+    }
+    if (!ret.empty()) {
+        ret.pop_back();
+        ret.pop_back();
+    }
+    return ret;
 }
