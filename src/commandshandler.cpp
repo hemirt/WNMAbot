@@ -118,8 +118,6 @@ CommandsHandler::handle(const IRCMessage &message)
             response = this->setDataAdmin(message, tokens);
         } else if (tokens[0] == "!deletemodule") {
             response = this->deleteModule(message, tokens);
-        } else if (tokens[0] == "!del" || tokens[0] == "!delete") {
-            response = this->deleteMyData(message, tokens);
         } else if (tokens[0] == "!adel" || tokens[0] == "!adeletedata") {
             response = this->deleteUserData(message, tokens);
         }
@@ -149,9 +147,11 @@ CommandsHandler::handle(const IRCMessage &message)
         response = this->isAfk(message, tokens);
     } else if (tokens[0] == "!whoisafk" || tokens[0] == "!7") {
         response = this->whoIsAfk(message);
-    } else if (tokens[0] == "!where" || tokens[0] == "!country" || tokens[0] == "!8" || (tokens[0] == "!info" && tokens.size() >= 2 && (tokens[1] == "country" || tokens[1] == "where" || tokens[1] == "live" || tokens[1] == "from"))) {
-        if (tokens[0] == "!info") {
+    } else if (tokens[0] == "!where" || tokens[0] == "!country" || tokens[0] == "!8" || (tokens[0] == "!info" && tokens.size() >= 2 && ((tokens[1] == "country" || tokens[1] == "where" || tokens[1] == "live" || tokens[1] == "from") || (tokens[2] == "country" || tokens[2] == "where" || tokens[2] == "live" || tokens[2] == "from")))) {
+        if (tokens[0] == "!info" && (tokens[1] == "country" || tokens[1] == "where" || tokens[1] == "live" || tokens[1] == "from")) {
             tokens.erase(tokens.begin() + 1);
+        } else if (tokens[0] == "!info" && (tokens[2] == "country" || tokens[2] == "where" || tokens[2] == "live" || tokens[2] == "from")) {
+            tokens.erase(tokens.begin() + 2);
         }
         response = this->isFrom(message, tokens);
     } else if (tokens[0] == "!usersfrom" || tokens[0] == "!9") {
@@ -188,6 +188,8 @@ CommandsHandler::handle(const IRCMessage &message)
         response = this->setData(message, tokens);
     } else if (tokens[0] == "!modules" || tokens[0] == "!25") {
         response = this->modules(message, tokens);
+    } else if (tokens[0] == "!del" || tokens[0] == "!delete" || tokens[0] == "!26") {
+        response = this->deleteMyData(message, tokens);
     }
 
     // response valid
@@ -1947,7 +1949,11 @@ CommandsHandler::getUserData(const IRCMessage &message,
         response.message = message.user + ", " + p.second;
     } else {
         p = this->channelObject->owner->modulesManager.getData(tokens[2], tokens[1]);
-        response.message = message.user + ", " + p.second;
+        if (p.first == true) {
+            response.message = message.user + ", " + p.second;
+        } else if (UserIDs::getInstance().isUser(tokens[1])) {
+            response.message = this->channelObject->owner->modulesManager.getAllData(tokens[1]);
+        }
     }
      
     response.type = Response::Type::MESSAGE;
