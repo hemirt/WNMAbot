@@ -8,6 +8,7 @@
 #include <mutex>
 #include <string>
 #include <utility>
+#include <memory>
 
 class RemindUsers
 {
@@ -15,12 +16,12 @@ public:
     struct Reminder {
         std::string toUser;
         std::string whichReminder;
-        boost::asio::steady_timer *timer;
+        std::shared_ptr<boost::asio::steady_timer> timer;
     };
     RemindUsers() = default;
     void addReminder(const std::string &fromUser, const std::string &toUser,
                      const std::string &which,
-                     boost::asio::steady_timer *timer);
+                     std::shared_ptr<boost::asio::steady_timer> timer);
     int count(const std::string &fromUser);
     void removeFirst(const std::string &fromUser);
     RemindUsers::Reminder getFirst(const std::string &fromUser);

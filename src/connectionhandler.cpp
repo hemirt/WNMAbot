@@ -53,9 +53,9 @@ ConnectionHandler::ConnectionHandler()
 void
 ConnectionHandler::start()
 {
-    auto timer = new boost::asio::steady_timer(this->ioService);
-    timer->expires_from_now(std::chrono::seconds(2));
-    timer->async_wait(
+    this->msgDecreaserTimer = std::make_unique<boost::asio::steady_timer>(this->ioService);
+    this->msgDecreaserTimer->expires_from_now(std::chrono::seconds(2));
+    this->msgDecreaserTimer->async_wait(
         boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
 
     joinChannel(this->nick);
@@ -80,12 +80,14 @@ ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
 
     if (ec) {
         std::cerr << "MsgDecreaseHandler error " << ec << std::endl;
+        this->msgDecreaserTimer.reset();
         return;
     }
 
     std::lock_guard<std::mutex> lk(channelMtx);
 
     if (this->quit) {
+        this->msgDecreaserTimer.reset();
         return;
     }
 
@@ -95,9 +97,9 @@ ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
         }
     }
 
-    auto timer = new boost::asio::steady_timer(this->ioService);
-    timer->expires_from_now(std::chrono::seconds(2));
-    timer->async_wait(
+    this->msgDecreaserTimer = std::make_unique<boost::asio::steady_timer>(this->ioService);
+    this->msgDecreaserTimer->expires_from_now(std::chrono::seconds(2));
+    this->msgDecreaserTimer->async_wait(
         boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
 }
 
@@ -108,6 +110,7 @@ ConnectionHandler::~ConnectionHandler()
     Ayah::deinit();
     Bible::deinit();
     RandomQuote::deinit();
+    this->msgDecreaserTimer.reset();
     std::cout << "cleared end destr" << std::endl;
 }
 
@@ -158,6 +161,7 @@ ConnectionHandler::run()
     } catch (const std::exception &ex) {
         std::cerr << "Exception caught in ConnectionHandler::run(): "
                   << ex.what() << "\nec: " << ec << std::endl;
+        this->shutdown();
     }
 }
 
@@ -177,11 +181,13 @@ ConnectionHandler::loadAllReminders()
     auto remindersMap = this->authFromRedis.getAllReminders();
     for (const auto &name_vec : remindersMap) {
         for (const auto &reminder : name_vec.second) {
+            auto t = std::make_shared<boost::asio::basic_waitable_timer<std::chrono::system_clock>>(ioService, std::chrono::system_clock::from_time_t(reminder.timeStamp));
+            
             auto remindFunction =
                 [
                   this, user = name_vec.first,
                   reminderMessage = reminder.message,
-                  whichReminder = reminder.id
+                  whichReminder = reminder.id, t
                 ](const boost::system::error_code &er)
                     ->void
             {
@@ -198,10 +204,7 @@ ConnectionHandler::loadAllReminders()
                                                                 whichReminder);
             };
 
-            auto t = new boost::asio::basic_waitable_timer<
-                std::chrono::system_clock>(
-                ioService,
-                std::chrono::system_clock::from_time_t(reminder.timeStamp));
+            
             t->async_wait(remindFunction);
         }
     }

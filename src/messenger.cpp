@@ -95,9 +95,9 @@ Messenger::startSending()
         this->ready = false;
         std::string value = this->extract_front();
         this->sendFunc(value);
-        auto t = new boost::asio::steady_timer(ioService,
+        auto t = std::make_shared<boost::asio::steady_timer>(ioService,
                                                std::chrono::milliseconds(1550));
-        t->async_wait([this](const boost::system::error_code &er) {
+        t->async_wait([this, t](const boost::system::error_code &er) {
             if (er) {
                 return;
             }

@@ -114,10 +114,14 @@ CommandsHandler::handle(const IRCMessage &message)
             response = this->unignore(message, tokens);
         } else if (tokens[0] == "!savemodule") {
             response = this->saveModule(message, tokens);
-        } else if (tokens[0] == "!asetdata") {
+        } else if (tokens[0] == "!asetdata" || tokens[0] == "!aset") {
             response = this->setDataAdmin(message, tokens);
         } else if (tokens[0] == "!deletemodule") {
             response = this->deleteModule(message, tokens);
+        } else if (tokens[0] == "!del" || tokens[0] == "!delete") {
+            response = this->deleteMyData(message, tokens);
+        } else if (tokens[0] == "!adel" || tokens[0] == "!adeletedata") {
+            response = this->deleteUserData(message, tokens);
         }
     }
 
@@ -145,7 +149,10 @@ CommandsHandler::handle(const IRCMessage &message)
         response = this->isAfk(message, tokens);
     } else if (tokens[0] == "!whoisafk" || tokens[0] == "!7") {
         response = this->whoIsAfk(message);
-    } else if (tokens[0] == "!where" || tokens[0] == "!country" || tokens[0] == "!8") {
+    } else if (tokens[0] == "!where" || tokens[0] == "!country" || tokens[0] == "!8" || (tokens[0] == "!info" && tokens.size() >= 2 && (tokens[1] == "country" || tokens[1] == "where" || tokens[1] == "live" || tokens[1] == "from"))) {
+        if (tokens[0] == "!info") {
+            tokens.erase(tokens.begin() + 1);
+        }
         response = this->isFrom(message, tokens);
     } else if (tokens[0] == "!usersfrom" || tokens[0] == "!9") {
         response = this->getUsersFrom(message, tokens);
@@ -173,7 +180,7 @@ CommandsHandler::handle(const IRCMessage &message)
         response = this->decrypt(message, tokens);
     } else if (tokens[0] == "!moduleinfo" || tokens[0] == "!21") {
         response = this->getModuleInfo(message, tokens);
-    } else if (tokens[0] == "!userdata" || tokens[0] == "!data" || tokens[0] == "!info" || tokens[0] == "!getdata" || tokens[0] == "!22") {
+    } else if (tokens[0] == "!info" || tokens[0] == "!22") {
         response = this->getUserData(message, tokens);
     } else if (tokens[0] == "!arq" || tokens[0] == "!23") {
         response = this->getRandomQuote(message, tokens);
@@ -273,6 +280,10 @@ CommandsHandler::printChannels(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
     Response response(0);
+    
+    if (!this->cooldownCheck(message.user, tokens[0])) {
+        return response;
+    }
 
     std::string channels;
     for (const auto &i : this->channelObject->owner->channels) {
@@ -308,13 +319,15 @@ CommandsHandler::makeResponse(const IRCMessage &message,
             }
         }
         cooldownsMap[tokens[0] + path] = now;
-        auto t = new boost::asio::steady_timer(ioService,
+        auto t = std::make_shared<boost::asio::steady_timer>(ioService,
                                                std::chrono::seconds(*cooldown));
-        t->async_wait([ this, key = tokens[0] + path ](
+        t->async_wait([ this, key = tokens[0] + path, t ](
             const boost::system::error_code &er) {
             std::lock_guard<std::mutex> lk(this->cooldownsMtx);
             this->cooldownsMap.erase(key);
         });
+    } else if (!this->cooldownCheck(message.user, tokens[0])) {
+        return response;
     }
 
     boost::optional<int> numParams =
@@ -771,12 +784,15 @@ CommandsHandler::remindMe(const IRCMessage &message,
     std::string whichReminder =
         this->redisClient.addReminder(message.user, seconds, reminderMessage);
 
+    auto t =
+        std::make_shared<boost::asio::steady_timer>(ioService, std::chrono::seconds(seconds));
+        
     auto whisperMessage =
         reminderMessage + " - " + makeTimeString(seconds) + " ago";
     auto remindFunction =
         [
           owner = this->channelObject->owner, user = message.user,
-          whisperMessage, whichReminder, seconds
+          whisperMessage, whichReminder, seconds, t
         ](const boost::system::error_code &er)
             ->void
     {
@@ -793,8 +809,7 @@ CommandsHandler::remindMe(const IRCMessage &message,
             .commandsHandler.redisClient.removeReminder(user, whichReminder);
     };
 
-    auto t =
-        new boost::asio::steady_timer(ioService, std::chrono::seconds(seconds));
+    
     t->async_wait(remindFunction);
 
     // this->channelObject->owner->sanitizeMsg(reminderMessage);
@@ -879,12 +894,15 @@ CommandsHandler::remind(const IRCMessage &message,
         pair.timer->cancel();
     }
 
+    auto t =
+        std::make_shared<boost::asio::steady_timer>(ioService, std::chrono::seconds(seconds));
+    
     auto whisperMessage =
         reminderMessage + " " + makeTimeString(seconds) + " ago";
     auto remindFunction =
         [
           owner = this->channelObject->owner, user = remindedUser,
-          whisperMessage, whichReminder, from = message.user, seconds
+          whisperMessage, whichReminder, from = message.user, seconds, t
         ](const boost::system::error_code &er)
             ->void
     {
@@ -901,8 +919,7 @@ CommandsHandler::remind(const IRCMessage &message,
         owner->userReminders.remove(from, user, whichReminder);
     };
 
-    auto t =
-        new boost::asio::steady_timer(ioService, std::chrono::seconds(seconds));
+    
     t->async_wait(remindFunction);
     this->channelObject->owner->userReminders.addReminder(
         message.user, remindedUser, whichReminder, t);
@@ -1107,6 +1124,11 @@ Response
 CommandsHandler::whoIsAfk(const IRCMessage &message)
 {
     Response response(0);
+    
+    if (!this->cooldownCheck(message.user, "!whoisafk")) {
+        return response;
+    }
+    
     std::string afkers = this->channelObject->owner->afkers.getAfkers();
     if (afkers.empty()) {
         response.message =
@@ -1249,6 +1271,10 @@ CommandsHandler::getUsersFrom(const IRCMessage &message,
     if (tokens.size() < 2) {
         return response;
     }
+    
+    if (!this->cooldownCheck(message.user, tokens[0])) {
+        return response;
+    }
 
     std::string country;
     for (int i = 1; i < tokens.size(); i++) {
@@ -1290,6 +1316,10 @@ CommandsHandler::getUsersLiving(const IRCMessage &message,
 {
     Response response(0);
     if (tokens.size() < 2) {
+        return response;
+    }
+    
+    if (!this->cooldownCheck(message.user, tokens[0])) {
         return response;
     }
 
@@ -1621,6 +1651,10 @@ CommandsHandler::checkReminder(const IRCMessage &message,
     if (tokens.size() < 2) {
         return response;
     }
+    
+    if (!this->cooldownCheck(message.user, tokens[0])) {
+        return response;
+    }
 
     auto reminderTree = this->redisClient.getRemindersOfUser(message.user);
 
@@ -1675,25 +1709,8 @@ CommandsHandler::randomIslamicQuote(const IRCMessage &message,
 {
     Response response(-1);
 
-    if (!this->isAdmin(message.user)) {
-        std::lock_guard<std::mutex> lk(this->cooldownsMtx);
-        auto it = this->cooldownsMap.find(tokens[0] + message.user);
-        auto now = std::chrono::steady_clock::now();
-        if (it != cooldownsMap.end()) {
-            if (std::chrono::duration_cast<std::chrono::seconds>(now -
-                                                                 it->second)
-                    .count() < 3) {
-                return response;
-            }
-        }
-        cooldownsMap[tokens[0] + message.user] = now;
-        auto t =
-            new boost::asio::steady_timer(ioService, std::chrono::seconds(3));
-        t->async_wait([ this, key = tokens[0] + message.user ](
-            const boost::system::error_code &er) {
-            std::lock_guard<std::mutex> lk(this->cooldownsMtx);
-            this->cooldownsMap.erase(key);
-        });
+    if (!this->cooldownCheck(message.user, tokens[0])) {
+        return response;
     }
 
     std::string str;
@@ -1723,25 +1740,8 @@ CommandsHandler::randomChristianQuote(const IRCMessage &message,
 {
     Response response(-1);
 
-    if (!this->isAdmin(message.user)) {
-        std::lock_guard<std::mutex> lk(this->cooldownsMtx);
-        auto it = this->cooldownsMap.find(tokens[0] + message.user);
-        auto now = std::chrono::steady_clock::now();
-        if (it != cooldownsMap.end()) {
-            if (std::chrono::duration_cast<std::chrono::seconds>(now -
-                                                                 it->second)
-                    .count() < 3) {
-                return response;
-            }
-        }
-        cooldownsMap[tokens[0] + message.user] = now;
-        auto t =
-            new boost::asio::steady_timer(ioService, std::chrono::seconds(3));
-        t->async_wait([ this, key = tokens[0] + message.user ](
-            const boost::system::error_code &er) {
-            std::lock_guard<std::mutex> lk(this->cooldownsMtx);
-            this->cooldownsMap.erase(key);
-        });
+    if (!this->cooldownCheck(message.user, tokens[0])) {
+        return response;
     }
 
     std::string str = Bible::getRandomVerse();
@@ -1763,6 +1763,10 @@ CommandsHandler::encrypt(const IRCMessage &message,
     if (tokens.size() < 2) {
         return response;
     }
+    
+    if (!this->cooldownCheck(message.user, tokens[0])) {
+        return response;
+    }
 
     std::string valueString;
     for (size_t i = 1; i < tokens.size(); ++i) {
@@ -1781,6 +1785,10 @@ CommandsHandler::decrypt(const IRCMessage &message,
 {
     Response response(-1);
     if (tokens.size() < 2) {
+        return response;
+    }
+    
+    if (!this->cooldownCheck(message.user, tokens[0])) {
         return response;
     }
 
@@ -1915,14 +1923,65 @@ CommandsHandler::getUserData(const IRCMessage &message,
                  std::vector<std::string> &tokens)
 {
     Response response(0);
+    if (!this->cooldownCheck(message.user, tokens[0])) {
+        return response;
+    }
     if (tokens.size() < 3) {
+        if (tokens.size() == 1) {
+            response.message = this->channelObject->owner->modulesManager.getAllData(message.user);
+            response.type = Response::Type::MESSAGE;
+            
+        } else if (tokens.size() == 2) {
+            changeToLower(tokens[1]);
+            response.message = this->channelObject->owner->modulesManager.getAllData(tokens[1]);
+            response.type = Response::Type::MESSAGE;
+        }
         return response;
     }
     changeToLower(tokens[1]);
     changeToLower(tokens[2]);
     
     // !data user module
-    response.message = message.user + ", " + this->channelObject->owner->modulesManager.getData(tokens[1], tokens[2]);
+    auto p = this->channelObject->owner->modulesManager.getData(tokens[1], tokens[2]);
+    if (p.first == true) {
+        response.message = message.user + ", " + p.second;
+    } else {
+        p = this->channelObject->owner->modulesManager.getData(tokens[2], tokens[1]);
+        response.message = message.user + ", " + p.second;
+    }
+     
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::deleteMyData(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(0);
+    if (tokens.size() < 2) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+
+    response.message = message.user + ", " + this->channelObject->owner->modulesManager.deleteData(message.user, tokens[1]);
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+
+Response
+CommandsHandler::deleteUserData(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() < 3) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    changeToLower(tokens[2]);
+
+    response.message = message.user + ", " + this->channelObject->owner->modulesManager.deleteData(tokens[2], tokens[1]);
     response.type = Response::Type::MESSAGE;
     return response;
 }
@@ -1932,6 +1991,11 @@ CommandsHandler::getRandomQuote(const IRCMessage &message,
                  std::vector<std::string> &tokens)
 {
     Response response(-1);
+    
+    if (!this->cooldownCheck(message.user, tokens[0])) {
+        return response;
+    }
+    
     if (tokens.size() > 1 && UserIDs::getInstance().isUser(tokens[1])) {
         changeToLower(tokens[1]);
         response.message = RandomQuote::getRandomQuote(this->channelObject->channelName, tokens[1]);
@@ -2064,4 +2128,32 @@ CommandsHandler::modules(const IRCMessage &message,
     response.message = message.user + ", " + this->channelObject->owner->modulesManager.getAllModules();
     response.type = Response::Type::MESSAGE;
     return response;
+}
+
+bool
+CommandsHandler::cooldownCheck(const std::string &user, const std::string &cmd)
+{
+    if (!this->isAdmin(user)) {
+        std::lock_guard<std::mutex> lk(this->cooldownsMtx);
+        auto it = this->cooldownsMap.find(cmd + user);
+        auto now = std::chrono::steady_clock::now();
+        if (it != cooldownsMap.end()) {
+            if (std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                                 it->second)
+                    .count() < 5) {
+                return false;
+            }
+        }
+        cooldownsMap[cmd + user] = now;
+        auto t =
+            std::make_shared<boost::asio::steady_timer>(ioService, std::chrono::seconds(5));
+        t->async_wait([ this, key = cmd + user, t ](
+            const boost::system::error_code &er) {
+            std::lock_guard<std::mutex> lk(this->cooldownsMtx);
+            this->cooldownsMap.erase(key);
+        });
+        return true;
+    } else {
+        return true;
+    }
 }

@@ -3,7 +3,7 @@
 void
 RemindUsers::addReminder(const std::string &fromUser, const std::string &toUser,
                          const std::string &which,
-                         boost::asio::steady_timer *timer)
+                         std::shared_ptr<boost::asio::steady_timer> timer)
 {
     std::lock_guard<std::mutex> lk(this->mtx);
     this->reminders.emplace(std::pair<std::string, RemindUsers::Reminder>(

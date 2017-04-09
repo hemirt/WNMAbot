@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <mutex>
+#include <utility>
 
 class Module
 {
@@ -71,8 +72,11 @@ public:
     std::string getInfo(const std::string &moduleName);
     std::string getAllModules();
     
-    std::string getData(const std::string &user, const std::string &moduleName);
+    std::pair<bool, std::string> getData(const std::string &user, const std::string &moduleName);
     std::string setData(const std::string &user, const std::string &moduleName, const std::string &data);
+    std::string deleteData(const std::string &user, const std::string &moduleName);
+    
+    std::string getAllData(const std::string &user);
 
 private:
     void loadAllModules();

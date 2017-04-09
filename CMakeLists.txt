@@ -12,7 +12,13 @@ include_directories(${CURL_INCLUDE_DIR})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-set(CMAKE_CXX_FLAGS "-pthread -std=c++1z -O3 ${CMAKE_CXX_FLAGS}")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message("debug")
+    set(CMAKE_CXX_FLAGS "-pthread -std=c++1z -O0 -g -fsanitize=address ${CMAKE_CXX_FLAGS}")
+else()
+    message("release")
+    set(CMAKE_CXX_FLAGS "-pthread -std=c++1z -O3 ${CMAKE_CXX_FLAGS}")
+endif()
 
 set(SOURCE
     ${SOURCE}

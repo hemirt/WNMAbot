@@ -173,11 +173,18 @@ private:
                      std::vector<std::string> &tokens);
     Response deleteModule(const IRCMessage &message,
                      std::vector<std::string> &tokens);
+    Response deleteMyData(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response deleteUserData(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+                     
     boost::asio::io_service &ioService;
 
     std::unordered_map<std::string, std::chrono::steady_clock::time_point>
         cooldownsMap;
     std::mutex cooldownsMtx;
+    
+    bool cooldownCheck(const std::string &user, const std::string &cmd);
 };
 
 #endif

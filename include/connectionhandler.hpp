@@ -91,6 +91,7 @@ private:
 
     void loadAllReminders();
     void start();
+    std::unique_ptr<boost::asio::steady_timer> msgDecreaserTimer;
 };
 
 #endif

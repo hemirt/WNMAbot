@@ -88,7 +88,7 @@ Channel::handleMessage(const IRCMessage &message)
                 auto now = std::chrono::steady_clock::now();
                 if (std::chrono::duration_cast<std::chrono::seconds>(now -
                                                                      afk.time)
-                            .count() > 10 ||
+                            .count() > 60 ||
                     boost::iequals(message.params.substr(0, 5), "!back")) {
                     owner->afkers.removeAfker(message.user);
 
@@ -173,7 +173,6 @@ Channel::handleMessage(const IRCMessage &message)
                 }
             } // end of not ignored user
 
-            
             if (this->pingMe.isPinger(message.user)) {
                 auto map = this->pingMe.ping(message.user);
                 if (!map.empty()) {

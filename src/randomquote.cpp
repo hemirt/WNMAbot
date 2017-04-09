@@ -35,7 +35,7 @@ std::string
 RandomQuote::getRandomQuote(const std::string &channel, const std::string &user)
 {
     std::string rawurl("https://api.gempir.com/channel/" + channel + "/user/" + user + "/random");
-
+    
     std::lock_guard<std::mutex> lk(RandomQuote::curlMtx);
     std::string readBuffer;
     curl_easy_setopt(RandomQuote::curl, CURLOPT_HTTPHEADER, RandomQuote::chunk);
