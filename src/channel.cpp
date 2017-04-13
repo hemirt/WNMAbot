@@ -129,14 +129,14 @@ Channel::handleMessage(const IRCMessage &message)
                     } else if (response.priority == 0) {
                         auto vec =
                             this->splitIntoChunks(std::move(response.message));
-                        for (int i = 0; i < 3 && i < vec.size(); i++) {
+                        for (int i = 0; i < 2 && i < vec.size(); i++) {
                             this->messenger.push_back(std::move(vec[i]));
                         }
                     } else if (this->messenger
                                    .able() /* && message.priority == -1 */) {
                         auto vec =
                             this->splitIntoChunks(std::move(response.message));
-                        for (int i = 0; i < 3 && i < vec.size(); i++) {
+                        for (int i = 0; i < 2 && i < vec.size(); i++) {
                             this->messenger.push_back(std::move(vec[i]));
                         }
                     }
@@ -269,6 +269,8 @@ Channel::splitIntoChunks(std::string &&str)
             auto pos = str.find_last_of(' ', 350);
             if (pos == std::string::npos) {
                 pos = 350;
+            } else if (pos == 0) {
+                break;
             }
             vec.push_back(str.substr(0, pos));
             str.erase(0, pos);

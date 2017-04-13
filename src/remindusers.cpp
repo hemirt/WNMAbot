@@ -73,3 +73,12 @@ RemindUsers::exists(const std::string &fromUser, const std::string &toUser,
     }
     return false;
 }
+
+RemindUsers::~RemindUsers()
+{
+    std::lock_guard<std::mutex> lk(this->mtx);
+    for (auto &i : reminders) {
+        i.second.timer->cancel();
+        i.second.timer.reset();
+    }
+}

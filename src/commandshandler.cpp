@@ -147,7 +147,7 @@ CommandsHandler::handle(const IRCMessage &message)
         response = this->isAfk(message, tokens);
     } else if (tokens[0] == "!whoisafk" || tokens[0] == "!7") {
         response = this->whoIsAfk(message);
-    } else if (tokens[0] == "!where" || tokens[0] == "!country" || tokens[0] == "!8" || (tokens[0] == "!info" && tokens.size() >= 2 && ((tokens[1] == "country" || tokens[1] == "where" || tokens[1] == "live" || tokens[1] == "from") || (tokens[2] == "country" || tokens[2] == "where" || tokens[2] == "live" || tokens[2] == "from")))) {
+    } else if (tokens[0] == "!where" || tokens[0] == "!country" || tokens[0] == "!8" || (tokens[0] == "!info" && tokens.size() > 2 && ((tokens[1] == "country" || tokens[1] == "where" || tokens[1] == "live" || tokens[1] == "from") || (tokens[2] == "country" || tokens[2] == "where" || tokens[2] == "live" || tokens[2] == "from")))) {
         if (tokens[0] == "!info" && (tokens[1] == "country" || tokens[1] == "where" || tokens[1] == "live" || tokens[1] == "from")) {
             tokens.erase(tokens.begin() + 1);
         } else if (tokens[0] == "!info" && (tokens[2] == "country" || tokens[2] == "where" || tokens[2] == "live" || tokens[2] == "from")) {
@@ -1928,6 +1928,8 @@ CommandsHandler::getUserData(const IRCMessage &message,
     if (!this->cooldownCheck(message.user, tokens[0])) {
         return response;
     }
+    std::cout << "qq" << std::endl;
+    std::cout << tokens.size() << std::endl;
     if (tokens.size() < 3) {
         if (tokens.size() == 1) {
             response.message = this->channelObject->owner->modulesManager.getAllData(message.user);
@@ -2092,9 +2094,16 @@ CommandsHandler::setData(const IRCMessage &message,
     changeToLower(tokens[1]);
     std::string valueString;
     for (size_t i = 2; i < tokens.size(); ++i) {
+        if (UserIDs::getInstance().isUser(tokens[i])) {
+            tokens[i] = "*";
+        }
         valueString += tokens[i] + ' ';
+        if (valueString.size() > 30) {
+            break;
+        }
     }
     valueString.pop_back();
+    valueString = valueString.substr(0, 30);
 
     response.message = message.user + ", " + this->channelObject->owner->modulesManager.setData(message.user, tokens[1], valueString);
     response.type = Response::Type::MESSAGE;

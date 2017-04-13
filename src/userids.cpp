@@ -89,8 +89,12 @@ UserIDs::addUser(const std::string &user)
     std::unique_lock<std::mutex> lock(this->curlMtx);
 
     char *escapedUser = curl_easy_escape(this->curl, user.c_str(), user.size());
+    if (escapedUser == nullptr) {
+        return;
+    }
     std::string rawurl("https://api.twitch.tv/kraken/users?login=");
     rawurl += escapedUser;
+    curl_free(escapedUser);
 
     std::string readBuffer;
     curl_easy_setopt(this->curl, CURLOPT_HTTPHEADER, this->chunk);
@@ -115,15 +119,15 @@ UserIDs::addUser(const std::string &user)
     pt::ptree tree;
     std::stringstream ss(readBuffer);
     pt::read_json(ss, tree);
-    auto users = tree.get_child("users");
-    if (users.empty()) {
+    auto users = tree.get_child_optional("users");
+    if (!users || users->empty()) {
         std::cout << "rawurl: " << rawurl
                   << "\njsontree child \"users\" empty:\n"
                   << readBuffer << std::endl;
         return;
     }
     std::string id;
-    for (const auto &user : users) {
+    for (const auto &user : *users) {
         id = user.second.get("_id", "");
     }
     if (id.empty()) {

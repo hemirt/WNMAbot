@@ -275,7 +275,7 @@ ModulesManager::setData(const std::string &user, const std::string &moduleName, 
             freeReplyObject(reply);
             return "module " + moduleName + " data for user " + user + " was set to " + data;
         } else if (search->second.getType() == "double") {
-            redisReply *reply;
+            redisReply *reply = nullptr;
             try {
                 double value = std::stod(data);
                 std::stringstream ss;
@@ -284,40 +284,58 @@ ModulesManager::setData(const std::string &user, const std::string &moduleName, 
                 reply = static_cast<redisReply *>(redisCommand(this->context,
                     "HSET WNMA:modulesData:%b %b %b", userIDstr.c_str(), userIDstr.size(), moduleName.c_str(), moduleName.size(), strVal.c_str(), strVal.size()));
                 freeReplyObject(reply);
+                reply = nullptr;
                 return "module " + moduleName + " data for user " + user + " was set to " + strVal;
             } catch (const std::invalid_argument &ex) {
-                freeReplyObject(reply);
+                if (reply != nullptr) {
+                    freeReplyObject(reply);
+                }
                 return "invalid argument";
             } catch (const std::out_of_range &ex) {
-                freeReplyObject(reply);
+                if (reply != nullptr) {
+                    freeReplyObject(reply);
+                }
                 return "out of range";
             } catch (const std::exception &ex) {
-                freeReplyObject(reply);
+                if (reply != nullptr) {
+                    freeReplyObject(reply);
+                }
                 return ex.what();
             } catch (...) {
-                freeReplyObject(reply);
+                if (reply != nullptr) {
+                    freeReplyObject(reply);
+                }
                 return "unknown exception";
             }
         } else if (search->second.getType() == "int") {
-            redisReply *reply;
+            redisReply *reply = nullptr;
             try {
                 int value = std::stoi(data);
                 std::string strVal = std::to_string(value);
                 reply = static_cast<redisReply *>(redisCommand(this->context,
                     "HSET WNMA:modulesData:%b %b %b", userIDstr.c_str(), userIDstr.size(), moduleName.c_str(), moduleName.size(), strVal.c_str(), strVal.size()));
                 freeReplyObject(reply);
+                reply = nullptr;
                 return "module " + moduleName + " data for user " + user + " was set to " + strVal;
             } catch (const std::invalid_argument &ex) {
-                freeReplyObject(reply);
+                if (reply != nullptr) {
+                    freeReplyObject(reply);
+                }
                 return "invalid argument";
             } catch (const std::out_of_range &ex) {
-                freeReplyObject(reply);
+                if (reply != nullptr) {
+                    freeReplyObject(reply);
+                }
                 return "out of range";
             } catch (const std::exception &ex) {
-                freeReplyObject(reply);
+                if (reply != nullptr) {
+                    freeReplyObject(reply);
+                }
                 return ex.what();
             } catch (...) {
-                freeReplyObject(reply);
+                if (reply != nullptr) {
+                    freeReplyObject(reply);
+                }
                 return "unknown exception";
             }
         } else {

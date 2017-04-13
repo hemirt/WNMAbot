@@ -19,6 +19,7 @@ public:
         std::shared_ptr<boost::asio::steady_timer> timer;
     };
     RemindUsers() = default;
+    ~RemindUsers();
     void addReminder(const std::string &fromUser, const std::string &toUser,
                      const std::string &which,
                      std::shared_ptr<boost::asio::steady_timer> timer);

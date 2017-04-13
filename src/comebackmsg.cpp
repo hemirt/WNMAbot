@@ -34,7 +34,9 @@ ComeBackMsg::sendMsgs(const std::string &user)
 
     int delay = 350;
     for (auto it = range.first; it != range.second; ++it) {
-        auto whisperFunction = [ to = it->first, MSG = it->second,
+        auto t = std::make_shared<boost::asio::steady_timer>(
+            ioService, std::chrono::milliseconds(delay));
+        auto whisperFunction = [ to = it->first, MSG = it->second, t,
                                  this ](const boost::system::error_code &er)
         {
             std::string whisperMsg =
@@ -58,8 +60,7 @@ ComeBackMsg::sendMsgs(const std::string &user)
             owner->channels.at(owner->nick).whisper(whisperMsg, to);
         };
 
-        auto t = new boost::asio::steady_timer(
-            ioService, std::chrono::milliseconds(delay));
+        
         t->async_wait(whisperFunction);
         delay += 350;
     }
