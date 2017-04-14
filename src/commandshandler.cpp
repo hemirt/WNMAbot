@@ -23,6 +23,14 @@
 
 namespace pt = boost::property_tree;
 
+std::unordered_map<std::string, cmdFunction> CommandsHandler::adminCommands = {
+    {"!raweditcmd", &CommandsHandler::rawEditCommand}
+};
+
+std::unordered_map<std::string, cmdFunction> CommandsHandler::normalCommands = {
+    {"!raweditcmd", &CommandsHandler::printChannels}
+};
+
 CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService,
                                  Channel *_channelObject)
     : ioService(_ioService)
@@ -146,7 +154,7 @@ CommandsHandler::handle(const IRCMessage &message)
     } else if (tokens[0] == "!isafk" || tokens[0] == "!6") {
         response = this->isAfk(message, tokens);
     } else if (tokens[0] == "!whoisafk" || tokens[0] == "!7") {
-        response = this->whoIsAfk(message);
+        response = this->whoIsAfk(message, tokens);
     } else if (tokens[0] == "!where" || tokens[0] == "!country" || tokens[0] == "!8" || (tokens[0] == "!info" && tokens.size() > 2 && ((tokens[1] == "country" || tokens[1] == "where" || tokens[1] == "live" || tokens[1] == "from") || (tokens[2] == "country" || tokens[2] == "where" || tokens[2] == "live" || tokens[2] == "from")))) {
         if (tokens[0] == "!info" && (tokens[1] == "country" || tokens[1] == "where" || tokens[1] == "live" || tokens[1] == "from")) {
             tokens.erase(tokens.begin() + 1);
@@ -438,9 +446,9 @@ CommandsHandler::makeResponse(const IRCMessage &message,
                     std::string("{unknown}"),
                     boost::match_default | boost::format_first_only);
             }
-        } while (
+        } while ((
             it = boost::algorithm::find_regex(
-                responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}")));
+                responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"))));
     }
     response.message = responseString;
     response.type = Response::Type::MESSAGE;
@@ -1123,7 +1131,7 @@ CommandsHandler::removeBlacklist(const IRCMessage &message,
 }
 
 Response
-CommandsHandler::whoIsAfk(const IRCMessage &message)
+CommandsHandler::whoIsAfk(const IRCMessage &message, std::vector<std::string> &tokens)
 {
     Response response(0);
     

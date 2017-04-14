@@ -58,6 +58,9 @@ public:
     Encryption crypto;
 
 private:
+    using cmdFunction = Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &);
+    static std::unordered_map<std::string, cmdFunction> adminCommands;
+    static std::unordered_map<std::string, cmdFunction> normalCommands;
     Response addCommand(const IRCMessage &message,
                         std::vector<std::string> &tokens);
     Response editCommand(const IRCMessage &message,
@@ -94,7 +97,7 @@ private:
                           std::vector<std::string> &tokens);
     Response removeBlacklist(const IRCMessage &message,
                              std::vector<std::string> &tokens);
-    Response whoIsAfk(const IRCMessage &message);
+    Response whoIsAfk(const IRCMessage &message, std::vector<std::string> &tokens);
     Response regexTest(const IRCMessage &message,
                        std::vector<std::string> &tokens);
     Response setUserCountryFrom(const IRCMessage &message,
