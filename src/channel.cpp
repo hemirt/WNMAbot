@@ -155,6 +155,7 @@ Channel::handleMessage(const IRCMessage &message)
                         // push_front - its a priority message
                         this->messenger.push_front("Shutting down FeelsBadMan");
                         this->owner->shutdown();
+                        return false;
                     } else if (tokens[0] == "!peng") {
                         auto now = std::chrono::steady_clock::now();
                         auto runT =
@@ -230,7 +231,7 @@ Channel::handleMessage(const IRCMessage &message)
         } break;
     }
 
-    return false;
+    return true;
 }
 
 void

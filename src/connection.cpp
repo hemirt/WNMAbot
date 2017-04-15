@@ -74,7 +74,9 @@ Connection::handleRead(const boost::system::error_code &ec,
 
     auto ircMessage = Parser::parseMessage(rawMessage);
 
-    this->handler->handleMessage(ircMessage);
+    if(!this->handler->handleMessage(ircMessage)) {
+        return;
+    }
 
     this->doRead();
 }

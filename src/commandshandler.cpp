@@ -23,12 +23,29 @@
 
 namespace pt = boost::property_tree;
 
-std::unordered_map<std::string, cmdFunction> CommandsHandler::adminCommands = {
-    {"!raweditcmd", &CommandsHandler::rawEditCommand}
+std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &)> CommandsHandler::adminCommands = {
+    {"!raweditcmd", &CommandsHandler::rawEditCommand}, {"!addcmd", &CommandsHandler::addCommand},
+    {"!editcmd", &CommandsHandler::editCommand}, {"!deletecmd", &CommandsHandler::deleteCommand},
+    {"!deletefullcommand", &CommandsHandler::deleteFullCommand}, {"!joinchn", &CommandsHandler::joinChannel},
+    {"!leavechn", &CommandsHandler::leaveChannel}, {"!asay", &CommandsHandler::say},
+    {"!comebackmsg", &CommandsHandler::comeBackMsg}, {"!addblacklist", &CommandsHandler::addBlacklist},
+    {"!removeblacklist", &CommandsHandler::removeBlacklist}, {"!setfrom", &CommandsHandler::setUserCountryFrom},
+    {"!setlive", &CommandsHandler::setUserCountryLive}, {"!deleteuser", &CommandsHandler::deleteUser},
+    {"!createcountry", &CommandsHandler::createCountry}, {"!deletecountry", &CommandsHandler::deleteCountry},
+    {"!renamecountry", &CommandsHandler::renameCountry}, {"!getcountryid", &CommandsHandler::getCountryID},
+    {"!createalias", &CommandsHandler::createAlias}, {"!deletealias", &CommandsHandler::deleteAlias},
+    {"!clearqueue", &CommandsHandler::clearQueue}, {"!createmodule", &CommandsHandler::createModule},
+    {"!moduletype", &CommandsHandler::setModuleType}, {"!modulesubtype", &CommandsHandler::setModuleSubtype},
+    {"!modulename", &CommandsHandler::setModuleName}, {"!modulestatus", &CommandsHandler::setModuleStatus},
+    {"!moduleformat", &CommandsHandler::setModuleFormat}, {"!ignore", &CommandsHandler::ignore},
+    {"!unignore", &CommandsHandler::unignore}, {"!savemodule", &CommandsHandler::saveModule},
+    {"!asetdata", &CommandsHandler::setDataAdmin}, {"!aset", &CommandsHandler::setDataAdmin},
+    {"!deletemodule", &CommandsHandler::deleteModule}, {"!adel", &CommandsHandler::deleteUserData}, 
+    {"!adeletedata", &CommandsHandler::deleteUserData}
 };
 
-std::unordered_map<std::string, cmdFunction> CommandsHandler::normalCommands = {
-    {"!raweditcmd", &CommandsHandler::printChannels}
+std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &)> CommandsHandler::normalCommands = {
+    {"!chns", &CommandsHandler::printChannels}
 };
 
 CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService,
@@ -62,72 +79,9 @@ CommandsHandler::handle(const IRCMessage &message)
     Response response;
 
     if (this->isAdmin(message.user)) {
-        if (tokens[0] == "!raweditcmd") {
-            response = this->rawEditCommand(message, tokens);
-        } else if (tokens[0] == "!addcmd") {
-            response = this->addCommand(message, tokens);
-        } else if (tokens[0] == "!editcmd") {
-            response = this->editCommand(message, tokens);
-        } else if (tokens[0] == "!deletecmd") {
-            response = this->deleteCommand(message, tokens);
-        } else if (tokens[0] == "!deletefullcommand") {
-            response = this->deleteFullCommand(message, tokens);
-        } else if (tokens[0] == "!joinchn") {
-            response = this->joinChannel(message, tokens);
-        } else if (tokens[0] == "!leavechn") {
-            response = this->leaveChannel(message, tokens);
-        } else if (tokens[0] == "!asay") {
-            response = this->say(message, tokens);
-        } else if (tokens[0] == "!comebackmsg") {
-            response = this->comeBackMsg(message, tokens);
-        } else if (tokens[0] == "!addblacklist") {
-            response = this->addBlacklist(message, tokens);
-        } else if (tokens[0] == "!removeblacklist") {
-            response = this->removeBlacklist(message, tokens);
-        } else if (tokens[0] == "!setfrom") {
-            response = this->setUserCountryFrom(message, tokens);
-        } else if (tokens[0] == "!setlive") {
-            response = this->setUserCountryLive(message, tokens);
-        } else if (tokens[0] == "!deleteuser") {
-            response = this->deleteUser(message, tokens);
-        } else if (tokens[0] == "!createcountry") {
-            response = this->createCountry(message, tokens);
-        } else if (tokens[0] == "!deletecountry") {
-            response = this->deleteCountry(message, tokens);
-        } else if (tokens[0] == "!renamecountry") {
-            response = this->renameCountry(message, tokens);
-        } else if (tokens[0] == "!getcountryid") {
-            response = this->getCountryID(message, tokens);
-        } else if (tokens[0] == "!createalias") {
-            response = this->createAlias(message, tokens);
-        } else if (tokens[0] == "!deletealias") {
-            response = this->deleteAlias(message, tokens);
-        } else if (tokens[0] == "!clearqueue") {
-            this->channelObject->messenger.clearQueue();
-        } else if (tokens[0] == "!createmodule") {
-            response = this->createModule(message, tokens);
-        } else if (tokens[0] == "!moduletype") {
-            response = this->setModuleType(message, tokens);
-        } else if (tokens[0] == "!modulesubtype") {
-            response = this->setModuleSubtype(message, tokens);
-        } else if (tokens[0] == "!modulename") {
-            response = this->setModuleName(message, tokens);
-        } else if (tokens[0] == "!modulestatus") {
-            response = this->setModuleStatus(message, tokens);
-        } else if (tokens[0] == "!moduleformat") {
-            response = this->setModuleFormat(message, tokens);
-        } else if (tokens[0] == "!ignore") {
-            response = this->ignore(message, tokens);
-        } else if (tokens[0] == "!unignore") {
-            response = this->unignore(message, tokens);
-        } else if (tokens[0] == "!savemodule") {
-            response = this->saveModule(message, tokens);
-        } else if (tokens[0] == "!asetdata" || tokens[0] == "!aset") {
-            response = this->setDataAdmin(message, tokens);
-        } else if (tokens[0] == "!deletemodule") {
-            response = this->deleteModule(message, tokens);
-        } else if (tokens[0] == "!adel" || tokens[0] == "!adeletedata") {
-            response = this->deleteUserData(message, tokens);
+        auto search = CommandsHandler::adminCommands.find(tokens[0]);
+        if (search != CommandsHandler::adminCommands.end()) {
+            response = (this->*(search->second))(message, tokens);
         }
     }
 
@@ -277,6 +231,11 @@ CommandsHandler::leaveChannel(const IRCMessage &message,
     }
 
     changeToLower(tokens[1]);
+    if (tokens[1] == this->channelObject->channelName) {
+        response.message = "Cant leave " + tokens[1] + " channel from itself tooDank";
+        response.type = Response::Type::MESSAGE;
+        return response;
+    }
 
     if (this->channelObject->owner->leaveChannel(tokens[1])) {
         response.message = "Left the " + tokens[1] + " channel SeemsGood";
@@ -1179,6 +1138,7 @@ CommandsHandler::regexTest(const IRCMessage &message,
                       << std::endl;
         }
     }
+    return response;
 }
 
 Response
@@ -2179,4 +2139,13 @@ CommandsHandler::cooldownCheck(const std::string &user, const std::string &cmd)
     } else {
         return true;
     }
+}
+
+Response
+CommandsHandler::clearQueue(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(0);
+    this->channelObject->messenger.clearQueue();
+    return response;
 }

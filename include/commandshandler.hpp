@@ -58,9 +58,8 @@ public:
     Encryption crypto;
 
 private:
-    using cmdFunction = Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &);
-    static std::unordered_map<std::string, cmdFunction> adminCommands;
-    static std::unordered_map<std::string, cmdFunction> normalCommands;
+    static std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &)> adminCommands;
+    static std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &)> normalCommands;
     Response addCommand(const IRCMessage &message,
                         std::vector<std::string> &tokens);
     Response editCommand(const IRCMessage &message,
@@ -179,6 +178,8 @@ private:
     Response deleteMyData(const IRCMessage &message,
                      std::vector<std::string> &tokens);
     Response deleteUserData(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response clearQueue(const IRCMessage &message,
                      std::vector<std::string> &tokens);
                      
     boost::asio::io_service &ioService;
