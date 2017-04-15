@@ -45,7 +45,20 @@ std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage 
 };
 
 std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &)> CommandsHandler::normalCommands = {
-    {"!chns", &CommandsHandler::printChannels}
+    {"!chns", &CommandsHandler::printChannels}, {"!remindme", &CommandsHandler::remindMe},
+    {"!remind", &CommandsHandler::remind}, {"!afk", &CommandsHandler::afk},
+    {"!gn", &CommandsHandler::goodNight}, {"!isafk", &CommandsHandler::isAfk},
+    {"!here", &CommandsHandler::isAfk}, {"!whoisafk", &CommandsHandler::whoIsAfk},
+    {"!where", &CommandsHandler::isFrom}, {"!country", &CommandsHandler::isFrom},
+    {"!usersfrom", &CommandsHandler::getUsersFrom}, {"!userslive", &CommandsHandler::getUsersLiving},
+    {"!myfrom", &CommandsHandler::myFrom}, {"!mylive", &CommandsHandler::myLiving},
+    {"!mydelete", &CommandsHandler::myDelete}, {"reminders", &CommandsHandler::myReminders},
+    {"!reminder", &CommandsHandler::checkReminder}, {"!pingme", &CommandsHandler::pingMeCommand},
+    {"!ri", &CommandsHandler::randomIslamicQuote}, {"!rb", &CommandsHandler::randomChristianQuote},
+    {"!encrypt", &CommandsHandler::encrypt}, {"!decrypt", &CommandsHandler::decrypt},
+    {"!moduleinfo", &CommandsHandler::getModuleInfo}, {"!info", &CommandsHandler::getUserData},
+    {"!arq", &CommandsHandler::getRandomQuote}, {"!set", &CommandsHandler::setData},
+    {"!modules", &CommandsHandler::modules}, {"!del", &CommandsHandler::deleteMyData}
 };
 
 CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService,
@@ -94,64 +107,12 @@ CommandsHandler::handle(const IRCMessage &message)
     if (!this->channelObject->messenger.able()) {
         return response;
     }
-
-    if (tokens[0] == "!chns" || tokens[0] == "!1") {
-        response = this->printChannels(message, tokens);
-    } else if (tokens[0] == "!remindme" || tokens[0] == "!2") {
-        response = this->remindMe(message, tokens);
-    } else if (tokens[0] == "!remind" || tokens[0] == "!3") {
-        response = this->remind(message, tokens);
-    } else if (tokens[0] == "!afk" || tokens[0] == "!4") {
-        response = this->afk(message, tokens);
-    } else if (tokens[0] == "!gn" || tokens[0] == "!5") {
-        response = this->goodNight(message, tokens);
-    } else if (tokens[0] == "!isafk" || tokens[0] == "!6") {
-        response = this->isAfk(message, tokens);
-    } else if (tokens[0] == "!whoisafk" || tokens[0] == "!7") {
-        response = this->whoIsAfk(message, tokens);
-    } else if (tokens[0] == "!where" || tokens[0] == "!country" || tokens[0] == "!8" || (tokens[0] == "!info" && tokens.size() > 2 && ((tokens[1] == "country" || tokens[1] == "where" || tokens[1] == "live" || tokens[1] == "from") || (tokens[2] == "country" || tokens[2] == "where" || tokens[2] == "live" || tokens[2] == "from")))) {
-        if (tokens[0] == "!info" && (tokens[1] == "country" || tokens[1] == "where" || tokens[1] == "live" || tokens[1] == "from")) {
-            tokens.erase(tokens.begin() + 1);
-        } else if (tokens[0] == "!info" && (tokens[2] == "country" || tokens[2] == "where" || tokens[2] == "live" || tokens[2] == "from")) {
-            tokens.erase(tokens.begin() + 2);
+    
+    {
+        auto search = CommandsHandler::normalCommands.find(tokens[0]);
+        if (search != CommandsHandler::normalCommands.end()) {
+            response = (this->*(search->second))(message, tokens);
         }
-        response = this->isFrom(message, tokens);
-    } else if (tokens[0] == "!usersfrom" || tokens[0] == "!9") {
-        response = this->getUsersFrom(message, tokens);
-    } else if (tokens[0] == "!userslive" || tokens[0] == "!10") {
-        response = this->getUsersLiving(message, tokens);
-    } else if (tokens[0] == "!myfrom" || tokens[0] == "!11") {
-        response = this->myFrom(message, tokens);
-    } else if (tokens[0] == "!mylive" || tokens[0] == "!12") {
-        response = this->myLiving(message, tokens);
-    } else if (tokens[0] == "!mydelete" || tokens[0] == "!13") {
-        response = this->myDelete(message, tokens);
-    } else if (tokens[0] == "!reminders" || tokens[0] == "!14") {
-        response = this->myReminders(message, tokens);
-    } else if (tokens[0] == "!reminder" || tokens[0] == "!15") {
-        response = this->checkReminder(message, tokens);
-    } else if (tokens[0] == "!pingme" || tokens[0] == "!16") {
-        response = this->pingMeCommand(message, tokens);
-    } else if (tokens[0] == "!ri" || tokens[0] == "!17") {
-        response = this->randomIslamicQuote(message, tokens);
-    } else if (tokens[0] == "!rb" || tokens[0] == "!18") {
-        response = this->randomChristianQuote(message, tokens);
-    } else if (tokens[0] == "!encrypt" || tokens[0] == "!19") {
-        response = this->encrypt(message, tokens);
-    } else if (tokens[0] == "!decrypt" || tokens[0] == "!20") {
-        response = this->decrypt(message, tokens);
-    } else if (tokens[0] == "!moduleinfo" || tokens[0] == "!21") {
-        response = this->getModuleInfo(message, tokens);
-    } else if (tokens[0] == "!info" || tokens[0] == "!22") {
-        response = this->getUserData(message, tokens);
-    } else if (tokens[0] == "!arq" || tokens[0] == "!23") {
-        response = this->getRandomQuote(message, tokens);
-    } else if (tokens[0] == "!setdata" || tokens[0] == "!set" || tokens[0] == "!24") {
-        response = this->setData(message, tokens);
-    } else if (tokens[0] == "!modules" || tokens[0] == "!25") {
-        response = this->modules(message, tokens);
-    } else if (tokens[0] == "!del" || tokens[0] == "!delete" || tokens[0] == "!26") {
-        response = this->deleteMyData(message, tokens);
     }
 
     // response valid
@@ -1900,12 +1861,36 @@ CommandsHandler::getUserData(const IRCMessage &message,
     std::cout << tokens.size() << std::endl;
     if (tokens.size() < 3) {
         if (tokens.size() == 1) {
+            auto from = Countries::getInstance().getFrom(message.user);
+            auto live = Countries::getInstance().getLive(message.user);
             response.message = this->channelObject->owner->modulesManager.getAllData(message.user);
+            if (!from.empty() && !live.empty() && from == live) {
+                response.message += " from&live: " + from;
+            } else {
+                if (!from.empty()) {
+                response.message += " from: " + from;
+                }
+                if (!live.empty()) {
+                    response.message += " live: " + live;
+                }
+            }
             response.type = Response::Type::MESSAGE;
             
         } else if (tokens.size() == 2) {
             changeToLower(tokens[1]);
+            auto from = Countries::getInstance().getFrom(tokens[1]);
+            auto live = Countries::getInstance().getLive(tokens[1]);
             response.message = this->channelObject->owner->modulesManager.getAllData(tokens[1]);
+            if (!from.empty() && !live.empty() && from == live) {
+                response.message += " from&live: " + from;
+            } else {
+                if (!from.empty()) {
+                response.message += " from: " + from;
+                }
+                if (!live.empty()) {
+                    response.message += " live: " + live;
+                }
+            }
             response.type = Response::Type::MESSAGE;
         }
         return response;
@@ -1922,7 +1907,19 @@ CommandsHandler::getUserData(const IRCMessage &message,
         if (p.first == true) {
             response.message = message.user + ", " + p.second;
         } else if (UserIDs::getInstance().isUser(tokens[1])) {
+            auto from = Countries::getInstance().getFrom(tokens[1]);
+            auto live = Countries::getInstance().getLive(tokens[1]);
             response.message = this->channelObject->owner->modulesManager.getAllData(tokens[1]);
+            if (!from.empty() && !live.empty() && from == live) {
+                response.    += " from&live: " + from;
+            } else {
+                if (!from.empty()) {
+                response.message += " from: " + from;
+                }
+                if (!live.empty()) {
+                    response.message += " live: " + live;
+                }
+            }
         }
     }
      
@@ -2060,6 +2057,13 @@ CommandsHandler::setData(const IRCMessage &message,
         return response;
     }
     changeToLower(tokens[1]);
+    if (tokens[1] == "from") {
+        tokens.erase(tokens.begin() + 1);
+        return this->myFrom(message, tokens);
+    } else if (tokens[1] == "live") {
+        tokens.erase(tokens.begin() + 1);
+        return this->myLiving(message, tokens);
+    }
     std::string valueString;
     for (size_t i = 2; i < tokens.size(); ++i) {
         if (UserIDs::getInstance().isUser(tokens[i])) {
