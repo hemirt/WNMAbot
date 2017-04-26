@@ -11,9 +11,9 @@ RandomQuote::init()
 {
     RandomQuote::curl = curl_easy_init();
     if (RandomQuote::curl) {
-        RandomQuote::chunk = curl_slist_append(chunk, "Accept: application/json");
+        RandomQuote::chunk = curl_slist_append(chunk, "Accept: text/plain");
     } else {
-        std::cerr << "CURL ERROR, BIBLE" << std::endl;
+        std::cerr << "CURL ERROR, RANDOMQUOTE" << std::endl;
     }
 }
 
@@ -55,5 +55,11 @@ RandomQuote::getRandomQuote(const std::string &channel, const std::string &user)
         return readBuffer;
     }
     
-    return readBuffer;
+    long response_code;
+    curl_easy_getinfo(RandomQuote::curl, CURLINFO_RESPONSE_CODE, &response_code);
+    if (response_code == 200) {
+        return readBuffer;
+    }
+    
+    return std::string();
 }
