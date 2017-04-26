@@ -1,5 +1,6 @@
 #include "connectionhandler.hpp"
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/thread.hpp>
 #include "ayah.hpp"
 #include "bible.hpp"
 #include "channel.hpp"
@@ -154,15 +155,24 @@ ConnectionHandler::leaveChannel(const std::string &channelName)
 void
 ConnectionHandler::run()
 {
-    boost::system::error_code ec;
-    try {
-        this->ioService.run(ec);
-        std::cout << "ec: " << ec << std::endl;
-    } catch (const std::exception &ex) {
-        std::cerr << "Exception caught in ConnectionHandler::run(): "
-                  << ex.what() << "\nec: " << ec << std::endl;
-        this->shutdown();
+    boost::thread_group tg;
+    auto hw_concurency_num = boost::thread::hardware_concurrency();
+    std::cout << "ConnectionHandler::ioService running on " << hw_concurency_num << " threads" << std::endl;
+    for (unsigned i = 0; i < hw_concurency_num; ++i) {
+        tg.create_thread([this](){
+            boost::system::error_code ec;
+            try {
+                
+                this->ioService.run(ec);
+                std::cout << "ec: " << ec << std::endl;
+            } catch (const std::exception &ex) {
+                std::cerr << "Exception caught in ConnectionHandler::run(): "
+                          << ex.what() << "\nec: " << ec << std::endl;
+                this->shutdown();
+            }
+        });
     }
+    tg.join_all();
 }
 
 void

@@ -3,7 +3,7 @@ project(WNMAbot CXX)
 
 SET(Boost_USE_STATIC_LIBS OFF)
 SET(Boost_USE_MULTITHREAD ON)
-find_package(Boost 1.45.0 REQUIRED COMPONENTS system regex)
+find_package(Boost 1.60.0 REQUIRED COMPONENTS system regex thread)
 include_directories(${Boost_INCLUDE_DIRS})
 find_package(Hiredis 0.13.3)
 include_directories(${HIREDIS_INCLUDE_DIR})

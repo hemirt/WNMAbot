@@ -42,7 +42,11 @@ RandomQuote::getRandomQuote(const std::string &channel, const std::string &user)
     curl_easy_setopt(RandomQuote::curl, CURLOPT_URL, rawurl.c_str());
     curl_easy_setopt(RandomQuote::curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(RandomQuote::curl, CURLOPT_WRITEDATA, &readBuffer);
+    curl_easy_setopt(RandomQuote::curl, CURLOPT_TIMEOUT, 3L);
+    curl_easy_setopt(RandomQuote::curl, CURLOPT_CONNECTTIMEOUT , 5L);
     CURLcode res = curl_easy_perform(RandomQuote::curl);
+    long response_code;
+    curl_easy_getinfo(RandomQuote::curl, CURLINFO_RESPONSE_CODE, &response_code);
     curl_easy_reset(curl);
 
     if (res) {
@@ -54,12 +58,10 @@ RandomQuote::getRandomQuote(const std::string &channel, const std::string &user)
         std::cerr << "RandomQuote readBuffer empty" << std::endl;
         return readBuffer;
     }
-    
-    long response_code;
-    curl_easy_getinfo(RandomQuote::curl, CURLINFO_RESPONSE_CODE, &response_code);
+
     if (response_code == 200) {
         return readBuffer;
     }
-    
+
     return std::string();
 }

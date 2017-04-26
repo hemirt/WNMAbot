@@ -1911,7 +1911,7 @@ CommandsHandler::getUserData(const IRCMessage &message,
             auto live = Countries::getInstance().getLive(tokens[1]);
             response.message = this->channelObject->owner->modulesManager.getAllData(tokens[1]);
             if (!from.empty() && !live.empty() && from == live) {
-                response.    += " from&live: " + from;
+                response.message += " from&live: " + from;
             } else {
                 if (!from.empty()) {
                 response.message += " from: " + from;
@@ -1972,11 +1972,20 @@ CommandsHandler::getRandomQuote(const IRCMessage &message,
     if (tokens.size() > 1 && UserIDs::getInstance().isUser(tokens[1])) {
         changeToLower(tokens[1]);
         response.message = RandomQuote::getRandomQuote(this->channelObject->channelName, tokens[1]);
+        if (response.message.empty()) {
+            response.message = RandomQuote::getRandomQuote(this->channelObject->channelName, message.user);
+            if (response.message.empty()) {
+                return response;
+            }
+        }
         this->channelObject->owner->sanitizeMsg(response.message);
         response.type = Response::Type::MESSAGE;
         return response;
     } else {
         response.message = RandomQuote::getRandomQuote(this->channelObject->channelName, message.user);
+        if (response.message.empty()) {
+                return response;
+        }
         this->channelObject->owner->sanitizeMsg(response.message);
         response.type = Response::Type::MESSAGE;
         return response;
