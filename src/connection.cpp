@@ -40,7 +40,12 @@ Connection::writeMessage(const std::string &message)
     if (!this->established) {
         return;
     }
-    this->writeRawMessage(message + " \r\n");
+    this->duplicateMsg = !this->duplicateMsg;
+    if (this->duplicateMsg) {
+        this->writeRawMessage(message + " ⁭\r\n");
+    } else {
+        this->writeRawMessage(message + " \r\n");
+    }
 }
 
 void

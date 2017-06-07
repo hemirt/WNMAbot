@@ -5,6 +5,7 @@
 #include "bible.hpp"
 #include "channel.hpp"
 #include "randomquote.hpp"
+#include "lotto/lottoimpl.hpp"
 
 static const char *IRC_HOST = "irc.chat.twitch.tv";
 static const char *IRC_PORT = "6667";
@@ -72,6 +73,7 @@ ConnectionHandler::start()
     Ayah::init();
     Bible::init();
     RandomQuote::init();
+    LottoImpl::init();
 }
 
 void
@@ -111,6 +113,7 @@ ConnectionHandler::~ConnectionHandler()
     Ayah::deinit();
     Bible::deinit();
     RandomQuote::deinit();
+    LottoImpl::deinit();
     this->msgDecreaserTimer.reset();
     std::cout << "cleared end destr" << std::endl;
 }

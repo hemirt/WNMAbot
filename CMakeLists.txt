@@ -45,6 +45,8 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/modules.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/randomquote.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ignore.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lotto.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lotto/lottoimpl.cpp
 )
 
 add_executable(WNMAbot ${SOURCE})

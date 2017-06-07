@@ -47,6 +47,7 @@ private:
     std::string channelName;
 
     MessageHandler *handler;
+    bool duplicateMsg = false;
 };
 
 #endif  // CONNECTION_HPP

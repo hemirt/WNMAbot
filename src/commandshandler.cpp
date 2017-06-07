@@ -41,30 +41,32 @@ std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage 
     {"!unignore", &CommandsHandler::unignore}, {"!savemodule", &CommandsHandler::saveModule},
     {"!asetdata", &CommandsHandler::setDataAdmin}, {"!aset", &CommandsHandler::setDataAdmin},
     {"!deletemodule", &CommandsHandler::deleteModule}, {"!adel", &CommandsHandler::deleteUserData}, 
-    {"!adeletedata", &CommandsHandler::deleteUserData}
+    {"!adeletedata", &CommandsHandler::deleteUserData}, {"!lottowinners", &CommandsHandler::getLottoWinners}
 };
 
 std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &)> CommandsHandler::normalCommands = {
     {"!chns", &CommandsHandler::printChannels}, {"!remindme", &CommandsHandler::remindMe},
     {"!remind", &CommandsHandler::remind}, {"!afk", &CommandsHandler::afk},
     {"!gn", &CommandsHandler::goodNight}, {"!isafk", &CommandsHandler::isAfk},
-    {"!here", &CommandsHandler::isAfk}, {"!whoisafk", &CommandsHandler::whoIsAfk},
+    {"!here", &CommandsHandler::isAfk},
     {"!where", &CommandsHandler::isFrom}, {"!country", &CommandsHandler::isFrom},
     {"!usersfrom", &CommandsHandler::getUsersFrom}, {"!userslive", &CommandsHandler::getUsersLiving},
     {"!myfrom", &CommandsHandler::myFrom}, {"!mylive", &CommandsHandler::myLiving},
-    {"!mydelete", &CommandsHandler::myDelete}, {"reminders", &CommandsHandler::myReminders},
+    {"!mydelete", &CommandsHandler::myDelete}, {"!reminders", &CommandsHandler::myReminders},
     {"!reminder", &CommandsHandler::checkReminder}, {"!pingme", &CommandsHandler::pingMeCommand},
     {"!ri", &CommandsHandler::randomIslamicQuote}, {"!rb", &CommandsHandler::randomChristianQuote},
     {"!encrypt", &CommandsHandler::encrypt}, {"!decrypt", &CommandsHandler::decrypt},
     {"!moduleinfo", &CommandsHandler::getModuleInfo}, {"!info", &CommandsHandler::getUserData},
     {"!arq", &CommandsHandler::getRandomQuote}, {"!set", &CommandsHandler::setData},
-    {"!modules", &CommandsHandler::modules}, {"!del", &CommandsHandler::deleteMyData}
+    {"!modules", &CommandsHandler::modules}, {"!del", &CommandsHandler::deleteMyData},
+    {"!lotto", &CommandsHandler::addLottoTicket}
 };
 
 CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService,
                                  Channel *_channelObject)
     : ioService(_ioService)
     , channelObject(_channelObject)
+    , lotto(_ioService, _channelObject->messenger)
 {
 }
 
@@ -903,7 +905,9 @@ CommandsHandler::afk(const IRCMessage &message,
     this->channelObject->owner->afkers.setAfker(message.user, msg);
 
     response.type = Response::Type::MESSAGE;
-    response.message = message.user + " is now afk ResidentSleeper";
+    
+    response.message = message.user + " is now afk";
+
     if (msg.size() != 0) {
         response.message += " - " + msg;
     }
@@ -1054,6 +1058,7 @@ Response
 CommandsHandler::whoIsAfk(const IRCMessage &message, std::vector<std::string> &tokens)
 {
     Response response(0);
+    return response;
     
     if (!this->cooldownCheck(message.user, "!whoisafk")) {
         return response;
@@ -1965,6 +1970,10 @@ CommandsHandler::getRandomQuote(const IRCMessage &message,
 {
     Response response(-1);
     
+    if (this->channelObject->channelName == "forsenlol" && !this->isAdmin(message.user)) {
+        return response;
+    }
+    
     if (!this->cooldownCheck(message.user, tokens[0])) {
         return response;
     }
@@ -2127,7 +2136,7 @@ CommandsHandler::modules(const IRCMessage &message,
 }
 
 bool
-CommandsHandler::cooldownCheck(const std::string &user, const std::string &cmd)
+CommandsHandler::cooldownCheck(const std::string &user, const std::string &cmd, int howmuch)
 {
     if (!this->isAdmin(user)) {
         std::lock_guard<std::mutex> lk(this->cooldownsMtx);
@@ -2136,13 +2145,13 @@ CommandsHandler::cooldownCheck(const std::string &user, const std::string &cmd)
         if (it != cooldownsMap.end()) {
             if (std::chrono::duration_cast<std::chrono::seconds>(now -
                                                                  it->second)
-                    .count() < 5) {
+                    .count() < howmuch) {
                 return false;
             }
         }
         cooldownsMap[cmd + user] = now;
         auto t =
-            std::make_shared<boost::asio::steady_timer>(ioService, std::chrono::seconds(5));
+            std::make_shared<boost::asio::steady_timer>(ioService, std::chrono::seconds(howmuch));
         t->async_wait([ this, key = cmd + user, t ](
             const boost::system::error_code &er) {
             std::lock_guard<std::mutex> lk(this->cooldownsMtx);
@@ -2160,5 +2169,34 @@ CommandsHandler::clearQueue(const IRCMessage &message,
 {
     Response response(0);
     this->channelObject->messenger.clearQueue();
+    return response;
+}
+
+Response
+CommandsHandler::addLottoTicket(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(0);
+    
+    if (!this->cooldownCheck(message.user, "!lotto", 30)) {
+        return response;
+    }
+    
+    std::vector<int> v;
+    for (size_t i = 1; i < tokens.size() && i < 7; ++i) {
+        v.push_back(std::atoi(tokens[i].c_str()));
+    }
+    response.message = this->lotto.addPlay({message.user, std::move(v)});
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::getLottoWinners(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    response.message = this->lotto.getWinners();
+    response.type = Response::Type::MESSAGE;
     return response;
 }

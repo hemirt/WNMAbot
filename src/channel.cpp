@@ -156,7 +156,7 @@ Channel::handleMessage(const IRCMessage &message)
                         this->messenger.push_front("Shutting down FeelsBadMan");
                         this->owner->shutdown();
                         return false;
-                    } else if (tokens[0] == "!peng") {
+                    } else if (this->messenger.able() && (tokens[0] == "!peng" || tokens[0] == "!pingall")) {
                         auto now = std::chrono::steady_clock::now();
                         auto runT =
                             std::chrono::duration_cast<std::chrono::seconds>(

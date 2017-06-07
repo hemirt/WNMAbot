@@ -9,6 +9,8 @@
 #include "countries.hpp"
 #include "userids.hpp"
 
+#include "lotto.hpp"
+
 #include <boost/property_tree/ptree.hpp>
 #include <chrono>
 #include <iostream>
@@ -181,6 +183,10 @@ private:
                      std::vector<std::string> &tokens);
     Response clearQueue(const IRCMessage &message,
                      std::vector<std::string> &tokens);
+    Response addLottoTicket(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response getLottoWinners(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
                      
     boost::asio::io_service &ioService;
 
@@ -188,7 +194,9 @@ private:
         cooldownsMap;
     std::mutex cooldownsMtx;
     
-    bool cooldownCheck(const std::string &user, const std::string &cmd);
+    bool cooldownCheck(const std::string &user, const std::string &cmd, int howmuch = 5);
+    
+    Lotto lotto;
 };
 
 #endif
