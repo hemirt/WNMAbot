@@ -41,7 +41,8 @@ std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage 
     {"!unignore", &CommandsHandler::unignore}, {"!savemodule", &CommandsHandler::saveModule},
     {"!asetdata", &CommandsHandler::setDataAdmin}, {"!aset", &CommandsHandler::setDataAdmin},
     {"!deletemodule", &CommandsHandler::deleteModule}, {"!adel", &CommandsHandler::deleteUserData}, 
-    {"!adeletedata", &CommandsHandler::deleteUserData}, {"!lottowinners", &CommandsHandler::getLottoWinners}
+    {"!adeletedata", &CommandsHandler::deleteUserData}, {"!lottowinners", &CommandsHandler::getLottoWinners},
+    {"!whoisafk", &CommandsHandler::whoIsAfk}
 };
 
 std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &)> CommandsHandler::normalCommands = {
@@ -963,7 +964,7 @@ CommandsHandler::isAfk(const IRCMessage &message,
     auto afk = this->channelObject->owner->afkers.getAfker(tokens[1]);
 
     if (afk.exists) {
-        auto now = std::chrono::steady_clock::now();
+        auto now = std::chrono::system_clock::now();
         auto seconds =
             std::chrono::duration_cast<std::chrono::seconds>(now - afk.time)
                 .count();
@@ -1057,8 +1058,10 @@ CommandsHandler::removeBlacklist(const IRCMessage &message,
 Response
 CommandsHandler::whoIsAfk(const IRCMessage &message, std::vector<std::string> &tokens)
 {
-    Response response(0);
-    return response;
+    Response response(1);
+    if (message.user != "hemirt") {
+        return response;
+    }
     
     if (!this->cooldownCheck(message.user, "!whoisafk")) {
         return response;

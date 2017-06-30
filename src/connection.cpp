@@ -1,6 +1,8 @@
 #include "connection.hpp"
 #include "parser.hpp"
 
+#include <iomanip>
+
 #include <boost/bind.hpp>
 
 Connection::Connection(boost::asio::io_service &ioService,
@@ -121,7 +123,8 @@ Connection::handleConnect(const boost::system::error_code &ec)
 void
 Connection::handleError(const boost::system::error_code &ec)
 {
-    std::cerr << "Handle error: " << ec << std::endl;
+    std::time_t t = std::time(nullptr);
+    std::cerr << "Handle error" << std::put_time(std::gmtime(&t), "[%F %H:%M:%S]") << ": " << ec << " msg: " << ec.message() << std::endl;
     if (ec == boost::asio::error::eof) {
         this->socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
         this->socket.close();

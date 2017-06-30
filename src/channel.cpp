@@ -85,7 +85,7 @@ Channel::handleMessage(const IRCMessage &message)
         case IRCMessage::Type::PRIVMSG: {
             auto afk = owner->afkers.getAfker(message.user);
             if (afk.exists) {
-                auto now = std::chrono::steady_clock::now();
+                auto now = std::chrono::system_clock::now();
                 if (std::chrono::duration_cast<std::chrono::seconds>(now -
                                                                      afk.time)
                             .count() > 60 ||
@@ -94,7 +94,7 @@ Channel::handleMessage(const IRCMessage &message)
 
                     auto seconds =
                         std::chrono::duration_cast<std::chrono::seconds>(
-                            std::chrono::steady_clock::now() - afk.time)
+                            std::chrono::system_clock::now() - afk.time)
                             .count();
                     std::string howLongWasGone = makeTimeString(seconds);
 
@@ -227,6 +227,7 @@ Channel::handleMessage(const IRCMessage &message)
         } break;
 
         default: {
+            std::cout << "UNKWNON MESSAGE:\n" << message << std::endl;
             // Unknown message type
         } break;
     }

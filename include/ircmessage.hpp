@@ -3,8 +3,10 @@
 
 #include <algorithm>
 #include <string>
+#include <iostream>
 
 struct MiddleMessage {
+    std::string raw;
     std::string tags;
     std::string prefix;
     std::string command;
@@ -31,6 +33,7 @@ public:
 
     IRCMessage(const MiddleMessage &mm)
     {
+       this->raw = mm.raw;
         if (mm.prefix.length() > 0) {
             auto at = std::find(mm.prefix.begin(), mm.prefix.end(), '@');
             auto dot = std::find(mm.prefix.begin(), mm.prefix.end(), '.');
@@ -71,7 +74,8 @@ public:
         this->middle = mm.middle;
         this->params = mm.params;
     }
-
+    
+    std::string raw;
     std::string server;
     std::string nickname;
     std::string user;
@@ -79,6 +83,19 @@ public:
     std::string params;
     std::string host;
     std::string channel;
+    
+    friend std::ostream &operator<<(std::ostream &stream, const IRCMessage &msg)
+    {
+        stream << "raw:\n" << msg.raw
+               << "server:\n" << msg.server
+               << "nickname:\n" << msg.nickname
+               << "user:\n" << msg.user
+               << "middle:\n" << msg.middle
+               << "params:\n" << msg.params
+               << "host:\n" << msg.host
+               << "channel:\n" << msg.channel;
+        return stream;
+    }
 };
 
 #endif  // IRCMESSAGE_HPP

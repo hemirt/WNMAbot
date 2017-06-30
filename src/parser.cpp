@@ -9,6 +9,7 @@ parseMessage(const std::string &rawMessage)
 {
     IRCMessage message;
     MiddleMessage mm;
+    mm.raw = rawMessage;
 
     auto it = rawMessage.begin();
     auto rawEnd = rawMessage.end();

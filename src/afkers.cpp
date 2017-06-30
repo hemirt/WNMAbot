@@ -38,7 +38,7 @@ void
 Afkers::setAfker(const std::string &user, const std::string &message)
 {
     std::lock_guard<std::mutex> lock(this->afkersMapMtx);
-    const Afk afk = {true, message, std::chrono::steady_clock::now()};
+    const Afk afk = {true, message, std::chrono::system_clock::now()};
     this->afkersMap[user] = afk;
     this->setAfkerRedis(user, afk);
 }
@@ -143,7 +143,7 @@ Afkers::getAllAfkersRedis()
 
             auto dur = std::chrono::seconds(time);
             auto timepoint =
-                std::chrono::time_point<std::chrono::steady_clock>(dur);
+                std::chrono::time_point<std::chrono::system_clock>(dur);
 
             this->afkersMap[user] = {true, message, timepoint};
         }
