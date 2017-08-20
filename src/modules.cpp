@@ -400,7 +400,7 @@ ModulesManager::loadAllModules()
         return;
     }
     
-    for (int i = 0; i < reply->elements; i += 2) {
+    for (decltype(reply->elements) i = 0; i < reply->elements; i += 2) {
         pt::ptree tree;
         std::string moduleName(reply->element[i]->str, reply->element[i]->len);
         std::string module(reply->element[i + 1]->str, reply->element[i + 1]->len);

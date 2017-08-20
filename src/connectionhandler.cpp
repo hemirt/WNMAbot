@@ -7,21 +7,21 @@
 #include "randomquote.hpp"
 #include "lotto/lottoimpl.hpp"
 
-static const char *IRC_HOST = "irc.chat.twitch.tv";
-static const char *IRC_PORT = "6667";
+//static const char *IRC_HOST = "irc.chat.twitch.tv";
+//static const char *IRC_PORT = "6667";
 
 ConnectionHandler::ConnectionHandler(const std::string &_pass,
                                      const std::string &_nick)
     : pass(_pass)
     , nick(_nick)
+    , comebacks(this->ioService, this)
     , quit(false)
     , dummyWork(new boost::asio::io_service::work(this->ioService))
     , resolver(this->ioService)
     , twitchEndpoint(
           this->resolver
-              .resolve(BoostConnection::resolver::query(IRC_HOST, IRC_PORT))
+              .resolve(BoostConnection::resolver::query(Network::IRC_HOST, Network::IRC_PORT))
               ->endpoint())
-    , comebacks(this->ioService, this)
 {
     if (!this->authFromRedis.isValid()) {
         throw std::runtime_error("Redis connection error, see std::cerr");
@@ -33,14 +33,14 @@ ConnectionHandler::ConnectionHandler(const std::string &_pass,
 }
 
 ConnectionHandler::ConnectionHandler()
-    : quit(false)
+    : comebacks(this->ioService, this)
+    , quit(false)
     , dummyWork(new boost::asio::io_service::work(this->ioService))
     , resolver(this->ioService)
     , twitchEndpoint(
           this->resolver
-              .resolve(BoostConnection::resolver::query(IRC_HOST, IRC_PORT))
+              .resolve(BoostConnection::resolver::query(Network::IRC_HOST, Network::IRC_PORT))
               ->endpoint())
-    , comebacks(this->ioService, this)
 {
     if (this->authFromRedis.isValid() && this->authFromRedis.hasAuth()) {
         this->pass = this->authFromRedis.getOauth();
@@ -59,6 +59,11 @@ ConnectionHandler::start()
     this->msgDecreaserTimer->expires_from_now(std::chrono::seconds(2));
     this->msgDecreaserTimer->async_wait(
         boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
+    
+    this->reconnectTimer = std::make_unique<boost::asio::steady_timer>(this->ioService);
+    this->reconnectTimer->expires_from_now(std::chrono::minutes(5));
+    this->reconnectTimer->async_wait(
+        boost::bind(&ConnectionHandler::OwnChannelReconnectHandler, this, _1));
 
     joinChannel(this->nick);
     auto channels = this->authFromRedis.getChannels();
@@ -83,7 +88,11 @@ ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
 
     if (ec) {
         std::cerr << "MsgDecreaseHandler error " << ec << std::endl;
-        this->msgDecreaserTimer.reset();
+        
+        this->msgDecreaserTimer = std::make_unique<boost::asio::steady_timer>(this->ioService);
+        this->msgDecreaserTimer->expires_from_now(std::chrono::seconds(2));
+        this->msgDecreaserTimer->async_wait(
+            boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
         return;
     }
 
@@ -104,6 +113,55 @@ ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
     this->msgDecreaserTimer->expires_from_now(std::chrono::seconds(2));
     this->msgDecreaserTimer->async_wait(
         boost::bind(&ConnectionHandler::MsgDecreaseHandler, this, _1));
+}
+
+
+void
+ConnectionHandler::OwnChannelReconnectHandler(const boost::system::error_code &ec)
+{
+    this->joinChannel(this->nick);
+
+    if (ec) {
+        std::cerr << "OwnChannelReconnectHandler error " << ec << std::endl;
+        this->reconnectTimer = std::make_unique<boost::asio::steady_timer>(this->ioService);
+        this->reconnectTimer->expires_from_now(std::chrono::minutes(5));
+        this->reconnectTimer->async_wait(
+            boost::bind(&ConnectionHandler::OwnChannelReconnectHandler, this, _1));
+        return;
+    }
+
+    std::lock_guard<std::mutex> lk(channelMtx);
+
+    if (this->quit) {
+        this->reconnectTimer.reset();
+        return;
+    }
+
+    auto &connections = this->channels.at(this->nick).connections;
+    for (auto &conn : connections) {
+        conn.reconnect();
+    }
+
+    this->reconnectTimer = std::make_unique<boost::asio::steady_timer>(this->ioService);
+    this->reconnectTimer->expires_from_now(std::chrono::minutes(5));
+    this->reconnectTimer->async_wait(
+        boost::bind(&ConnectionHandler::OwnChannelReconnectHandler, this, _1));
+}
+
+void
+ConnectionHandler::reconnectAllChannels(const std::string &chn)
+{
+    std::lock_guard<std::mutex> lk(channelMtx);
+
+    for (auto &i : this->channels) {
+        if (i.first == chn) {
+            continue;
+        }
+        auto &connections = i.second.connections;
+        for (auto &conn : connections) {
+            conn.reconnect();
+        }
+    }
 }
 
 ConnectionHandler::~ConnectionHandler()
@@ -171,6 +229,7 @@ ConnectionHandler::run()
             } catch (const std::exception &ex) {
                 std::cerr << "Exception caught in ConnectionHandler::run(): "
                           << ex.what() << "\nec: " << ec << std::endl;
+                this->err = true;
                 this->shutdown();
             }
         });

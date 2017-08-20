@@ -14,7 +14,7 @@ changeToLower(std::string &str)
                                                 "í", "ň", "ó", "ř", "š",
                                                 "ť", "ú", "ů", "ý", "ž"};
 
-    for (int i = 0; i < vekcharup.size(); ++i) {
+    for (std::vector<std::string>::size_type i = 0; i < vekcharup.size(); ++i) {
         size_t pos = 0;
         while ((pos = str.find(vekcharup[i], 0)) != std::string::npos) {
             str.replace(pos, vekcharup[i].size(), vekchardown[i], 0,
@@ -35,7 +35,7 @@ changeToLower_copy(std::string str)
                                                 "í", "ň", "ó", "ř", "š",
                                                 "ť", "ú", "ů", "ý", "ž"};
 
-    for (int i = 0; i < vekcharup.size(); ++i) {
+    for (std::vector<std::string>::size_type i = 0; i < vekcharup.size(); ++i) {
         size_t pos = 0;
         while ((pos = str.find(vekcharup[i], 0)) != std::string::npos) {
             str.replace(pos, vekcharup[i].size(), vekchardown[i], 0,
@@ -74,4 +74,50 @@ makeTimeString(int64_t seconds)
         time.pop_back();
     }
     return time;
+}
+
+std::vector<std::string>
+splitIntoChunks(std::string &&str)
+{
+    std::vector<std::string> vec;
+    for (;;) {
+        if (str.size() > 350) {
+            auto pos = str.find_last_of(' ', 350);
+            if (pos == std::string::npos) {
+                pos = 350;
+            } else if (pos == 0) {
+                break;
+            }
+            vec.push_back(str.substr(0, pos));
+            str.erase(0, pos);
+        } else {
+            vec.push_back(str.substr(0, std::string::npos));
+            break;
+        }
+    }
+    return vec;
+}
+
+std::string localTime()
+{
+    std::time_t t = std::time(nullptr);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&t), "%H:%M:%S");
+    return ss.str();
+}
+
+std::string localDate()
+{
+    std::time_t t = std::time(nullptr);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&t), "%F");
+    return ss.str();
+}
+
+std::string utcDateTime()
+{
+    std::time_t t = std::time(nullptr);
+    std::stringstream ss;
+    ss << std::put_time(std::gmtime(&t), "[%F %H:%M:%S]");
+    return ss.str();
 }

@@ -125,7 +125,7 @@ Afkers::getAllAfkersRedis()
     }
 
     if (reply->type == REDIS_REPLY_ARRAY) {
-        for (int i = 0; i < reply->elements; i += 2) {
+        for (decltype(reply->elements) i = 0; i < reply->elements; i += 2) {
             pt::ptree tree;
 
             std::string user(reply->element[i]->str, reply->element[i]->len);

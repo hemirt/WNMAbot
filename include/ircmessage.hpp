@@ -5,97 +5,62 @@
 #include <string>
 #include <iostream>
 
-struct MiddleMessage {
-    std::string raw;
-    std::string tags;
-    std::string prefix;
-    std::string command;
-    std::string middle;
-    std::string params;
-};
-
 class IRCMessage
 {
-public:
+public: 
     enum class Type {
         UNKNOWN,
         PRIVMSG,
         PING,
         PONG,
-
-        // TODO: add remaining types,
+        USERSTATE,
+        ROOMSTATE,
+        CLEARCHAT,
+        
         NUM_TYPES,
     } type = Type::UNKNOWN;
 
-    IRCMessage()
-    {
-    }
+    IRCMessage() = default;
 
-    IRCMessage(const MiddleMessage &mm)
-    {
-       this->raw = mm.raw;
-        if (mm.prefix.length() > 0) {
-            auto at = std::find(mm.prefix.begin(), mm.prefix.end(), '@');
-            auto dot = std::find(mm.prefix.begin(), mm.prefix.end(), '.');
-
-            if (at == mm.prefix.end() && dot != mm.prefix.end()) {
-                this->server = mm.prefix;
-            } else {
-                if (at == mm.prefix.end()) {
-                    this->nickname = mm.prefix;
-                } else {
-                    auto exclamation =
-                        std::find(mm.prefix.begin(), mm.prefix.end(), '!');
-
-                    if (exclamation == mm.prefix.end()) {
-                        this->nickname = std::string(mm.prefix.begin(), at);
-                        this->host = std::string(at + 1, mm.prefix.end());
-                    } else if (exclamation < at) {
-                        this->nickname =
-                            std::string(mm.prefix.begin(), exclamation);
-                        this->user = std::string(exclamation + 1, at);
-                        this->host = std::string(at + 1, mm.prefix.end());
-                    }
-                }
-            }
-        }
-
-        if (mm.command == "PRIVMSG") {
-            this->type = Type::PRIVMSG;
-            // middle "#channelname"
-            // channel:
-            this->channel = mm.middle.substr(1, std::string::npos);
-        } else if (mm.command == "PING") {
-            this->type = Type::PING;
-        } else if (mm.command == "PONG") {
-            this->type = Type::PONG;
-        }
-
-        this->middle = mm.middle;
-        this->params = mm.params;
-    }
-    
-    std::string raw;
-    std::string server;
-    std::string nickname;
-    std::string user;
+    std::string tags;
     std::string middle;
-    std::string params;
-    std::string host;
+    std::string message;
+    
+    std::string user;
     std::string channel;
     
-    friend std::ostream &operator<<(std::ostream &stream, const IRCMessage &msg)
-    {
-        stream << "raw:\n" << msg.raw
-               << "server:\n" << msg.server
-               << "nickname:\n" << msg.nickname
-               << "user:\n" << msg.user
-               << "middle:\n" << msg.middle
-               << "params:\n" << msg.params
-               << "host:\n" << msg.host
-               << "channel:\n" << msg.channel;
+    std::string raw;
+    std::string badges;
+    std::string bits;
+    std::string color;
+    std::string displayname;
+    std::string rawemotes;
+    bool mod = false;
+    bool subscriber = false;
+    bool turbo = false;
+    std::string userid;
+    std::string userType;
+    
+    friend std::ostream& operator<< (std::ostream& stream, const IRCMessage& ircMessage) {
+        stream << "raw: " << ircMessage.raw
+               << "\ntags: " << ircMessage.tags
+               << "\nmiddle: " << ircMessage.middle
+               << "\nmessage: " << ircMessage.message
+               << "\nusername: " << ircMessage.user
+               << "\nbadges: " << ircMessage.badges
+               << "\nbits: " << ircMessage.bits
+               << "\ncolor: " << ircMessage.color
+               << "\ndisplayname: " << ircMessage.displayname
+               << "\nrawem: " << ircMessage.rawemotes
+               << "\nmod: " << ircMessage.mod
+               << "\nsub: " << ircMessage.subscriber
+               << "\ntrbo: " << ircMessage.turbo
+               << "\nuserid: " << ircMessage.userid
+               << "\nuserty: " << ircMessage.userType;
         return stream;
     }
+    
+    
 };
 
 #endif  // IRCMESSAGE_HPP

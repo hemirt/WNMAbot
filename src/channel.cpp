@@ -19,15 +19,14 @@
 Channel::Channel(const std::string &_channelName,
                  boost::asio::io_service &_ioService, ConnectionHandler *_owner)
     : channelName(_channelName)
-    , pingReplied(false)
-    , owner(_owner)
-    , ioService(_ioService)
-    , credentials(owner->nick, owner->pass)
     , messageCount(0)
+    , owner(_owner)
     , commandsHandler(_ioService, this)
     , messenger(_ioService,
                 std::bind(&Channel::say, this, std::placeholders::_1))
     , pingMe(PingMe::getInstance())
+    , ioService(_ioService)
+    , credentials(owner->nick, owner->pass)
 {
     // Create initial connection
     this->createConnection();
@@ -89,7 +88,7 @@ Channel::handleMessage(const IRCMessage &message)
                 if (std::chrono::duration_cast<std::chrono::seconds>(now -
                                                                      afk.time)
                             .count() > 60 ||
-                    boost::iequals(message.params.substr(0, 5), "!back")) {
+                    boost::iequals(message.message.substr(0, 5), "!back")) {
                     owner->afkers.removeAfker(message.user);
 
                     auto seconds =
@@ -113,7 +112,7 @@ Channel::handleMessage(const IRCMessage &message)
                 }
             }
 
-            owner->comebacks.sendMsgs(message.user);
+            owner->comebacks.sendMsgs(message.user, this->messenger);
             
             if (!this->ignore.isIgnored(message.user)) {
                 // user is not ignored
@@ -122,21 +121,21 @@ Channel::handleMessage(const IRCMessage &message)
                 if (response.type == Response::Type::MESSAGE) {
                     if (response.priority == 1) {
                         auto vec =
-                            this->splitIntoChunks(std::move(response.message));
+                            splitIntoChunks(std::move(response.message));
                         for (auto &i : vec) {
                             this->messenger.push_front(std::move(i));
                         }
                     } else if (response.priority == 0) {
                         auto vec =
-                            this->splitIntoChunks(std::move(response.message));
-                        for (int i = 0; i < 2 && i < vec.size(); i++) {
+                            splitIntoChunks(std::move(response.message));
+                        for (decltype(vec.size()) i = 0; i < 2 && i < vec.size(); i++) {
                             this->messenger.push_back(std::move(vec[i]));
                         }
                     } else if (this->messenger
                                    .able() /* && message.priority == -1 */) {
                         auto vec =
-                            this->splitIntoChunks(std::move(response.message));
-                        for (int i = 0; i < 2 && i < vec.size(); i++) {
+                            splitIntoChunks(std::move(response.message));
+                        for (decltype(vec.size()) i = 0; i < 2 && i < vec.size(); i++) {
                             this->messenger.push_back(std::move(vec[i]));
                         }
                     }
@@ -145,7 +144,7 @@ Channel::handleMessage(const IRCMessage &message)
                     this->whisper(response.message, response.whisperReceiver);
                 } else {
                     std::vector<std::string> tokens;
-                    boost::algorithm::split(tokens, message.params,
+                    boost::algorithm::split(tokens, message.message,
                                             boost::algorithm::is_space(),
                                             boost::token_compress_on);
 
@@ -198,7 +197,7 @@ Channel::handleMessage(const IRCMessage &message)
                                     ". At channel " + this->channelName + ".";
                             }
 
-                            auto vec = this->splitIntoChunks(
+                            auto vec = splitIntoChunks(
                                 message.user + " is back: " + users);
 
                             try {
@@ -223,16 +222,24 @@ Channel::handleMessage(const IRCMessage &message)
             // handleMessage should take a shared_ptr to the connection the
             // message came from as a parameter
             // only relevant when we have more than one connection per channel
-            this->sendToOne("PONG :" + message.params);
+            std::cout << "PING MESSAGE (" << static_cast<std::underlying_type<IRCMessage::Type>::type>(message.type) << ") :\n" << message << "\n" << std::endl;
+            this->pong();
         } break;
 
         default: {
-            std::cout << "UNKWNON MESSAGE:\n" << message << std::endl;
+            std::cout << "UNKWNON MESSAGE (" << static_cast<std::underlying_type<IRCMessage::Type>::type>(message.type) << ") :\n" << message << "\n" << std::endl;
             // Unknown message type
         } break;
     }
 
     return true;
+}
+
+void
+Channel::pong()
+{
+    auto &connection = this->connections.at(0);
+    connection.pong();
 }
 
 void
@@ -260,26 +267,4 @@ Channel::sendToAll(const std::string &message)
     for (auto &connection : this->connections) {
         connection.writeMessage(message);
     }
-}
-
-std::vector<std::string>
-Channel::splitIntoChunks(std::string &&str)
-{
-    std::vector<std::string> vec;
-    for (;;) {
-        if (str.size() > 350) {
-            auto pos = str.find_last_of(' ', 350);
-            if (pos == std::string::npos) {
-                pos = 350;
-            } else if (pos == 0) {
-                break;
-            }
-            vec.push_back(str.substr(0, pos));
-            str.erase(0, pos);
-        } else {
-            vec.push_back(str.substr(0, std::string::npos));
-            break;
-        }
-    }
-    return vec;
 }

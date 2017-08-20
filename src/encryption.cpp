@@ -7,7 +7,7 @@ Encryption::encrypt(const std::string &what)
 {
     std::string ret;
     for (const auto &c : what) {
-        int i;
+        decltype(this->chars.size()) i;
         for (i = 1; i < this->chars.size(); i++) {
             if (this->chars[i] == c) {
                 break;

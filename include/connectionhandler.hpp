@@ -47,6 +47,15 @@ public:
     {
         return this->twitchEndpoint;
     }
+    
+    auto resetEndpoint()
+    {
+        boost::system::error_code ec;
+        this->twitchEndpoint = this->resolver
+              .resolve(BoostConnection::resolver::query(Network::IRC_HOST, Network::IRC_PORT), ec)
+              ->endpoint();
+        return ec;
+    }
 
     void shutdown();
 
@@ -64,7 +73,12 @@ public:
     void sanitizeMsg(std::string &msg);
     bool isBlacklisted(const std::string &msg);
     
+    void reconnectAllChannels(const std::string &chn);
+    
     ModulesManager modulesManager;
+    bool error() const {
+        return err;
+    }
 
 private:
     std::mutex channelMtx;
@@ -86,12 +100,16 @@ private:
 
     // steady_timer handler which decreases the messageCount on all Channels
     void MsgDecreaseHandler(const boost::system::error_code &ec);
+    void OwnChannelReconnectHandler(const boost::system::error_code &ec);
 
     RedisAuth authFromRedis;
 
     void loadAllReminders();
     void start();
     std::unique_ptr<boost::asio::steady_timer> msgDecreaserTimer;
+    std::unique_ptr<boost::asio::steady_timer> reconnectTimer;
+    
+    bool err = false;
 };
 
 #endif

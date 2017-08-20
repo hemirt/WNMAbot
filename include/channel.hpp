@@ -39,18 +39,17 @@ public:
     // right now public, connhandler is using it
     std::atomic<unsigned int> messageCount;
 
-    const bool
+    bool
     operator<(const Channel &r) const
     {
         return channelName < r.channelName;
     }
-    const bool
+    bool
     operator==(const Channel &r) const
     {
         return channelName == r.channelName;
     }
 
-    std::vector<std::string> splitIntoChunks(std::string &&str);
 
     // The ConnectionHandler managin this channel, should be only one in whole
     // app
@@ -65,14 +64,14 @@ private:
     // Create a new connection add it to the connections vector
     void createConnection();
 
-    // Send a message to one (random?) connection
+    // Send a message to one (random?) currently 0th connection
     void sendToOne(const std::string &message);
+    
+    // send Pong to 0th connection;
+    void pong();
 
     // Send a message to all connections
     void sendToAll(const std::string &message);
-
-    // XXX: This doesn't even seem to be used
-    std::atomic<bool> pingReplied;
 
     boost::asio::io_service &ioService;
 

@@ -9,6 +9,6 @@ namespace Parser {
 
 IRCMessage parseMessage(const std::string &rawMessage);
 
-}  // namespace Parser
+} // namespace Parser
 
-#endif  // PARSER_HPP
+#endif // PARSER_HPP

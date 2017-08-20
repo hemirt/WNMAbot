@@ -22,7 +22,7 @@ PingMe::PingMe()
     redisReply *reply = static_cast<redisReply *>(
         redisCommand(this->context, "SMEMBERS WNMA:pingers"));
     if (reply && reply->type == REDIS_REPLY_ARRAY) {
-        for (int i = 0; i < reply->elements; i++) {
+        for (decltype(reply->elements) i = 0; i < reply->elements; i++) {
             std::string user(reply->element[i]->str, reply->element[i]->len);
 
             redisReply *reply2 = static_cast<redisReply *>(
@@ -30,7 +30,7 @@ PingMe::PingMe()
                              user.c_str(), user.size()));
             std::map<std::string, std::string> pingedUsers;
             if (reply2 && reply2->type == REDIS_REPLY_ARRAY) {
-                for (int j = 0; j < reply2->elements; j += 2) {
+                for (decltype(reply2->elements) j = 0; j < reply2->elements; j += 2) {
                     pingedUsers.insert(std::make_pair(
                         std::string(reply2->element[j]->str,
                                     reply2->element[j]->len),

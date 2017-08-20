@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <iterator>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -28,7 +29,7 @@ std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage 
     {"!editcmd", &CommandsHandler::editCommand}, {"!deletecmd", &CommandsHandler::deleteCommand},
     {"!deletefullcommand", &CommandsHandler::deleteFullCommand}, {"!joinchn", &CommandsHandler::joinChannel},
     {"!leavechn", &CommandsHandler::leaveChannel}, {"!asay", &CommandsHandler::say},
-    {"!comebackmsg", &CommandsHandler::comeBackMsg}, {"!addblacklist", &CommandsHandler::addBlacklist},
+    {"!addblacklist", &CommandsHandler::addBlacklist},
     {"!removeblacklist", &CommandsHandler::removeBlacklist}, {"!setfrom", &CommandsHandler::setUserCountryFrom},
     {"!setlive", &CommandsHandler::setUserCountryLive}, {"!deleteuser", &CommandsHandler::deleteUser},
     {"!createcountry", &CommandsHandler::createCountry}, {"!deletecountry", &CommandsHandler::deleteCountry},
@@ -42,7 +43,7 @@ std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage 
     {"!asetdata", &CommandsHandler::setDataAdmin}, {"!aset", &CommandsHandler::setDataAdmin},
     {"!deletemodule", &CommandsHandler::deleteModule}, {"!adel", &CommandsHandler::deleteUserData}, 
     {"!adeletedata", &CommandsHandler::deleteUserData}, {"!lottowinners", &CommandsHandler::getLottoWinners},
-    {"!whoisafk", &CommandsHandler::whoIsAfk}
+    {"!whoisafk", &CommandsHandler::whoIsAfk}, {"!rcall", &CommandsHandler::reconnectAllChannels}
 };
 
 std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &)> CommandsHandler::normalCommands = {
@@ -60,13 +61,14 @@ std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage 
     {"!moduleinfo", &CommandsHandler::getModuleInfo}, {"!info", &CommandsHandler::getUserData},
     {"!arq", &CommandsHandler::getRandomQuote}, {"!set", &CommandsHandler::setData},
     {"!modules", &CommandsHandler::modules}, {"!del", &CommandsHandler::deleteMyData},
-    {"!lotto", &CommandsHandler::addLottoTicket}
+    {"!lotto", &CommandsHandler::addLottoTicket}, {"!comebackmsg", &CommandsHandler::comeBackMsg},
+    {"!notify", &CommandsHandler::comeBackMsg}
 };
 
 CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService,
                                  Channel *_channelObject)
-    : ioService(_ioService)
-    , channelObject(_channelObject)
+    : channelObject(_channelObject)
+    , ioService(_ioService)
     , lotto(_ioService, _channelObject->messenger)
 {
 }
@@ -80,14 +82,14 @@ CommandsHandler::handle(const IRCMessage &message)
 {
     UserIDs::getInstance().addUser(message.user);
     std::vector<std::string> tokens;
-    boost::algorithm::split(tokens, message.params,
+    boost::algorithm::split(tokens, message.message,
                             boost::algorithm::is_space(),
                             boost::token_compress_on);
 
     changeToLower(tokens[0]);
 
     if (!this->isAdmin(message.user)) {
-        for (int i = 1; i < tokens.size(); i++) {
+        for (decltype(tokens.size()) i = 1; i < tokens.size(); i++) {
             this->channelObject->owner->sanitizeMsg(tokens[i]);
         }
     }
@@ -125,7 +127,7 @@ CommandsHandler::handle(const IRCMessage &message)
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
     if (commandTree.empty()) {
-        return response;
+        return this->highlightResponse(message, tokens);
     }
 
     // channel user command
@@ -161,6 +163,36 @@ CommandsHandler::handle(const IRCMessage &message)
                                   "default");
     }
 
+    return this->highlightResponse(message, tokens);
+}
+
+Response
+
+CommandsHandler::highlightResponse([[maybe_unused]] const IRCMessage &message,
+                                   std::vector<std::string> &tokens)
+{
+    Response response;
+    if (!this->softCooldownCheck("\\_weneedmoreautisticbots", "\\_weneedmoreautisticbots", 30)) {
+        return response;
+    }
+    
+    auto &mt = MTRandom::getInstance();
+    
+    if (mt.getBool(0.9)) {
+        return response;
+    }
+    
+    for (auto &i : tokens) {
+        changeToLower(i);
+        if (i.find("weneedmoreautisticbots") != std::string::npos) {
+            static const char *rsp[] = {"monkaS", "monkaGIGA", "hwat pajaDank", "OMEGALUL", "LUL", "Kappa", "Keepo", "forsenSWA", "pajaDank", "ResidentSleeper"};
+            response.message = rsp[mt.getInt(0, std::size(rsp) - 1)];
+            response.type = Response::Type::MESSAGE;
+            this->cooldownCheck("\\_weneedmoreautisticbots", "\\_weneedmoreautisticbots", 25);
+            return response;
+        }
+    }
+    
     return response;
 }
 
@@ -255,9 +287,9 @@ CommandsHandler::makeResponse(const IRCMessage &message,
         auto t = std::make_shared<boost::asio::steady_timer>(ioService,
                                                std::chrono::seconds(*cooldown));
         t->async_wait([ this, key = tokens[0] + path, t ](
-            const boost::system::error_code &er) {
-            std::lock_guard<std::mutex> lk(this->cooldownsMtx);
-            this->cooldownsMap.erase(key);
+            [[maybe_unused]] const boost::system::error_code &er) {
+                std::lock_guard<std::mutex> lk(this->cooldownsMtx);
+                this->cooldownsMap.erase(key);
         });
     } else if (!this->cooldownCheck(message.user, tokens[0])) {
         return response;
@@ -284,14 +316,30 @@ CommandsHandler::makeResponse(const IRCMessage &message,
             boost::algorithm::replace_all(responseString, ss.str(), tokens[i]);
         }
     }
-
+    
+    if (responseString.find("{all}") != std::string::npos)
+    {
+        std::string valueString;
+        for (decltype(tokens.size()) i = 1; i < tokens.size(); ++i) {
+            valueString += tokens[i] + ' ';
+        }
+        if (!valueString.empty()) {
+            valueString.pop_back();
+            boost::algorithm::replace_all(responseString, "{all}", valueString);
+        } else {
+            return response;
+        }
+    }
+    
     boost::algorithm::replace_all(responseString, "{user}", message.user);
     boost::algorithm::replace_all(responseString, "{channel}", message.channel);
+    boost::algorithm::replace_all(responseString, "{time}", localTime());
+    boost::algorithm::replace_all(responseString, "{date}", localDate());
 
     if (boost::algorithm::find_regex(responseString,
                                      boost::regex("{\\d+\\+}"))) {
         std::string msg;
-        for (int i = 1; i < tokens.size(); i++) {
+        for (decltype(tokens.size()) i = 1; i < tokens.size(); i++) {
             msg += tokens[i] + " ";
         }
         if (msg.empty()) {
@@ -328,6 +376,29 @@ CommandsHandler::makeResponse(const IRCMessage &message,
             responseString, "{drnd}",
             std::to_string(MTRandom::getInstance().getReal()));
     }
+    
+    {
+        boost::regex e("{cirnd (\\d+) (\\d+)}");
+        boost::match_results<std::string::const_iterator> results;
+        while (boost::regex_search(responseString, results, e)) {
+            std::string smin = results[1];
+            std::string smax = results[2];
+            auto num = MTRandom::getInstance().getInt(std::atoi(smin.c_str()), std::atoi(smax.c_str()));
+            boost::algorithm::replace_all(responseString, "{cirnd " + smin + " " + smax + "}", std::to_string(num));
+        }
+    }
+    
+    {
+        boost::regex e("{irnd\\s(\\d+)\\s(\\d+)}");
+        boost::match_results<std::string::const_iterator> results;
+        while (boost::regex_search(responseString, results, e)) {
+            std::string smin = results[1];
+            std::string smax = results[2];
+            auto num = MTRandom::getInstance().getInt(std::atoi(smin.c_str()), std::atoi(smax.c_str()));
+            boost::algorithm::replace_first(responseString, "{irnd " + smin + " " + smax + "}", std::to_string(num));
+        }
+    }
+
 
     auto it = boost::algorithm::find_regex(
         responseString, boost::regex("\\{([^\\}:]+):([^\\}]*)\\}"));
@@ -642,7 +713,7 @@ int64_t
 getSecondsCount(std::vector<std::string> &tokens, size_t inPos)
 {
     int64_t seconds = 0;
-    for (int i = inPos + 1; i < tokens.size(); i++) {
+    for (decltype(tokens.size()) i = inPos + 1; i < tokens.size(); i++) {
         if (tokens[i].back() == 'd') {
             seconds += std::atoll(tokens[i].c_str()) * 24 * 3600;
         } else if (tokens[i].back() == 'h') {
@@ -660,8 +731,7 @@ std::string
 makeReminderMsg(std::vector<std::string> &tokens, size_t inPos)
 {
     std::string str;
-    int j = 1;
-    for (; j < inPos; j++) {
+    for (decltype(tokens.size()) j = 1; j < inPos; j++) {
         str += tokens[j] + " ";
     }
     if (str.back() == ' ') {
@@ -725,7 +795,7 @@ CommandsHandler::remindMe(const IRCMessage &message,
     auto remindFunction =
         [
           owner = this->channelObject->owner, user = message.user,
-          whisperMessage, whichReminder, seconds, t
+          whisperMessage, whichReminder, t
         ](const boost::system::error_code &er)
             ->void
     {
@@ -835,7 +905,7 @@ CommandsHandler::remind(const IRCMessage &message,
     auto remindFunction =
         [
           owner = this->channelObject->owner, user = remindedUser,
-          whisperMessage, whichReminder, from = message.user, seconds, t
+          whisperMessage, whichReminder, from = message.user, t
         ](const boost::system::error_code &er)
             ->void
     {
@@ -871,7 +941,7 @@ CommandsHandler::remind(const IRCMessage &message,
 }
 
 Response
-CommandsHandler::say(const IRCMessage &message,
+CommandsHandler::say([[maybe_unused]] const IRCMessage &message,
                      std::vector<std::string> &tokens)
 {
     Response response(1);
@@ -893,7 +963,7 @@ CommandsHandler::afk(const IRCMessage &message,
 {
     Response response(0);
     std::string msg;
-    for (int i = 1; i < tokens.size(); ++i) {
+    for (decltype(tokens.size()) i = 1; i < tokens.size(); ++i) {
         msg += tokens[i] + ' ';
     }
 
@@ -928,7 +998,7 @@ CommandsHandler::goodNight(const IRCMessage &message,
 
     std::string gnmsg;
     if (tokens.size() > 1) {
-        for (int i = 1; i < tokens.size(); i++) {
+        for (decltype(tokens.size()) i = 1; i < tokens.size(); i++) {
             gnmsg += tokens[i] + " ";
         }
     }
@@ -990,29 +1060,46 @@ Response
 CommandsHandler::comeBackMsg(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
-    Response response(1);
+    Response response(0);
     if (tokens.size() < 3) {
         return response;
     }
 
     changeToLower(tokens[1]);
+    
+    if (!UserIDs::getInstance().isUser(tokens[1])) {
+        return response;
+    }
 
     std::string msg;
-    for (int i = 2; i < tokens.size(); ++i) {
+    for (decltype(tokens.size()) i = 2; i < tokens.size(); ++i) {
         msg += tokens[i] + ' ';
     }
 
     if (msg.back() == ' ') {
         msg.pop_back();
     }
+    
+    if (msg.size() > 150) {
+        msg = msg.substr(0, 150);
+    }
+    
+    bool admin = this->isAdmin(message.user);
 
-    this->channelObject->owner->comebacks.makeComeBackMsg(message.user,
-                                                          tokens[1], msg);
+    int added = this->channelObject->owner->comebacks.makeComeBackMsg(message.user,
+                                                          tokens[1], msg, admin);
 
     response.type = Response::Type::MESSAGE;
-    response.message =
-        message.user + ", the user " + tokens[1] +
-        " will get your message once he writes anything in chat SeemsGood";
+    if (added == 0) {
+        response.message =
+            message.user + ", the user " + tokens[1] +
+            " will get your message once he writes anything in chat SeemsGood";
+    } else if (added == 1) {
+        response.message = message.user + ", you've already set enough messages for " + tokens[1];
+    } else if (added == 2) {
+        response.message = message.user + ", the user " + tokens[1] + " has already enough of notifications PajaWLookingOutOfHisMemePortal ";
+    }
+    
     return response;
 }
 
@@ -1056,7 +1143,7 @@ CommandsHandler::removeBlacklist(const IRCMessage &message,
 }
 
 Response
-CommandsHandler::whoIsAfk(const IRCMessage &message, std::vector<std::string> &tokens)
+CommandsHandler::whoIsAfk(const IRCMessage &message, [[maybe_unused]] std::vector<std::string> &tokens)
 {
     Response response(1);
     if (message.user != "hemirt") {
@@ -1120,7 +1207,7 @@ CommandsHandler::setUserCountryFrom(const IRCMessage &message,
     }
 
     std::string country;
-    for (int i = 2; i < tokens.size(); i++) {
+    for (decltype(tokens.size()) i = 2; i < tokens.size(); i++) {
         country += tokens[i] + " ";
     }
     if (country.back() == ' ') {
@@ -1150,7 +1237,7 @@ CommandsHandler::setUserCountryLive(const IRCMessage &message,
     }
 
     std::string country;
-    for (int i = 2; i < tokens.size(); i++) {
+    for (decltype(tokens.size()) i = 2; i < tokens.size(); i++) {
         country += tokens[i] + " ";
     }
     if (country.back() == ' ') {
@@ -1216,7 +1303,7 @@ CommandsHandler::getUsersFrom(const IRCMessage &message,
     }
 
     std::string country;
-    for (int i = 1; i < tokens.size(); i++) {
+    for (decltype(tokens.size()) i = 1; i < tokens.size(); i++) {
         country += tokens[i] + " ";
     }
     if (country.back() == ' ') {
@@ -1263,7 +1350,7 @@ CommandsHandler::getUsersLiving(const IRCMessage &message,
     }
 
     std::string country;
-    for (int i = 1; i < tokens.size(); i++) {
+    for (decltype(tokens.size()) i = 1; i < tokens.size(); i++) {
         country += tokens[i] + " ";
     }
     if (country.back() == ' ') {
@@ -1320,7 +1407,7 @@ CommandsHandler::myFrom(const IRCMessage &message,
     }
 
     std::string country;
-    for (int i = 1; i < tokens.size(); i++) {
+    for (decltype(tokens.size()) i = 1; i < tokens.size(); i++) {
         country += tokens[i] + " ";
     }
     if (country.back() == ' ') {
@@ -1351,7 +1438,7 @@ CommandsHandler::myLiving(const IRCMessage &message,
     }
 
     std::string country;
-    for (int i = 1; i < tokens.size(); i++) {
+    for (decltype(tokens.size()) i = 1; i < tokens.size(); i++) {
         country += tokens[i] + " ";
     }
     if (country.back() == ' ') {
@@ -1404,7 +1491,7 @@ CommandsHandler::createCountry(const IRCMessage &message,
     }
 
     std::string country;
-    for (int i = 1; i < tokens.size(); i++) {
+    for (decltype(tokens.size()) i = 1; i < tokens.size(); i++) {
         country += tokens[i] + " ";
     }
     if (country.back() == ' ') {
@@ -1449,7 +1536,7 @@ CommandsHandler::renameCountry(const IRCMessage &message,
     }
 
     std::string country;
-    for (int i = 2; i < tokens.size(); i++) {
+    for (decltype(tokens.size()) i = 2; i < tokens.size(); i++) {
         country += tokens[i] + " ";
     }
     if (country.back() == ' ') {
@@ -1476,7 +1563,7 @@ CommandsHandler::getCountryID(const IRCMessage &message,
     }
 
     std::string country;
-    for (int i = 1; i < tokens.size(); i++) {
+    for (decltype(tokens.size()) i = 1; i < tokens.size(); i++) {
         country += tokens[i] + " ";
     }
     if (country.back() == ' ') {
@@ -1506,7 +1593,7 @@ CommandsHandler::createAlias(const IRCMessage &message,
     }
 
     std::string country;
-    for (int i = 2; i < tokens.size(); i++) {
+    for (decltype(tokens.size()) i = 2; i < tokens.size(); i++) {
         country += tokens[i] + " ";
     }
     if (country.back() == ' ') {
@@ -1535,7 +1622,7 @@ CommandsHandler::deleteAlias(const IRCMessage &message,
     }
 
     std::string country;
-    for (int i = 2; i < tokens.size(); i++) {
+    for (decltype(tokens.size()) i = 2; i < tokens.size(); i++) {
         country += tokens[i] + " ";
     }
     if (country.back() == ' ') {
@@ -1555,7 +1642,7 @@ CommandsHandler::deleteAlias(const IRCMessage &message,
 
 Response
 CommandsHandler::myReminders(const IRCMessage &message,
-                             std::vector<std::string> &tokens)
+                             [[maybe_unused]] std::vector<std::string> &tokens)
 {
     Response response(0);
 
@@ -2129,7 +2216,7 @@ CommandsHandler::setDataAdmin(const IRCMessage &message,
 
 Response
 CommandsHandler::modules(const IRCMessage &message,
-                 std::vector<std::string> &tokens)
+                 [[maybe_unused]] std::vector<std::string> &tokens)
 {
     Response response(0);
 
@@ -2156,7 +2243,7 @@ CommandsHandler::cooldownCheck(const std::string &user, const std::string &cmd, 
         auto t =
             std::make_shared<boost::asio::steady_timer>(ioService, std::chrono::seconds(howmuch));
         t->async_wait([ this, key = cmd + user, t ](
-            const boost::system::error_code &er) {
+            [[maybe_unused]] const boost::system::error_code &er) {
             std::lock_guard<std::mutex> lk(this->cooldownsMtx);
             this->cooldownsMap.erase(key);
         });
@@ -2166,9 +2253,25 @@ CommandsHandler::cooldownCheck(const std::string &user, const std::string &cmd, 
     }
 }
 
+bool
+CommandsHandler::softCooldownCheck(const std::string &user, const std::string &cmd, int howmuch)
+{
+    std::lock_guard<std::mutex> lk(this->cooldownsMtx);
+    auto it = this->cooldownsMap.find(cmd + user);
+    auto now = std::chrono::steady_clock::now();
+    if (it != cooldownsMap.end()) {
+        if (std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                             it->second)
+                .count() < howmuch) {
+            return false;
+        }
+    }
+    return true;
+}
+
 Response
-CommandsHandler::clearQueue(const IRCMessage &message,
-                 std::vector<std::string> &tokens)
+CommandsHandler::clearQueue([[maybe_unused]] const IRCMessage &message,
+                 [[maybe_unused]] std::vector<std::string> &tokens)
 {
     Response response(0);
     this->channelObject->messenger.clearQueue();
@@ -2195,11 +2298,23 @@ CommandsHandler::addLottoTicket(const IRCMessage &message,
 }
 
 Response
-CommandsHandler::getLottoWinners(const IRCMessage &message,
-                 std::vector<std::string> &tokens)
+CommandsHandler::getLottoWinners([[maybe_unused]] const IRCMessage &message,
+                 [[maybe_unused]] std::vector<std::string> &tokens)
 {
     Response response(1);
     response.message = this->lotto.getWinners();
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::reconnectAllChannels(const IRCMessage &message,
+                               [[maybe_unused]] std::vector<std::string> &tokens)
+{
+    Response response(1);
+
+    this->channelObject->owner->reconnectAllChannels(message.channel);
+    response.message = "Reconnected all channels";
     response.type = Response::Type::MESSAGE;
     return response;
 }

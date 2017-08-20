@@ -100,7 +100,7 @@ RedisAuth::getAllReminders()
     }
 
     if (reply->type == REDIS_REPLY_ARRAY) {
-        for (int i = 0; i < reply->elements; i += 2) {
+        for (decltype(reply->elements) i = 0; i < reply->elements; i += 2) {
             std::vector<Reminder> vec;
             pt::ptree tree;
 
@@ -133,7 +133,7 @@ RedisAuth::getChannels()
         return channels;
     }
 
-    for (int i = 0; i < reply->elements; ++i) {
+    for (decltype(reply->elements) i = 0; i < reply->elements; ++i) {
         channels.push_back(
             std::string(reply->element[i]->str, reply->element[i]->len));
     }
@@ -171,7 +171,7 @@ RedisAuth::getBlacklist()
     }
 
     if (reply->type == REDIS_REPLY_ARRAY) {
-        for (int i = 0; i < reply->elements; i += 2) {
+        for (decltype(reply->elements) i = 0; i < reply->elements; i += 2) {
             std::string search(reply->element[i]->str, reply->element[i]->len);
             std::string replace(reply->element[i + 1]->str,
                                 reply->element[i + 1]->len);

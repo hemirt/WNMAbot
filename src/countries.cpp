@@ -124,7 +124,7 @@ Countries::usersFrom(const std::string &country)
         freeReplyObject(reply);
         return pair;
     }
-    for (int i = 0; i < reply->elements; i++) {
+    for (decltype(reply->elements) i = 0; i < reply->elements; i++) {
         std::string username = this->userIDs.getUserName(
             std::string(reply->element[i]->str, reply->element[i]->len));
         if (!username.empty()) {
@@ -162,7 +162,7 @@ Countries::usersLive(const std::string &country)
         return pair;
     }
 
-    for (int i = 0; i < reply->elements; i++) {
+    for (decltype(reply->elements) i = 0; i < reply->elements; i++) {
         std::string username = this->userIDs.getUserName(
             std::string(reply->element[i]->str, reply->element[i]->len));
         if (!username.empty()) {
@@ -476,7 +476,7 @@ Countries::deleteCountry(const std::string &countryID)
                      countryID.c_str(), countryID.size()));
 
     if (reply != NULL && reply->type == REDIS_REPLY_ARRAY) {
-        for (int i = 0; i < reply->elements; i++) {
+        for (decltype(reply->elements) i = 0; i < reply->elements; i++) {
             std::string userID(reply->element[i]->str, reply->element[i]->len);
             this->deleteUserCountryByID(userID, Countries::Type::LIVE);
         }
@@ -488,7 +488,7 @@ Countries::deleteCountry(const std::string &countryID)
                      countryID.c_str(), countryID.size()));
 
     if (reply != NULL && reply->type == REDIS_REPLY_ARRAY) {
-        for (int i = 0; i < reply->elements; i++) {
+        for (decltype(reply->elements) i = 0; i < reply->elements; i++) {
             std::string userID(reply->element[i]->str, reply->element[i]->len);
             this->deleteUserCountryByID(userID, Countries::Type::FROM);
         }
@@ -516,7 +516,7 @@ Countries::deleteCountry(const std::string &countryID)
 
     if (reply != NULL && reply->type == REDIS_REPLY_ARRAY) {
         redisReply *reply2;
-        for (int i = 0; i < reply->elements; i++) {
+        for (decltype(reply->elements) i = 0; i < reply->elements; i++) {
             std::string alias(reply->element[i]->str, reply->element[i]->len);
             reply2 = static_cast<redisReply *>(
                 redisCommand(this->context, "HDEL WNMA:countries %b",

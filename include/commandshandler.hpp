@@ -187,6 +187,10 @@ private:
                      std::vector<std::string> &tokens);
     Response getLottoWinners(const IRCMessage &message,
                      std::vector<std::string> &tokens);
+    Response highlightResponse(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response reconnectAllChannels(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
                      
     boost::asio::io_service &ioService;
 
@@ -195,6 +199,7 @@ private:
     std::mutex cooldownsMtx;
     
     bool cooldownCheck(const std::string &user, const std::string &cmd, int howmuch = 5);
+    bool softCooldownCheck(const std::string &user, const std::string &cmd, int howmuch = 5);
     
     Lotto lotto;
 };

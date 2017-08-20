@@ -18,8 +18,10 @@ public:
     virtual ~Connection();
 
     void writeMessage(const std::string &message);
+    void pong();
 
     bool established = false;
+    void reconnect();
 
 private:
     // Start connecting to the stored endpoint
@@ -31,14 +33,15 @@ private:
     void doWrite();
 
     void handleConnect(const boost::system::error_code &ec);
-    void handleRead(const boost::system::error_code &ec,
+    void handleRead(std::shared_ptr<BoostConnection::socket> sock, const boost::system::error_code &ec,
                     std::size_t bytesTransferred);
     void handleError(const boost::system::error_code &ec);
-    void handleWrite(const boost::system::error_code &ec);
+    void handleWrite(std::shared_ptr<BoostConnection::socket> sock, const boost::system::error_code &ec);
 
     void onConnectionEstablished();
 
-    BoostConnection::socket socket;
+    boost::asio::io_service &ioService;
+    std::shared_ptr<BoostConnection::socket> socket;
     BoostConnection::endpoint endpoint;
 
     boost::asio::streambuf inputBuffer;

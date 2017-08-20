@@ -162,7 +162,7 @@ LottoImpl::getNumbers()
     }
     
     LottoImpl::logFile << readBuffer << std::endl;;
-    ret = std::move(LottoImpl::readData(readBuffer));
+    ret = LottoImpl::readData(readBuffer);
     return ret;
 }
 

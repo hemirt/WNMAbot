@@ -2,9 +2,9 @@
 
 Messenger::Messenger(boost::asio::io_service &_ioService,
                      std::function<bool(const std::string &)> _sendFunc)
-    : lk(mtx, std::defer_lock)
+    : sendFunc(_sendFunc)
+    , lk(mtx, std::defer_lock)
     , ioService(_ioService)
-    , sendFunc(_sendFunc)
 {
 }
 
