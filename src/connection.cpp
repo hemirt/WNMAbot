@@ -46,7 +46,7 @@ Connection::pong()
     if (!this->established) {
         this->socket->close();
 
-        this->startConnect();
+        this->startConnect(this->socket);
 
         return;
     }
@@ -69,6 +69,13 @@ Connection::writeMessage(const std::string &message)
 
 void
 Connection::startConnect()
+{
+    this->socket->async_connect(
+        this->endpoint, boost::bind(&Connection::handleConnect, this, _1));
+}
+
+void
+Connection::startConnect([[maybe_unused]] std::shared_ptr<BoostConnection::socket> sock)
 {
     this->socket->async_connect(
         this->endpoint, boost::bind(&Connection::handleConnect, this, _1));
@@ -124,24 +131,36 @@ void
 Connection::reconnect()
 {
     //this->inputBuffer.consume(this->inputBuffer.size());
-    this->socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+    std::lock_guard<std::mutex> lock(this->connM);
+    boost::system::error_code ec;
+    this->socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+    if (ec) {
+        std::cerr << "Reconnect: shutdown: ec: " << ec << " msg: " << ec.message() << std::endl;
+        return;
+    }
     this->socket->close();
+    if (ec) {
+        std::cerr << "Reconnect: close: ec: " << ec << " msg: " << ec.message() << std::endl;
+        return;
+    }
     this->socket.reset(new BoostConnection::socket(ioService));
     std::cerr << "Connection " << channelName << " reconnected." << std::endl;
     this->inputBuffer.consume(this->inputBuffer.size());
-    this->startConnect();
+    this->startConnect(this->socket);
 }
 
 void
 Connection::handleConnect(const boost::system::error_code &ec)
 {
+    std::unique_lock<std::mutex> lock(this->connM);
     if (!this->socket->is_open()) {
         // Connection timed out, machine unreachable?
 
-        this->startConnect();
+        this->startConnect(this->socket);
     } else if (ec) {
+        lock.unlock();
         this->handleError(ec);
-        this->reconnect();
+        // this->reconnect(); // maybe this fixes it?
     } else {
         this->onConnectionEstablished();
     }

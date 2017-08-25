@@ -14,7 +14,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("debug")
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra -pthread -std=c++1z -O0 -g -fsanitize=address ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -pthread -std=c++1z -O0 -g -fsanitize=address -fno-omit-frame-pointer ${CMAKE_CXX_FLAGS}")
 else()
     message("release")
     set(CMAKE_CXX_FLAGS "-Wall -Wextra -pthread -std=c++1z -O3 ${CMAKE_CXX_FLAGS}")
@@ -47,6 +47,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ignore.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/lotto.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/lotto/lottoimpl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hemirt.cpp
 )
 
 add_executable(WNMAbot ${SOURCE})

@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <memory>
+#include <mutex>
 
 class Connection : public std::enable_shared_from_this<Connection>
 {
@@ -26,6 +27,7 @@ public:
 private:
     // Start connecting to the stored endpoint
     void startConnect();
+    void startConnect(std::shared_ptr<BoostConnection::socket> sock);
 
     void writeRawMessage(const std::string &message);
 
@@ -51,6 +53,8 @@ private:
 
     MessageHandler *handler;
     bool duplicateMsg = false;
+    
+    std::mutex connM;
 };
 
 #endif  // CONNECTION_HPP

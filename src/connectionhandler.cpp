@@ -3,6 +3,7 @@
 #include <boost/thread.hpp>
 #include "ayah.hpp"
 #include "bible.hpp"
+#include "hemirt.hpp"
 #include "channel.hpp"
 #include "randomquote.hpp"
 #include "lotto/lottoimpl.hpp"
@@ -79,6 +80,7 @@ ConnectionHandler::start()
     Bible::init();
     RandomQuote::init();
     LottoImpl::init();
+    Hemirt::init();
 }
 
 void
@@ -172,6 +174,7 @@ ConnectionHandler::~ConnectionHandler()
     Bible::deinit();
     RandomQuote::deinit();
     LottoImpl::deinit();
+    Hemirt::deinit();
     this->msgDecreaserTimer.reset();
     std::cout << "cleared end destr" << std::endl;
 }
@@ -228,9 +231,11 @@ ConnectionHandler::run()
                 std::cout << "ec: " << ec << std::endl;
             } catch (const std::exception &ex) {
                 std::cerr << "Exception caught in ConnectionHandler::run(): "
-                          << ex.what() << "\nec: " << ec << std::endl;
-                this->err = true;
-                this->shutdown();
+                          << ex.what() << " && ec: " << ec << std::endl;
+                if (!this->err) {
+                    this->err = true;
+                    this->shutdown();
+                }
             }
         });
     }
@@ -241,10 +246,15 @@ void
 ConnectionHandler::shutdown()
 {
     std::lock_guard<std::mutex> lk(this->channelMtx);
-    this->quit = true;
-    this->channels.clear();
-    this->dummyWork.reset();
-    this->ioService.stop();
+    try {
+        this->quit = true;
+        this->channels.clear();
+        this->dummyWork.reset();
+        this->ioService.stop();
+    } catch (const std::exception &ex) {
+        std::cerr << "Exception caught in ConnectionHandler::shutdown(): "
+                          << ex.what() << std::endl;
+    }
 }
 
 void

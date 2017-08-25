@@ -109,7 +109,7 @@ private:
     std::unique_ptr<boost::asio::steady_timer> msgDecreaserTimer;
     std::unique_ptr<boost::asio::steady_timer> reconnectTimer;
     
-    bool err = false;
+    std::atomic<bool> err = false;
 };
 
 #endif

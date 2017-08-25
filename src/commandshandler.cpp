@@ -6,6 +6,7 @@
 #include "mtrandom.hpp"
 #include "utilities.hpp"
 #include "randomquote.hpp"
+#include "hemirt.hpp"
 
 #include <stdint.h>
 #include <vector>
@@ -396,6 +397,26 @@ CommandsHandler::makeResponse(const IRCMessage &message,
             std::string smax = results[2];
             auto num = MTRandom::getInstance().getInt(std::atoi(smin.c_str()), std::atoi(smax.c_str()));
             boost::algorithm::replace_first(responseString, "{irnd " + smin + " " + smax + "}", std::to_string(num));
+        }
+    }
+
+    {
+        boost::regex e("{page:\\s*(.+)}");
+        boost::match_results<std::string::const_iterator> results;
+        while (boost::regex_search(responseString, results, e)) {
+            std::string page = results[1];
+            std::string replace = Hemirt::getRandom(page);
+            responseString = boost::regex_replace(responseString, e, replace, boost::match_default | boost::format_first_only);
+        }
+    }
+
+    {
+        boost::regex e("{rawpage:\\s*(.+)}");
+        boost::match_results<std::string::const_iterator> results;
+        while (boost::regex_search(responseString, results, e)) {
+            std::string page = results[1];
+            std::string replace = Hemirt::getRaw(page);
+            responseString = boost::regex_replace(responseString, e, replace, boost::match_default | boost::format_first_only);
         }
     }
 
