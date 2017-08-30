@@ -222,12 +222,12 @@ Channel::handleMessage(const IRCMessage &message)
             // handleMessage should take a shared_ptr to the connection the
             // message came from as a parameter
             // only relevant when we have more than one connection per channel
-            std::cout << "PING MESSAGE (" << static_cast<std::underlying_type<IRCMessage::Type>::type>(message.type) << ") :\n" << message << "\n" << std::endl;
+            //std::cout << "PING MESSAGE (" << static_cast<std::underlying_type<IRCMessage::Type>::type>(message.type) << ") :\n" << message << "\n" << std::endl;
             this->pong();
         } break;
 
         default: {
-            std::cout << "UNKWNON MESSAGE (" << static_cast<std::underlying_type<IRCMessage::Type>::type>(message.type) << ") :\n" << message << "\n" << std::endl;
+            //std::cout << "UNKWNON MESSAGE (" << static_cast<std::underlying_type<IRCMessage::Type>::type>(message.type) << ") :\n" << message << "\n" << std::endl;
             // Unknown message type
         } break;
     }
