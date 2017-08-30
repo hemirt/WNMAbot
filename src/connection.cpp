@@ -33,12 +33,6 @@ Connection::~Connection()
 void
 Connection::shutdown()
 {
-    bool bc = this->connM.try_lock();
-    bool bh = this->handlerM.try_lock();
-    std::cout << "bc: " << bc << " bh: " << bh << std::endl;
-    if (bc) this->connM.unlock();
-    if (bh) this->handlerM.unlock();
-    std::cout << "trying lock?!" << this->channelName << std::endl;
     std::scoped_lock lock(this->connM, this->handlerM);
     this->quit = true;
     this->handler.reset();
