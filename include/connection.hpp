@@ -2,20 +2,20 @@
 #define CONNECTION_HPP
 
 #include "credentials.hpp"
-#include "messagehandler.hpp"
 #include "network.hpp"
 
 #include <iostream>
 #include <memory>
 #include <mutex>
 
+class Channel;
+
 class Connection : public std::enable_shared_from_this<Connection>
 {
 public:
     Connection(boost::asio::io_service &ioService,
                const BoostConnection::endpoint &_endpoint,
-               const Credentials &_credentials, const std::string &_channelName,
-               MessageHandler *_handler);
+               const Credentials &_credentials, const std::string &_channelName);
     virtual ~Connection();
 
     void writeMessage(const std::string &message);
@@ -23,6 +23,8 @@ public:
 
     bool established = false;
     void reconnect();
+    void startConnect(std::shared_ptr<Channel> chn);
+    void shutdown();
 
 private:
     // Start connecting to the stored endpoint
@@ -51,10 +53,12 @@ private:
     Credentials credentials;
     std::string channelName;
 
-    MessageHandler *handler;
+    std::shared_ptr<Channel> handler;
     bool duplicateMsg = false;
     
     std::mutex connM;
+    std::mutex handlerM;
+    std::atomic<bool> quit = false;
 };
 
 #endif  // CONNECTION_HPP

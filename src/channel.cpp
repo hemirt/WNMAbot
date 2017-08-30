@@ -28,19 +28,30 @@ Channel::Channel(const std::string &_channelName,
     , ioService(_ioService)
     , credentials(owner->nick, owner->pass)
 {
-    // Create initial connection
-    this->createConnection();
 }
 
 Channel::~Channel()
 {
+    this->shutdown();
+    std::cout << "Channel::~Channel(): " << this->channelName << std::endl;
+}
+
+void
+Channel::shutdown()
+{
+    for (auto & conn : this->connections) {
+        conn.shutdown();
+        std::cout << "Channel shutdown connection: " << this->channelName << std::endl;
+    }
 }
 
 void
 Channel::createConnection()
 {
     this->connections.emplace_back(this->ioService, this->owner->getEndpoint(),
-                                   this->credentials, this->channelName, this);
+                                   this->credentials, this->channelName);
+    Connection &ref = this->connections[0];
+    ref.startConnect(this->getShared());
 }
 
 bool
@@ -203,7 +214,7 @@ Channel::handleMessage(const IRCMessage &message)
                             try {
                                 for (auto &msg : vec) {
                                     this->owner->channels.at(i.first)
-                                        .messenger.push_back(std::move(msg));
+                                        ->messenger.push_back(std::move(msg));
                                 }
                             } catch (std::exception &e) {
                                 std::cerr << "Ping me exception " << i.first

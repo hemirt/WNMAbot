@@ -16,10 +16,11 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <memory>
 
 class ConnectionHandler;
 
-class Channel : public MessageHandler
+class Channel : public MessageHandler, public std::enable_shared_from_this<Channel>
 {
 public:
     Channel(const std::string &_channelName,
@@ -59,10 +60,17 @@ public:
     Messenger messenger;
     PingMe &pingMe;
     Ignore ignore;
+    
+    std::shared_ptr<Channel> getShared() {
+        return shared_from_this();
+    }
+    
+    void createConnection();
+    
+    void shutdown();
 
 private:
     // Create a new connection add it to the connections vector
-    void createConnection();
 
     // Send a message to one (random?) currently 0th connection
     void sendToOne(const std::string &message);

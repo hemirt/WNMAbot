@@ -106,8 +106,8 @@ ConnectionHandler::MsgDecreaseHandler(const boost::system::error_code &ec)
     }
 
     for (auto &i : this->channels) {
-        if (i.second.messageCount > 0) {
-            --i.second.messageCount;
+        if (i.second->messageCount > 0) {
+            --i.second->messageCount;
         }
     }
 
@@ -139,7 +139,7 @@ ConnectionHandler::OwnChannelReconnectHandler(const boost::system::error_code &e
         return;
     }
 
-    auto &connections = this->channels.at(this->nick).connections;
+    auto &connections = this->channels.at(this->nick)->connections;
     for (auto &conn : connections) {
         conn.reconnect();
     }
@@ -159,7 +159,7 @@ ConnectionHandler::reconnectAllChannels(const std::string &chn)
         if (i.first == chn) {
             continue;
         }
-        auto &connections = i.second.connections;
+        auto &connections = i.second->connections;
         for (auto &conn : connections) {
             conn.reconnect();
         }
@@ -190,10 +190,15 @@ ConnectionHandler::joinChannel(const std::string &channelName)
     std::cout << "joining: " << channelName << std::endl;
 
     this->authFromRedis.addChannel(channelName);
+    
 
-    this->channels.emplace(
+    auto p = this->channels.emplace(
         std::piecewise_construct, std::forward_as_tuple(channelName),
-        std::forward_as_tuple(channelName, this->ioService, this));
+        std::forward_as_tuple(std::make_shared<Channel>(channelName, this->ioService, this)));
+    // p.first == iterator
+    // p.first->first == channelName
+    // p.first->second == shared_ptr<Channel>
+    p.first->second->createConnection();
 
     return true;
 }
@@ -211,7 +216,11 @@ ConnectionHandler::leaveChannel(const std::string &channelName)
 
     this->authFromRedis.removeChannel(channelName);
 
+    auto shared = this->channels[channelName];
     this->channels.erase(channelName);
+    shared->shutdown();
+    std::cout << "left: " << channelName << std::endl;
+
 
     return true;
 }
@@ -228,9 +237,9 @@ ConnectionHandler::run()
             try {
                 
                 this->ioService.run(ec);
-                std::cout << "ec: " << ec << std::endl;
+                std::cout << "IOSERVICE ec: " << ec << std::endl;
             } catch (const std::exception &ex) {
-                std::cerr << "Exception caught in ConnectionHandler::run(): "
+                std::cerr << "IOSERVICE Exception caught in ConnectionHandler::run(): "
                           << ex.what() << " && ec: " << ec << std::endl;
                 if (!this->err) {
                     this->err = true;
@@ -247,10 +256,20 @@ ConnectionHandler::shutdown()
 {
     std::lock_guard<std::mutex> lk(this->channelMtx);
     try {
+        std::cout << "trying to quit" << std::endl;
         this->quit = true;
+        for (auto &p : this->channels) {
+            std::cout << "TRQT: " << p.second->channelName << std::endl;
+            p.second->shutdown();
+            std::cout << "TRQTED: " << p.second->channelName << std::endl;
+
+        }
+         std::cout << "trying to quit2" << std::endl;
         this->channels.clear();
+         std::cout << "trying to quit3" << std::endl;
         this->dummyWork.reset();
         this->ioService.stop();
+         std::cout << "trying to quit4" << std::endl;
     } catch (const std::exception &ex) {
         std::cerr << "Exception caught in ConnectionHandler::shutdown(): "
                           << ex.what() << std::endl;
@@ -280,9 +299,9 @@ ConnectionHandler::loadAllReminders()
                 if (this->channels.count(this->nick) == 0) {
                     this->joinChannel(this->nick);
                 }
-                this->channels.at(this->nick).whisper(reminderMessage, user);
+                this->channels.at(this->nick)->whisper(reminderMessage, user);
                 this->channels.at(this->nick)
-                    .commandsHandler.redisClient.removeReminder(user,
+                    ->commandsHandler.redisClient.removeReminder(user,
                                                                 whichReminder);
             };
 

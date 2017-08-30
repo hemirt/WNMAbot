@@ -5,20 +5,19 @@
 #include "connectionhandler.hpp"
 
 #include <iomanip>
+#include <thread>
 
 #include <boost/bind.hpp>
 
 Connection::Connection(boost::asio::io_service &ioService,
                        const BoostConnection::endpoint &_endpoint,
                        const Credentials &_credentials,
-                       const std::string &_channelName,
-                       MessageHandler *_handler)
+                       const std::string &_channelName)
     : ioService(ioService)
     , socket(new BoostConnection::socket(ioService))
     , endpoint(_endpoint)
     , credentials(_credentials)
     , channelName(_channelName)
-    , handler(_handler)
 {
     // When the connection object is started, we start connecting
     std::cout << "connection: " << this->channelName << std::endl;
@@ -27,8 +26,28 @@ Connection::Connection(boost::asio::io_service &ioService,
 
 Connection::~Connection()
 {
-    this->socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-    this->socket->close();
+    this->shutdown();
+    std::cout << "Connection::~Connection(): " << this->channelName << std::endl;
+}
+
+void
+Connection::shutdown()
+{
+    bool bc = this->connM.try_lock();
+    bool bh = this->handlerM.try_lock();
+    std::cout << "bc: " << bc << " bh: " << bh << std::endl;
+    if (bc) this->connM.unlock();
+    if (bh) this->handlerM.unlock();
+    std::cout << "trying lock?!" << this->channelName << std::endl;
+    std::scoped_lock lock(this->connM, this->handlerM);
+    this->quit = true;
+    this->handler.reset();
+    if (this->socket != nullptr) {
+        this->socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+        this->socket->close();
+        this->socket.reset();
+    }
+    std::cout << "connection was shut down " << this->channelName << std::endl;
 }
 
 void
@@ -56,7 +75,7 @@ Connection::pong()
 void
 Connection::writeMessage(const std::string &message)
 {
-    if (!this->established) {
+    if (!this->established || this->quit) {
         return;
     }
     this->duplicateMsg = !this->duplicateMsg;
@@ -65,6 +84,16 @@ Connection::writeMessage(const std::string &message)
     } else {
         this->writeRawMessage(message + " \r\n");
     }
+}
+
+void
+Connection::startConnect(std::shared_ptr<Channel> chn)
+{
+    {
+        std::scoped_lock lock(this->connM, this->handlerM);
+        this->handler = chn;
+    }
+    this->startConnect();
 }
 
 void
@@ -106,8 +135,25 @@ Connection::handleRead([[maybe_unused]] std::shared_ptr<BoostConnection::socket>
 
     auto ircMessage = Parser::parseMessage(rawMessage);
 
-    if(!this->handler->handleMessage(ircMessage)) {
-        return;
+    {
+        std::unique_lock lk1(this->connM, std::defer_lock);
+        std::unique_lock lk2(this->handlerM, std::defer_lock);
+        std::lock(lk1, lk2);
+
+        if (this->handler == nullptr) {
+            return;
+        }
+        if (this->socket == nullptr) {
+            return;
+        }
+        
+        auto copy = this->handler;
+        lk1.unlock();
+        lk2.unlock();
+        
+        if(!copy->handleMessage(ircMessage)) {
+            return;
+        }
     }
 
     this->doRead();
@@ -130,9 +176,14 @@ Connection::doWrite()
 void
 Connection::reconnect()
 {
-    //this->inputBuffer.consume(this->inputBuffer.size());
-    std::lock_guard<std::mutex> lock(this->connM);
+    // CALL THIS UNDER lock(connM)
+    if (this->quit) {
+        return;
+    }
     boost::system::error_code ec;
+    if (this->socket == nullptr) {
+        return;
+    }
     this->socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
     if (ec) {
         std::cerr << "Reconnect: shutdown: ec: " << ec << " msg: " << ec.message() << std::endl;
@@ -152,13 +203,11 @@ Connection::reconnect()
 void
 Connection::handleConnect(const boost::system::error_code &ec)
 {
-    std::unique_lock<std::mutex> lock(this->connM);
     if (!this->socket->is_open()) {
         // Connection timed out, machine unreachable?
 
         this->startConnect(this->socket);
     } else if (ec) {
-        lock.unlock();
         this->handleError(ec);
         // this->reconnect(); // maybe this fixes it?
     } else {
@@ -169,17 +218,24 @@ Connection::handleConnect(const boost::system::error_code &ec)
 void
 Connection::handleError(const boost::system::error_code &ec)
 {
+    std::scoped_lock lock(this->connM, this->handlerM);
     std::cerr << "Handle error" << utcDateTime() << ": " << ec << " msg: " << ec.message() << std::endl;
     if (ec == boost::asio::error::eof || ec == boost::system::errc::timed_out || ec == boost::system::errc::bad_file_descriptor) {
         //this->socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
         //this->socket->close();
         //this->startConnect();
-        auto ec = static_cast<Channel *>(this->handler)->owner->resetEndpoint();
+        if (this->handler == nullptr) {
+            return;
+        }
+        auto ec = this->handler->owner->resetEndpoint();
         if (ec) {
             std::cerr << "resetEndpoint() ec: " << ec << " msg: " << ec.message() << std::endl;
             return;
         }
-        this->endpoint = static_cast<Channel *>(this->handler)->owner->getEndpoint();
+        if (this->handler == nullptr) {
+            return;
+        }
+        this->endpoint = this->handler->owner->getEndpoint();
         this->reconnect();
     }
 }

@@ -76,6 +76,7 @@ CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService,
 
 CommandsHandler::~CommandsHandler()
 {
+    std::cout << "CommandsHandler::~CommandsHandler(): " << this->channelObject->channelName << std::endl;
 }
 
 Response
@@ -828,9 +829,9 @@ CommandsHandler::remindMe(const IRCMessage &message,
             owner->joinChannel(owner->nick);
         }
 
-        owner->channels.at(owner->nick).whisper(whisperMessage, user);
+        owner->channels.at(owner->nick)->whisper(whisperMessage, user);
         owner->channels.at(owner->nick)
-            .commandsHandler.redisClient.removeReminder(user, whichReminder);
+            ->commandsHandler.redisClient.removeReminder(user, whichReminder);
     };
 
     
@@ -937,9 +938,9 @@ CommandsHandler::remind(const IRCMessage &message,
         if (owner->channels.count(owner->nick) == 0) {
             owner->joinChannel(owner->nick);
         }
-        owner->channels.at(owner->nick).whisper(whisperMessage, user);
+        owner->channels.at(owner->nick)->whisper(whisperMessage, user);
         owner->channels.at(owner->nick)
-            .commandsHandler.redisClient.removeReminder(user, whichReminder);
+            ->commandsHandler.redisClient.removeReminder(user, whichReminder);
         owner->userReminders.remove(from, user, whichReminder);
     };
 
