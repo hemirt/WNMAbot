@@ -197,11 +197,17 @@ Connection::reconnect()
 void
 Connection::handleConnect(const boost::system::error_code &ec)
 {
+    std::unique_lock lockconn(this->connM, std::defer_lock);
+    std::unique_lock lockhandler(this->handlerM, std::defer_lock);
+    std::lock(lockconn, lockhandler);
+    
     if (!this->socket->is_open()) {
         // Connection timed out, machine unreachable?
 
         this->startConnect(this->socket);
     } else if (ec) {
+        lockconn.unlock();
+        lockhandler.unlock();
         this->handleError(ec);
         // this->reconnect(); // maybe this fixes it?
     } else {
