@@ -65,11 +65,14 @@ ConnectionHandler::start()
     this->reconnectTimer->expires_from_now(std::chrono::minutes(5));
     this->reconnectTimer->async_wait(
         boost::bind(&ConnectionHandler::OwnChannelReconnectHandler, this, _1));
-
-    joinChannel(this->nick);
+        
     auto channels = this->authFromRedis.getChannels();
     for (const auto &i : channels) {
         joinChannel(i);
+    }
+    
+    if (std::find(channels.begin(), channels.end(), this->nick) == channels.end()) {
+        joinChannel(this->nick);
     }
 
     this->loadAllReminders();
@@ -234,18 +237,18 @@ ConnectionHandler::run()
     for (unsigned i = 0; i < hw_concurency_num; ++i) {
         tg.create_thread([this](){
             boost::system::error_code ec;
-            try {
+            //try {
                 
                 this->ioService.run(ec);
                 std::cout << "IOSERVICE ec: " << ec << std::endl;
-            } catch (const std::exception &ex) {
-                std::cerr << "IOSERVICE Exception caught in ConnectionHandler::run(): "
-                          << ex.what() << " && ec: " << ec << std::endl;
+            //} catch (const std::exception &ex) {
+            //    std::cerr << "IOSERVICE Exception caught in ConnectionHandler::run(): "
+            //              << ex.what() << " && ec: " << ec << std::endl;
                 if (!this->err) {
                     this->err = true;
                     this->shutdown();
                 }
-            }
+            //}
         });
     }
     tg.join_all();
@@ -255,25 +258,21 @@ void
 ConnectionHandler::shutdown()
 {
     std::lock_guard<std::mutex> lk(this->channelMtx);
-    try {
-        std::cout << "trying to quit" << std::endl;
+    //try {
+        std::cout << "ConnectionHandler::shutdown() START" << std::endl;
         this->quit = true;
         for (auto &p : this->channels) {
-            std::cout << "TRQT: " << p.second->channelName << std::endl;
             p.second->shutdown();
-            std::cout << "TRQTED: " << p.second->channelName << std::endl;
-
         }
-         std::cout << "trying to quit2" << std::endl;
         this->channels.clear();
-         std::cout << "trying to quit3" << std::endl;
         this->dummyWork.reset();
         this->ioService.stop();
-         std::cout << "trying to quit4" << std::endl;
-    } catch (const std::exception &ex) {
-        std::cerr << "Exception caught in ConnectionHandler::shutdown(): "
-                          << ex.what() << std::endl;
-    }
+        std::cout << "ConnectionHandler::shutdown() END" << std::endl;
+
+    //} catch (const std::exception &ex) {
+    //    std::cerr << "Exception caught in ConnectionHandler::shutdown(): "
+    //                      << ex.what() << std::endl;
+    //}
 }
 
 void

@@ -44,6 +44,7 @@ Bible::getRandomVerse()
 
     std::lock_guard<std::mutex> lk(Bible::curlMtx);
     std::string readBuffer;
+    curl_easy_setopt(Bible::curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(Bible::curl, CURLOPT_HTTPHEADER, Bible::chunk);
     curl_easy_setopt(Bible::curl, CURLOPT_URL, rawurl.c_str());
     curl_easy_setopt(Bible::curl, CURLOPT_WRITEFUNCTION, WriteCallback);

@@ -58,6 +58,11 @@ UserIDs::isUser(std::string user)
         freeReplyObject(reply);
         return false;
     }
+    
+    if (reply == nullptr)
+    {
+        return false;
+    }
 
     if (reply->type != REDIS_REPLY_INTEGER) {
         freeReplyObject(reply);

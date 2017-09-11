@@ -38,6 +38,7 @@ RandomQuote::getRandomQuote(const std::string &channel, const std::string &user)
     
     std::lock_guard<std::mutex> lk(RandomQuote::curlMtx);
     std::string readBuffer;
+    curl_easy_setopt(RandomQuote::curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(RandomQuote::curl, CURLOPT_HTTPHEADER, RandomQuote::chunk);
     curl_easy_setopt(RandomQuote::curl, CURLOPT_URL, rawurl.c_str());
     curl_easy_setopt(RandomQuote::curl, CURLOPT_WRITEFUNCTION, WriteCallback);

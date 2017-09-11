@@ -21,7 +21,7 @@ Connection::Connection(boost::asio::io_service &ioService,
 {
     // When the connection object is started, we start connecting
     std::cout << "connection: " << this->channelName << std::endl;
-    this->startConnect();
+    //this->startConnect();
 }
 
 Connection::~Connection()
@@ -118,6 +118,7 @@ Connection::handleRead([[maybe_unused]] std::shared_ptr<BoostConnection::socket>
                        std::size_t bytesTransferred)
 {
     if (ec) {
+        std::cout << "from handleRead" << std::endl;
         this->handleError(ec);
         return;
     }
@@ -157,6 +158,7 @@ void
 Connection::handleWrite([[maybe_unused]] std::shared_ptr<BoostConnection::socket> sock, const boost::system::error_code &ec)
 {
     if (ec) {
+        std::cout << "from handleWrite" << std::endl;
         this->handleError(ec);
         return;
     }
@@ -200,14 +202,20 @@ Connection::handleConnect(const boost::system::error_code &ec)
     std::unique_lock lockconn(this->connM, std::defer_lock);
     std::unique_lock lockhandler(this->handlerM, std::defer_lock);
     std::lock(lockconn, lockhandler);
+    std::cout << "HANDLECONNECTING " << this->channelName << std::endl;
+    if (this->socket == nullptr) {
+        std::cout << "CNN NULLPTR" << std::endl;
+        return;
+    }
     
     if (!this->socket->is_open()) {
         // Connection timed out, machine unreachable?
-
+        std::cout << "socket is not open startcon" << this->channelName << std::endl;
         this->startConnect(this->socket);
     } else if (ec) {
         lockconn.unlock();
         lockhandler.unlock();
+        std::cout << "from handleConnect" << std::endl;
         this->handleError(ec);
         // this->reconnect(); // maybe this fixes it?
     } else {

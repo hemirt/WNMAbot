@@ -86,6 +86,10 @@ RedisClient::getCommandTree(const std::string &trigger)
         this->reconnect();
         return tree;
     }
+    
+    if (reply == nullptr) {
+        return tree;
+    }
 
     if (reply->type != REDIS_REPLY_STRING) {
         freeReplyObject(reply);
@@ -111,6 +115,10 @@ RedisClient::isAdmin(const std::string &user)
                   << std::endl;
         freeReplyObject(reply);
         this->reconnect();
+        return false;
+    }
+    
+    if (reply == nullptr) {
         return false;
     }
 
@@ -139,6 +147,10 @@ RedisClient::getRemindersOfUser(const std::string &user)
                   << "): " << this->context->errstr << std::endl;
         freeReplyObject(reply);
         this->reconnect();
+        return tree;
+    }
+    
+    if (reply == nullptr) {
         return tree;
     }
 

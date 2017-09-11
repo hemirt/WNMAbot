@@ -54,6 +54,7 @@ Ayah::getAyah(int number)
 
     std::lock_guard<std::mutex> lk(Ayah::curlMtx);
     std::string readBuffer;
+    curl_easy_setopt(Ayah::curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(Ayah::curl, CURLOPT_HTTPHEADER, Ayah::chunk);
     curl_easy_setopt(Ayah::curl, CURLOPT_URL, rawurl.c_str());
     curl_easy_setopt(Ayah::curl, CURLOPT_WRITEFUNCTION, WriteCallback);

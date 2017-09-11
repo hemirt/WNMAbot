@@ -36,7 +36,7 @@ main(int argc, char *argv[])
         
         irc->run();
         
-    } while (irc->error());
+    } while (!irc->error() && !irc->stop());
     
     if (irc != nullptr) {
         delete irc;

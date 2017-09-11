@@ -47,6 +47,10 @@ LottoImpl::init()
             redisCommand(LottoImpl::context, "GET WNMA:randomorg"));
             
         if (!(reply == NULL && LottoImpl::context->err)) {
+            if (reply == nullptr) {
+                LottoImpl::valid = false;
+                return;
+            }
             if (reply->type != REDIS_REPLY_STRING) {
                 LottoImpl::valid = false;
                 freeReplyObject(reply);
@@ -95,6 +99,10 @@ LottoImpl::getID()
             
     if (reply == NULL && LottoImpl::context->err) {
         return -1;
+    }
+    
+    if (reply == nullptr) {
+        return -3;
     }
     
     if (reply->type != REDIS_REPLY_INTEGER) {

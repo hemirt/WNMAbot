@@ -40,7 +40,7 @@ private:
     int howMuchVec(const std::string &from, const std::string &to);
     int howMuchForVec(const std::string &to);
     RedisClient redisClient;
-    boost::asio::io_service &ioService [[maybe_unused]];
+    boost::asio::io_service &ioService;
     std::multimap<std::string, Msg> cbMsgs;
     std::mutex mapMtx;
     std::vector<User> maxVec;

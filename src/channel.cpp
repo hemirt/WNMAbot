@@ -50,8 +50,18 @@ Channel::createConnection()
 {
     this->connections.emplace_back(this->ioService, this->owner->getEndpoint(),
                                    this->credentials, this->channelName);
-    Connection &ref = this->connections[0];
-    ref.startConnect(this->getShared());
+    if (this->connections.size() != 1) {
+        for (auto & conn : this->connections) {
+            conn.shutdown();
+        }
+        this->connections.emplace_back(this->ioService, this->owner->getEndpoint(),
+                                   this->credentials, this->channelName);
+        Connection &ref = this->connections[0];
+        ref.startConnect(this->getShared());
+    } else {
+        Connection &ref = this->connections[0];
+        ref.startConnect(this->getShared());
+    }
 }
 
 bool

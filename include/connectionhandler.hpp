@@ -24,6 +24,8 @@ class Channel;
 
 class ConnectionHandler
 {
+private:
+    boost::asio::io_service ioService;
 public:
     ConnectionHandler();
     ConnectionHandler(const std::string &_pass, const std::string &_nick);
@@ -79,6 +81,10 @@ public:
     bool error() const {
         return err;
     }
+    
+    bool stop() const {
+        return quit;
+    }
 
 private:
     std::mutex channelMtx;
@@ -87,8 +93,6 @@ private:
 
     // A bool for quit? checking
     std::atomic<bool> quit;
-
-    boost::asio::io_service ioService;
 
     // Dummy work that makes sure ioService doesn't shut down
     std::unique_ptr<boost::asio::io_service::work> dummyWork;
