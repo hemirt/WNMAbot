@@ -101,7 +101,7 @@ void
 Connection::startConnect([[maybe_unused]] std::shared_ptr<BoostConnection::socket> sock)
 {
     this->socket->async_connect(
-        this->endpoint, boost::bind(&Connection::handleConnect, this, _1));
+        this->endpoint, boost::bind(&Connection::handleConnect, this->shared_from_this(), _1));
 }
 
 void
@@ -109,7 +109,7 @@ Connection::doRead()
 {
     boost::asio::async_read_until(
         *this->socket, this->inputBuffer, "\r\n",
-        boost::bind(&Connection::handleRead, this, this->socket, _1, _2));
+        boost::bind(&Connection::handleRead, this->shared_from_this(), this->socket, _1, _2));
 }
 
 void
@@ -172,12 +172,14 @@ Connection::doWrite()
 void
 Connection::reconnect()
 {
-    // CALL THIS UNDER lock(connM)
+    std::scoped_lock lock(this->connM, this->handlerM);
     if (this->quit) {
+        std::cerr << this->channelName << ": connection is quitting, cant reconnect" << std::endl;
         return;
     }
     boost::system::error_code ec;
     if (this->socket == nullptr) {
+        std::cerr << this->channelName << ": connection socket is nullptr, cant reconnect" << std::endl;
         return;
     }
     this->socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
@@ -191,9 +193,9 @@ Connection::reconnect()
         return;
     }
     this->socket.reset(new BoostConnection::socket(ioService));
-    std::cerr << "Connection " << channelName << " reconnected." << std::endl;
     this->inputBuffer.consume(this->inputBuffer.size());
     this->startConnect(this->socket);
+    std::cout << "Connection " << channelName << " reconnected." << std::endl;
 }
 
 void
@@ -204,18 +206,18 @@ Connection::handleConnect(const boost::system::error_code &ec)
     std::lock(lockconn, lockhandler);
     std::cout << "HANDLECONNECTING " << this->channelName << std::endl;
     if (this->socket == nullptr) {
-        std::cout << "CNN NULLPTR" << std::endl;
+        std::cerr << "CNN NULLPTR" << std::endl;
         return;
     }
     
     if (!this->socket->is_open()) {
         // Connection timed out, machine unreachable?
-        std::cout << "socket is not open startcon" << this->channelName << std::endl;
+        std::cerr << "socket is not open startcon" << this->channelName << std::endl;
         this->startConnect(this->socket);
     } else if (ec) {
         lockconn.unlock();
         lockhandler.unlock();
-        std::cout << "from handleConnect" << std::endl;
+        std::cerr << "from handleConnect" << std::endl;
         this->handleError(ec);
         // this->reconnect(); // maybe this fixes it?
     } else {
@@ -226,13 +228,17 @@ Connection::handleConnect(const boost::system::error_code &ec)
 void
 Connection::handleError(const boost::system::error_code &ec)
 {
-    std::scoped_lock lock(this->connM, this->handlerM);
-    std::cerr << "Handle error" << utcDateTime() << ": " << ec << " msg: " << ec.message() << std::endl;
+    std::unique_lock lk1(this->connM, std::defer_lock);
+    std::unique_lock lk2(this->handlerM, std::defer_lock);
+    std::lock(lk1, lk2);
+    std::cerr << "Handle error " << this->channelName << ": " << utcDateTime() << ": " << ec << " msg: " << ec.message() << std::endl;
     if (ec == boost::asio::error::eof || ec == boost::system::errc::timed_out || ec == boost::system::errc::bad_file_descriptor) {
         //this->socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
         //this->socket->close();
         //this->startConnect();
+        std::cerr << "attempting to reconnect" << std::endl;
         if (this->handler == nullptr) {
+            std::cerr << "this->handler is nullptr" << std::endl;
             return;
         }
         auto ec = this->handler->owner->resetEndpoint();
@@ -241,9 +247,12 @@ Connection::handleError(const boost::system::error_code &ec)
             return;
         }
         if (this->handler == nullptr) {
+            std::cerr << "this->handler 2 is nullptr" << std::endl;
             return;
         }
         this->endpoint = this->handler->owner->getEndpoint();
+        lk1.unlock();
+        lk2.unlock();
         this->reconnect();
     }
 }

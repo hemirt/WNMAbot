@@ -6,7 +6,7 @@
 #include <hiredis/hiredis.h>
 
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <mutex>
 #include <utility>
 
@@ -57,7 +57,7 @@ public:
     ModulesManager();
     ~ModulesManager();
     
-    std::unordered_map<std::string, Module> modules;
+    std::map<std::string, Module> modules;
     UserIDs &userIDs;
     
     bool createModule(const std::string &name);

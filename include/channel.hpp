@@ -27,7 +27,7 @@ public:
             boost::asio::io_service &_ioService, ConnectionHandler *_owner);
     ~Channel();
 
-    std::deque<Connection> connections;
+    std::deque<std::shared_ptr<Connection>> connections;
 
     bool say(const std::string &message);
     bool whisper(const std::string &message, const std::string &recipient);

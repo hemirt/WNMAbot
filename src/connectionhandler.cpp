@@ -144,7 +144,7 @@ ConnectionHandler::OwnChannelReconnectHandler(const boost::system::error_code &e
 
     auto &connections = this->channels.at(this->nick)->connections;
     for (auto &conn : connections) {
-        conn.reconnect();
+        conn->reconnect();
     }
 
     this->reconnectTimer = std::make_unique<boost::asio::steady_timer>(this->ioService);
@@ -164,7 +164,7 @@ ConnectionHandler::reconnectAllChannels(const std::string &chn)
         }
         auto &connections = i.second->connections;
         for (auto &conn : connections) {
-            conn.reconnect();
+            conn->reconnect();
         }
     }
 }

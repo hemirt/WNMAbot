@@ -44,11 +44,12 @@ std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage 
     {"!asetdata", &CommandsHandler::setDataAdmin}, {"!aset", &CommandsHandler::setDataAdmin},
     {"!deletemodule", &CommandsHandler::deleteModule}, {"!adel", &CommandsHandler::deleteUserData}, 
     {"!adeletedata", &CommandsHandler::deleteUserData}, {"!lottowinners", &CommandsHandler::getLottoWinners},
-    {"!whoisafk", &CommandsHandler::whoIsAfk}, {"!rcall", &CommandsHandler::reconnectAllChannels}
+    {"!whoisafk", &CommandsHandler::whoIsAfk}, {"!rcall", &CommandsHandler::reconnectAllChannels},
+    {"!chns", &CommandsHandler::printChannels}
 };
 
 std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &)> CommandsHandler::normalCommands = {
-    {"!chns", &CommandsHandler::printChannels}, {"!remindme", &CommandsHandler::remindMe},
+    {"!remindme", &CommandsHandler::remindMe},
     {"!remind", &CommandsHandler::remind}, {"!afk", &CommandsHandler::afk},
     {"!gn", &CommandsHandler::goodNight}, {"!isafk", &CommandsHandler::isAfk},
     {"!here", &CommandsHandler::isAfk},

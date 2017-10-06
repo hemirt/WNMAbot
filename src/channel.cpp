@@ -40,7 +40,7 @@ void
 Channel::shutdown()
 {
     for (auto & conn : this->connections) {
-        conn.shutdown();
+        conn->shutdown();
         std::cout << "Channel shutdown connection: " << this->channelName << std::endl;
     }
 }
@@ -48,19 +48,19 @@ Channel::shutdown()
 void
 Channel::createConnection()
 {
-    this->connections.emplace_back(this->ioService, this->owner->getEndpoint(),
-                                   this->credentials, this->channelName);
+    this->connections.emplace_back(std::make_shared<Connection>(this->ioService, this->owner->getEndpoint(),
+                                   this->credentials, this->channelName));
     if (this->connections.size() != 1) {
         for (auto & conn : this->connections) {
-            conn.shutdown();
+            conn->shutdown();
         }
-        this->connections.emplace_back(this->ioService, this->owner->getEndpoint(),
-                                   this->credentials, this->channelName);
-        Connection &ref = this->connections[0];
-        ref.startConnect(this->getShared());
+        this->connections.emplace_back(std::make_shared<Connection>(this->ioService, this->owner->getEndpoint(),
+                                   this->credentials, this->channelName));
+        auto& connptrref = this->connections[0];
+        connptrref->startConnect(this->getShared());
     } else {
-        Connection &ref = this->connections[0];
-        ref.startConnect(this->getShared());
+        auto& connptrref = this->connections[0];
+        connptrref->startConnect(this->getShared());
     }
 }
 
@@ -260,7 +260,7 @@ void
 Channel::pong()
 {
     auto &connection = this->connections.at(0);
-    connection.pong();
+    connection->pong();
 }
 
 void
@@ -274,7 +274,7 @@ Channel::sendToOne(const std::string &message)
     // TODO: randomize which connection to send to if we have multiple
     auto &connection = this->connections.at(0);
 
-    connection.writeMessage(message);
+    connection->writeMessage(message);
 }
 
 void
@@ -286,6 +286,6 @@ Channel::sendToAll(const std::string &message)
     }
 
     for (auto &connection : this->connections) {
-        connection.writeMessage(message);
+        connection->writeMessage(message);
     }
 }

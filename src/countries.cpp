@@ -1,6 +1,8 @@
 #include "countries.hpp"
 #include <iostream>
 #include "utilities.hpp"
+#include <algorithm>
+#include <random>
 
 using std::experimental::optional;
 
@@ -130,6 +132,13 @@ Countries::usersFrom(const std::string &country)
         if (!username.empty()) {
             pair.second.emplace_back(std::move(username));
         }
+    }
+    if (pair.second.size() > 5) {
+        static std::random_device rd;
+        static std::mt19937 g(rd());
+        std::shuffle(pair.second.begin(), pair.second.end(), g);
+        pair.second[5] = " in total " + std::to_string(pair.second.size()) + " users";
+        pair.second.resize(6);
     }
 
     return pair;
