@@ -3,7 +3,6 @@
 Messenger::Messenger(boost::asio::io_service &_ioService,
                      std::function<bool(const std::string &)> _sendFunc)
     : sendFunc(_sendFunc)
-    , lk(mtx, std::defer_lock)
     , ioService(_ioService)
 {
 }
@@ -11,63 +10,63 @@ Messenger::Messenger(boost::asio::io_service &_ioService,
 void
 Messenger::push_front(const std::string &value)
 {
-    this->lk.lock();
+    std::unique_lock<std::mutex> lk(this->mtx);
     this->deque.push_front(value);
-    this->lk.unlock();
+    lk.unlock();
     this->startSending();
 }
 
 void
 Messenger::push_front(std::string &&value)
 {
-    this->lk.lock();
+    std::unique_lock<std::mutex> lk(this->mtx);
     this->deque.push_front(std::move(value));
-    this->lk.unlock();
+    lk.unlock();
     this->startSending();
 }
 
 void
 Messenger::push_back(const std::string &value)
 {
-    this->lk.lock();
+    std::unique_lock<std::mutex> lk(this->mtx);
     this->deque.push_back(value);
-    this->lk.unlock();
+    lk.unlock();
     this->startSending();
 }
 
 void
 Messenger::push_back(std::string &&value)
 {
-    this->lk.lock();
+    std::unique_lock<std::mutex> lk(this->mtx);
     this->deque.push_back(std::move(value));
-    this->lk.unlock();
+    lk.unlock();
     this->startSending();
 }
 
 size_t
 Messenger::size() const
 {
-    this->lk.lock();
+    std::unique_lock<std::mutex> lk(this->mtx);
     auto size = this->deque.size();
-    this->lk.unlock();
+    lk.unlock();
     return size;
 }
 
 bool
 Messenger::empty() const
 {
-    this->lk.lock();
+    std::unique_lock<std::mutex> lk(this->mtx);
     auto empty = this->deque.empty();
-    this->lk.unlock();
+    lk.unlock();
     return empty;
 }
 
 bool
 Messenger::able() const
 {
-    this->lk.lock();
+    std::unique_lock<std::mutex> lk(this->mtx);
     bool b = this->deque.size() < this->maxMsgsInQueue;
-    this->lk.unlock();
+    lk.unlock();
     return b;
 }
 
@@ -82,15 +81,14 @@ Messenger::extract_front()
 void
 Messenger::clearQueue()
 {
-    this->lk.lock();
+    std::unique_lock<std::mutex> lk(this->mtx);
     this->deque.clear();
-    this->lk.unlock();
 }
 
 void
 Messenger::startSending()
 {
-    this->lk.lock();
+    std::unique_lock<std::mutex> lk(this->mtx);
     if (this->ready) {
         this->ready = false;
         std::string value = this->extract_front();
@@ -101,16 +99,14 @@ Messenger::startSending()
             if (er) {
                 return;
             }
-            this->lk.lock();
+            std::unique_lock<std::mutex> lk(this->mtx);
             if (this->deque.empty()) {
                 this->ready = true;
-                this->lk.unlock();
             } else {
                 this->ready = true;
-                this->lk.unlock();
+                lk.unlock();
                 this->startSending();
             }
         });
     }
-    this->lk.unlock();
 }

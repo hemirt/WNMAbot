@@ -101,9 +101,13 @@ ComeBackMsg::sendMsgs(const std::string &user, Messenger &messenger)
     std::lock_guard<std::mutex> lock2(vecMtx, std::adopt_lock);
 
     auto range = this->cbMsgs.equal_range(user);
+    if (range.first == this->cbMsgs.end()) {
+        return;
+    }
     if (range.first == range.second) {
         return;
     }
+
 
     std::string send = user + ", ";
     for (auto it = range.first; it != range.second; ++it) {

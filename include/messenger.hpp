@@ -28,7 +28,6 @@ private:
     bool ready = true;
     std::deque<std::string> deque;
     mutable std::mutex mtx;
-    mutable std::unique_lock<std::mutex> lk;
     boost::asio::io_service &ioService;
     std::string extract_front();
     constexpr static int maxMsgsInQueue = 2;

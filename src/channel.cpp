@@ -103,6 +103,16 @@ Channel::handleMessage(const IRCMessage &message)
 {
     switch (message.type) {
         case IRCMessage::Type::PRIVMSG: {
+            
+            static std::atomic<bool> maintenance = false;
+            if ((message.user == "hemirt") && (message.message.compare(0, strlen("!maintenance"), "!maintenance") == 0 )) {
+                maintenance = !maintenance;
+                std::cout << "maintenance: " << maintenance << std::endl;
+            }
+            if (maintenance && message.user != "hemirt") {
+                return true;
+            }
+            
             auto afk = owner->afkers.getAfker(message.user);
             if (afk.exists) {
                 auto now = std::chrono::system_clock::now();
