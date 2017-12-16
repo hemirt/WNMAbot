@@ -10,18 +10,18 @@ double
 MTRandom::getReal(double min, double max)
 {
     if (min > max) {
-        return 0;
+        std::swap(min, max);
     }
     std::uniform_real_distribution<double> dis(min, max);
     std::lock_guard<std::mutex> lock(this->mtx);
     return dis(this->engine);
 }
 
-int
-MTRandom::getInt(int min, int max)
+std::int64_t
+MTRandom::getInt(std::int64_t min, std::int64_t max)
 {
     if (min > max) {
-        return 0;
+        std::swap(min, max);
     }
     std::uniform_int_distribution<int> dis(min, max);
     std::lock_guard<std::mutex> lock(this->mtx);

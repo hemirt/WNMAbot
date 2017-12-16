@@ -62,6 +62,7 @@ Bible::getRandomVerse()
         return readBuffer;
     }
 
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree tree;
     if (readBuffer.back() == ']') {
         readBuffer.pop_back();

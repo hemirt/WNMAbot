@@ -4,6 +4,7 @@
 #include <chrono>
 #include <mutex>
 #include <random>
+#include <cstdint>
 
 class MTRandom
 {
@@ -15,7 +16,7 @@ public:
     }
 
     double getReal(double min = 0, double max = 1);
-    int getInt(int min = 0, int max = 100);
+    std::int64_t getInt(std::int64_t min = 0, std::int64_t max = 100);
     bool getBool(double p = 0.5);
 
     MTRandom(MTRandom const &) = delete;

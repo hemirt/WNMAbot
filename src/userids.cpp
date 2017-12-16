@@ -121,6 +121,7 @@ UserIDs::addUser(const std::string &user)
         return;
     }
 
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree tree;
     std::stringstream ss(readBuffer);
     pt::read_json(ss, tree);

@@ -47,6 +47,7 @@ RemindsHandler::fireReminder(Reminder &reminder)
 void
 RemindsHandler::saveToRedis(const Reminder &reminder)
 {
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree tree;
     tree.put("from", reminder.from);
     tree.put("to", reminder.to);
@@ -73,6 +74,7 @@ RemindsHandler::saveToRedis(const Reminder &reminder)
 void
 RemindsHandler::removeFromRedis(const Reminder &reminder)
 {
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree tree;
     tree.put("from", reminder.from);
     tree.put("to", reminder.to);
@@ -110,6 +112,7 @@ RemindsHandler::loadFromRedis()
     }
     std::lock_guard<std::mutex> lock(this->vecMtx);
     for (int i = 0; i < reply->elements; ++i) {
+        std::cout << __FILE__ << " " << __LINE__ << std::endl;
         pt::ptree tree;
         std::string json(reply->element[i]->str, reply->element[i]->len);
         std::stringstream ss(json);

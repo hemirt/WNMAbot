@@ -128,6 +128,7 @@ CommandsHandler::handle(const IRCMessage &message)
         return response;
     }
 
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
     if (commandTree.empty()) {
         return this->highlightResponse(message, tokens);
@@ -339,19 +340,40 @@ CommandsHandler::makeResponse(const IRCMessage &message,
     boost::algorithm::replace_all(responseString, "{time}", localTime());
     boost::algorithm::replace_all(responseString, "{date}", localDate());
 
-    if (boost::algorithm::find_regex(responseString,
-                                     boost::regex("{\\d+\\+}"))) {
-        std::string msg;
-        for (decltype(tokens.size()) i = 1; i < tokens.size(); i++) {
-            msg += tokens[i] + " ";
+    {
+        boost::regex e("{(\\d+)\\+}");
+        boost::match_results<std::string::const_iterator> results;
+        while (boost::regex_search(responseString, results, e)) {
+            std::string numAfter = results[1];
+            int num = std::atoi(numAfter.c_str());
+            std::string msg;
+            for (decltype(tokens.size()) i = num; i < tokens.size(); i++) {
+                msg += tokens[i] + " ";
+            }
+            if (msg.empty()) {
+                return response;
+            } else {
+                msg.pop_back();
+            }
+            responseString = boost::regex_replace(responseString, e, msg, boost::match_default | boost::format_first_only);
         }
-        if (msg.empty()) {
-            msg = "nothing eShrug";
-        } else {
-            msg.pop_back();
+    }
+    
+    {
+        boost::regex e("{\\?(\\d+)\\+}");
+        boost::match_results<std::string::const_iterator> results;
+        while (boost::regex_search(responseString, results, e)) {
+            std::string numAfter = results[1];
+            int num = std::atoi(numAfter.c_str());
+            std::string msg;
+            for (decltype(tokens.size()) i = num; i < tokens.size(); i++) {
+                msg += tokens[i] + " ";
+            }
+            if (!msg.empty()) {
+                msg.pop_back();
+            }
+            responseString = boost::regex_replace(responseString, e, msg, boost::match_default | boost::format_first_only);
         }
-        boost::algorithm::replace_all_regex(responseString,
-                                            boost::regex("{\\d+\\+}"), msg);
     }
 
     if (boost::algorithm::find_regex(responseString, boost::regex("{cirnd}"))) {
@@ -381,23 +403,23 @@ CommandsHandler::makeResponse(const IRCMessage &message,
     }
     
     {
-        boost::regex e("{cirnd (\\d+) (\\d+)}");
+        boost::regex e("{cirnd (-?\\d+) (-?\\d+)}");
         boost::match_results<std::string::const_iterator> results;
         while (boost::regex_search(responseString, results, e)) {
             std::string smin = results[1];
             std::string smax = results[2];
-            auto num = MTRandom::getInstance().getInt(std::atoi(smin.c_str()), std::atoi(smax.c_str()));
+            auto num = MTRandom::getInstance().getInt(std::atoll(smin.c_str()), std::atoll(smax.c_str()));
             boost::algorithm::replace_all(responseString, "{cirnd " + smin + " " + smax + "}", std::to_string(num));
         }
     }
     
     {
-        boost::regex e("{irnd\\s(\\d+)\\s(\\d+)}");
+        boost::regex e("{irnd\\s(-?\\d+)\\s(-?\\d+)}");
         boost::match_results<std::string::const_iterator> results;
         while (boost::regex_search(responseString, results, e)) {
             std::string smin = results[1];
             std::string smax = results[2];
-            auto num = MTRandom::getInstance().getInt(std::atoi(smin.c_str()), std::atoi(smax.c_str()));
+            auto num = MTRandom::getInstance().getInt(std::atoll(smin.c_str()), std::atoll(smax.c_str()));
             boost::algorithm::replace_first(responseString, "{irnd " + smin + " " + smax + "}", std::to_string(num));
         }
     }
@@ -495,6 +517,7 @@ CommandsHandler::addCommand(const IRCMessage &message,
     }
     valueString.pop_back();
 
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
 
     boost::optional<pt::ptree &> child =
@@ -556,6 +579,7 @@ CommandsHandler::editCommand(const IRCMessage &message,
     }
     valueString.pop_back();
 
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
 
     boost::optional<pt::ptree &> child =
@@ -615,6 +639,7 @@ CommandsHandler::rawEditCommand(const IRCMessage &message,
         return response;
     }
     std::string pathstring = tokens[2] + '.' + tokens[3];
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree::path_type path(pathstring);
     pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
 
@@ -653,6 +678,7 @@ CommandsHandler::deleteCommand(const IRCMessage &message,
     // tokens[0]     1       2
     //! deletecmd trigger default
 
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
 
     boost::optional<pt::ptree &> child =
@@ -1016,7 +1042,10 @@ CommandsHandler::goodNight(const IRCMessage &message,
     Response response(0);
 
     if (tokens.size() > 1 && UserIDs::getInstance().isUser(tokens[1])) {
-        return response;
+        auto str = Hemirt::getRaw("http://tmi.twitch.tv/group/user/" + message.channel + "/chatters");
+        if (auto pos = str.find(tokens[1]); pos != std::string::npos && str[pos-1] == '\"' && str[pos+tokens[1].size()] == '\"') {
+            return response;
+        }
     }
 
     std::string gnmsg;

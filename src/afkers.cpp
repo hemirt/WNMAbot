@@ -88,6 +88,7 @@ Afkers::getAfkers()
 void
 Afkers::setAfkerRedis(const std::string &user, const Afk &afk)
 {
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree tree;
     tree.put("message", afk.message);
     int64_t epoch = std::chrono::duration_cast<std::chrono::seconds>(
@@ -126,6 +127,7 @@ Afkers::getAllAfkersRedis()
 
     if (reply->type == REDIS_REPLY_ARRAY) {
         for (decltype(reply->elements) i = 0; i < reply->elements; i += 2) {
+            std::cout << __FILE__ << " " << __LINE__ << std::endl;
             pt::ptree tree;
 
             std::string user(reply->element[i]->str, reply->element[i]->len);

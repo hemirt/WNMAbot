@@ -102,6 +102,7 @@ RedisAuth::getAllReminders()
     if (reply->type == REDIS_REPLY_ARRAY) {
         for (decltype(reply->elements) i = 0; i < reply->elements; i += 2) {
             std::vector<Reminder> vec;
+            std::cout << __FILE__ << " " << __LINE__ << std::endl;
             pt::ptree tree;
 
             std::string user(reply->element[i]->str, reply->element[i]->len);
