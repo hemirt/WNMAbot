@@ -20,8 +20,8 @@ else()
     set(CMAKE_CXX_FLAGS "-Wall -Wextra -pthread -std=c++1z -O3 ${CMAKE_CXX_FLAGS}")
 endif()
 
-set(SOURCE
-    ${SOURCE}
+set(WNMAbot
+    ${WNMAbot}
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connectionhandler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connection.cpp
@@ -50,5 +50,8 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hemirt.cpp
 )
 
-add_executable(WNMAbot ${SOURCE})
-target_link_libraries(WNMAbot ${Boost_LIBRARIES} ${HIREDIS_LIBRARIES} ${CURL_LIBRARIES})
+add_subdirectory(mariadb)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mariadb/include)
+
+add_executable(WNMAbot ${WNMAbot})
+target_link_libraries(WNMAbot ${Boost_LIBRARIES} ${HIREDIS_LIBRARIES} ${CURL_LIBRARIES} database)
