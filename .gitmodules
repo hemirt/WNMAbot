@@ -1,0 +1,3 @@
+[submodule "mariadb"]
+	path = mariadb
+	url = https://github.com/hemirt/mariadb.git
