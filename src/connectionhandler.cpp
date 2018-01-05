@@ -7,6 +7,7 @@
 #include "channel.hpp"
 #include "randomquote.hpp"
 #include "lotto/lottoimpl.hpp"
+#include "databasehandle.hpp"
 
 //static const char *IRC_HOST = "irc.chat.twitch.tv";
 //static const char *IRC_PORT = "6667";
@@ -65,15 +66,6 @@ ConnectionHandler::start()
     this->reconnectTimer->expires_from_now(std::chrono::minutes(5));
     this->reconnectTimer->async_wait(
         boost::bind(&ConnectionHandler::OwnChannelReconnectHandler, this, _1));
-        
-    auto channels = this->authFromRedis.getChannels();
-    for (const auto &i : channels) {
-        joinChannel(i);
-    }
-    
-    if (std::find(channels.begin(), channels.end(), this->nick) == channels.end()) {
-        joinChannel(this->nick);
-    }
 
     this->loadAllReminders();
 
@@ -84,6 +76,89 @@ ConnectionHandler::start()
     RandomQuote::init();
     LottoImpl::init();
     Hemirt::init();
+    
+    hemirt::DB::Credentials* cred = nullptr;
+    try {
+        std::ifstream configcfg("config.cfg");
+        if (!configcfg) { 
+            std::cerr << "Config file \"config.cfg\" could not be opened" << std::endl;
+            throw std::runtime_error("Config file \"config.cfg\" could not be opened");
+        }
+        std::string vars[7];
+        int varnm = 0;
+        while (std::getline(configcfg, vars[varnm++])) {
+            if (varnm == 7) break;
+        }
+        if (varnm != 7) {
+            throw std::runtime_error("Config file \"config.cfg\" is not valid");
+        }
+    
+        cred = new hemirt::DB::Credentials(vars[0], vars[1], vars[2], vars[3], std::stoull(vars[4]), vars[5], std::stoull(vars[6]));
+    } catch (std::exception &e) {
+        std::cerr << "Exception occured reading config file: " << e.what() << std::endl;
+        throw;
+    }
+    
+    DatabaseHandle::init(std::move(*cred));
+    delete cred;
+    {
+        auto& db = DatabaseHandle::get();
+        {
+            hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("SHOW TABLES LIKE \'wnmabot_settings\'");
+            q.type = hemirt::DB::QueryType::RAWSQL;
+            auto res = db.executeQuery(std::move(q));
+            if (auto eval = res.error(); eval) {
+                std::cerr << "Showing table `wnmabot_settings` error: " << eval->error() << std::endl;
+                this->err = true;
+                this->shutdown();
+                return;
+            } else if (auto rval = res.returned(); !rval || rval->data.size() == 0) {
+                q.setSql("CREATE TABLE `wnmabot_settings` (`setting` VARCHAR(32) UNIQUE NOT NULL, `value` VARCHAR(128) NOT NULL, PRIMARY KEY(`setting`))");
+                q.type = hemirt::DB::QueryType::RAWSQL;
+                auto res2 = db.executeQuery(std::move(q));
+                if (auto eval = res2.error(); eval) {
+                    std::cerr << "Creating table `wnmabot_settings` error: " << eval->error() << std::endl;
+                    this->err = true;
+                    this->shutdown();
+                    return;
+                }
+            }
+        }
+        
+        {
+            hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("INSERT INTO `wnmabot_settings` VALUES(\'username\', \'" + this->nick +"\') ON DUPLICATE KEY UPDATE `value` = \'" + this->nick + "\'");
+            q.type = hemirt::DB::QueryType::RAWSQL;
+            auto res = db.executeQuery(std::move(q));
+            if (auto eval = res.error(); eval) {
+                std::cerr << "Error settings \'username\': " << eval->error() << std::endl;
+                this->err = true;
+                this->shutdown();
+                return;
+            }
+        }
+        
+        {
+            hemirt::DB::Query<hemirt::DB::MariaDB::Values> q(
+                "CREATE TABLE IF NOT EXISTS `channels` (`m_channel_id` INT(8) UNSIGNED AUTO_INCREMENT, `userid` VARCHAR(64) UNIQUE NOT NULL, `username` VARCHAR(64) NOT NULL, PRIMARY KEY(`m_channel_id`))");
+            q.type = hemirt::DB::QueryType::RAWSQL;
+            auto res = db.executeQuery(std::move(q));
+            if (auto eval = res.error(); eval) {
+                std::cerr << "Creating table `channels` error: " << eval->error() << std::endl;
+                this->err = true;
+                this->shutdown();
+                return;
+            }
+        }
+    }
+    
+    auto channels = this->authFromRedis.getChannels();
+    for (const auto &i : channels) {
+        joinChannel(i);
+    }
+    
+    if (std::find(channels.begin(), channels.end(), this->nick) == channels.end()) {
+        joinChannel(this->nick);
+    }
 }
 
 void

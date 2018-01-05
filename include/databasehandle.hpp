@@ -8,16 +8,16 @@
 class DatabaseHandle
 {
 public:
-    static init(hemirt::DB::Credentials &&creds) {
-        this->pdb = std::make_unique<hemirt::DB::MariaDB>(std::move(creds));
+    static void init(hemirt::DB::Credentials &&creds) {
+        DatabaseHandle::pdb = std::make_unique<hemirt::DB::MariaDB>(std::move(creds));
     }
     
-    static hemirt::DB::MariaDB& get() const noexcept {
-        return *this->pdb.get();
+    static hemirt::DB::MariaDB& get() noexcept {
+        return *DatabaseHandle::pdb.get();
     }
 
 private:
-    static std::unique_ptr<hemirt::DB::MariaDB> pdb;
+    inline static std::unique_ptr<hemirt::DB::MariaDB> pdb = nullptr;
 };
 
 #endif

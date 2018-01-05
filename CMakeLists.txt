@@ -17,7 +17,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS "-Wall -Wextra -pthread -std=c++1z -O1 -g -fsanitize=address -fno-omit-frame-pointer ${CMAKE_CXX_FLAGS}")
 else()
     message("release")
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra -pthread -std=c++1z -O3 ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -pthread -std=c++1z -O3 -flto ${CMAKE_CXX_FLAGS}")
 endif()
 
 set(WNMAbot

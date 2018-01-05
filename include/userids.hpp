@@ -9,7 +9,7 @@
 class UserIDs
 {
 public:
-    void addUser(const std::string &user);
+    void addUser(const std::string &user, const std::string &userid = std::string(), const std::string &displayname = std::string());
     bool isUser(std::string user);
     std::string getID(const std::string &user);
     std::string getUserName(const std::string &userIDstr);

@@ -1,9 +1,11 @@
 #include "userids.hpp"
-#include <iostream>
 #include "utilities.hpp"
+#include "databasehandle.hpp"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+
+#include <iostream>
 
 namespace pt = boost::property_tree;
 
@@ -33,6 +35,22 @@ UserIDs::UserIDs()
             chunk, "Client-ID: i9nh09d5sv612dts3fmrccimhq7yb2");
     } else {
         std::cerr << "CURL ERROR" << std::endl;
+    }
+    
+    
+    auto& db = DatabaseHandle::get();
+    {
+        hemirt::DB::Query<hemirt::DB::MariaDB::Values> q(
+            "CREATE TABLE IF NOT EXISTS `users` (`id` INT(8) UNIQUE NOT NULL UNSIGNED AUTO_INCREMENT, `userid` VARCHAR(64) UNIQUE NOT NULL, `username` VARCHAR(64) NOT NULL, `displayname` VARCHAR(128) NOT NULL, `level` INT(4) DEFAULT 0, PRIMARY KEY(`id`))");
+        q.type = hemirt::DB::QueryType::RAWSQL;
+        auto res = db.executeQuery(std::move(q));
+        if (auto eval = res.error(); eval) {
+            std::string err = "Creating table `users` error: ";
+            err += eval->error();
+            std::cerr << err << std::endl;
+            throw std::runtime_exception(err);
+            return;
+        }
     }
 }
 
@@ -86,9 +104,19 @@ WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 }
 
 void
-UserIDs::addUser(const std::string &user)
+UserIDs::addUser(const std::string &user, const std::string &userid, const std::string &displayname)
 {
     if (this->isUser(user)) {
+        /*
+        {
+            if (userid.empty() || displayname.empty()) {
+                return;
+            }
+            auto& db = DatabaseHandle::get();
+            
+            hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("SELECT EXISTS(SELECT 1 FROM `users` WHERE `userid` = \'" + userid + "\'"
+        }
+        */
         return;
     }
     std::unique_lock<std::mutex> lock(this->curlMtx);
