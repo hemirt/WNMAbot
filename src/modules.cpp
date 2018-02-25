@@ -357,7 +357,6 @@ ModulesManager::saveModule(const std::string &moduleName)
         const auto &format = search->second.getFormat();
         const auto &status = search->second.getStatus();
         
-        std::cout << __FILE__ << " " << __LINE__ << std::endl;
         pt::ptree tree;
         tree.put("name", name);
         tree.put("type", type);
@@ -402,7 +401,6 @@ ModulesManager::loadAllModules()
     }
     
     for (decltype(reply->elements) i = 0; i < reply->elements; i += 2) {
-        std::cout << __FILE__ << " " << __LINE__ << std::endl;
         pt::ptree tree;
         std::string moduleName(reply->element[i]->str, reply->element[i]->len);
         std::string module(reply->element[i + 1]->str, reply->element[i + 1]->len);

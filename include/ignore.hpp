@@ -8,12 +8,10 @@
 class Ignore
 {
 public:
+    Ignore();
     void addUser(std::string user);
     void removeUser(std::string user);
     bool isIgnored(std::string user);
-private:
-    std::mutex access;
-    std::unordered_set<std::string> ignoredUsers;
 };
 
 #endif

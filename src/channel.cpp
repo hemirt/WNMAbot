@@ -1,6 +1,7 @@
 #include "channel.hpp"
 #include "connectionhandler.hpp"
 #include "utilities.hpp"
+#include "hemirt.hpp"
 
 #include <cstdlib>
 #include <functional>
@@ -69,6 +70,9 @@ Channel::say(const std::string &message)
 {
     if (messageCount >= 19) {
         // Too many messages sent recently
+        return false;
+    }
+    if (this->channelName == "forsen" && Hemirt::forsenBanned(message)) {
         return false;
     }
     std::string rawMessage = "PRIVMSG #" + this->channelName + " :";

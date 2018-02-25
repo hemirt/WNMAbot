@@ -6,6 +6,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <iostream>
+#include <stdexcept>
 
 namespace pt = boost::property_tree;
 
@@ -37,7 +38,7 @@ UserIDs::UserIDs()
         std::cerr << "CURL ERROR" << std::endl;
     }
     
-    
+    /* cannot get db, cause its inited on main, but this is a static instance
     auto& db = DatabaseHandle::get();
     {
         hemirt::DB::Query<hemirt::DB::MariaDB::Values> q(
@@ -48,10 +49,11 @@ UserIDs::UserIDs()
             std::string err = "Creating table `users` error: ";
             err += eval->error();
             std::cerr << err << std::endl;
-            throw std::runtime_exception(err);
+            throw std::runtime_error(err);
             return;
         }
     }
+    */
 }
 
 UserIDs::~UserIDs()
@@ -149,7 +151,6 @@ UserIDs::addUser(const std::string &user, const std::string &userid, const std::
         return;
     }
 
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree tree;
     std::stringstream ss(readBuffer);
     pt::read_json(ss, tree);

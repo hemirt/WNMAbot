@@ -217,11 +217,20 @@ ConnectionHandler::OwnChannelReconnectHandler(const boost::system::error_code &e
         return;
     }
 
-    auto &connections = this->channels.at(this->nick)->connections;
-    for (auto &conn : connections) {
-        conn->reconnect();
+    {    
+        auto shared = this->channels[this->nick];
+        this->channels.erase(this->nick);
+        shared->shutdown();
+        
+        auto p = this->channels.emplace(
+            std::piecewise_construct, std::forward_as_tuple(this->nick),
+            std::forward_as_tuple(std::make_shared<Channel>(this->nick, this->ioService, this)));
+        // p.first == iterator
+        // p.first->first == this->nick
+        // p.first->second == shared_ptr<Channel>
+        p.first->second->createConnection();
     }
-
+    
     this->reconnectTimer = std::make_unique<boost::asio::steady_timer>(this->ioService);
     this->reconnectTimer->expires_from_now(std::chrono::minutes(5));
     this->reconnectTimer->async_wait(
@@ -398,6 +407,9 @@ ConnectionHandler::sanitizeMsg(std::string &msg)
     std::shared_lock<std::shared_mutex> lock(blacklistMtx);
     for (const auto &i : this->blacklist) {
         boost::algorithm::ireplace_all(msg, i.first, i.second);
+    }
+    for (const auto &i : this->blacklist) {
+        if (i.second != "*") boost::algorithm::ireplace_all(msg, i.first, i.second);
     }
 }
 

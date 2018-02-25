@@ -74,7 +74,6 @@ RedisClient::deleteRedisKey(const std::string &key)
 boost::property_tree::ptree
 RedisClient::getCommandTree(const std::string &trigger)
 {
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree tree;
     redisReply *reply = static_cast<redisReply *>(
         redisCommand(this->context, "GET WNMA:commands:%b", trigger.c_str(),
@@ -140,7 +139,6 @@ RedisClient::isAdmin(const std::string &user)
 boost::property_tree::ptree
 RedisClient::getRemindersOfUser(const std::string &user)
 {
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree tree;
     redisReply *reply = static_cast<redisReply *>(redisCommand(
         this->context, "HGET WNMA:reminders %b", user.c_str(), user.size()));
@@ -175,7 +173,6 @@ RedisClient::addReminder(const std::string &user, int seconds,
                          const std::string &reminder)
 {
     std::string value;
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree reminderTree = this->getRemindersOfUser(user);
 
     auto now = std::chrono::time_point_cast<std::chrono::seconds>(
@@ -206,7 +203,6 @@ RedisClient::addReminder(const std::string &user, int seconds,
 void
 RedisClient::removeReminder(const std::string &user, const std::string &which)
 {
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree reminderTree = this->getRemindersOfUser(user);
     if (reminderTree.empty()) {
         return;

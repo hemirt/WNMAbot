@@ -128,7 +128,6 @@ CommandsHandler::handle(const IRCMessage &message)
         return response;
     }
 
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
     if (commandTree.empty()) {
         return this->highlightResponse(message, tokens);
@@ -517,7 +516,6 @@ CommandsHandler::addCommand(const IRCMessage &message,
     }
     valueString.pop_back();
 
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
 
     boost::optional<pt::ptree &> child =
@@ -579,7 +577,6 @@ CommandsHandler::editCommand(const IRCMessage &message,
     }
     valueString.pop_back();
 
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
 
     boost::optional<pt::ptree &> child =
@@ -639,7 +636,6 @@ CommandsHandler::rawEditCommand(const IRCMessage &message,
         return response;
     }
     std::string pathstring = tokens[2] + '.' + tokens[3];
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree::path_type path(pathstring);
     pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
 
@@ -678,7 +674,6 @@ CommandsHandler::deleteCommand(const IRCMessage &message,
     // tokens[0]     1       2
     //! deletecmd trigger default
 
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
 
     boost::optional<pt::ptree &> child =
@@ -2004,8 +1999,6 @@ CommandsHandler::getUserData(const IRCMessage &message,
     if (!this->cooldownCheck(message.user, tokens[0])) {
         return response;
     }
-    std::cout << "qq" << std::endl;
-    std::cout << tokens.size() << std::endl;
     if (tokens.size() < 3) {
         if (tokens.size() == 1) {
             auto from = Countries::getInstance().getFrom(message.user);
@@ -2112,7 +2105,7 @@ CommandsHandler::getRandomQuote(const IRCMessage &message,
 {
     Response response(-1);
     
-    if (this->channelObject->channelName == "forsenlol" && !this->isAdmin(message.user)) {
+    if (this->channelObject->channelName == "forsen" && !this->isAdmin(message.user)) {
         return response;
     }
     

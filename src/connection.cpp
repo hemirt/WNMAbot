@@ -37,7 +37,11 @@ Connection::shutdown()
     this->quit = true;
     this->handler.reset();
     if (this->socket != nullptr) {
-        this->socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+        boost::system::error_code ec;
+        this->socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+        if (ec) {
+            std::cerr << "connection " << this->channelName << " shutdown ec: " << ec << " : " << ec.value() << " : " << ec.category().name() << std::endl;
+        }
         this->socket->close();
         this->socket.reset();
     }
