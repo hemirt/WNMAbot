@@ -221,6 +221,18 @@ ModulesManager::deleteData(const std::string &user, const std::string &moduleNam
     return "no such module found";
 }
 
+std::string
+ModulesManager::deleteDataFull(const std::string &user)
+{
+    std::lock_guard<std::mutex> lock(this->access);
+    std::string userIDstr = this->userIDs.getID(user);
+    if (userIDstr.empty()) {
+        return "user " + user + " not found";
+    }
+    redisReply *reply = static_cast<redisReply *>(redisCommand(this->context, "DEL WNMA:modulesData:%b", userIDstr.c_str(), userIDstr.size()));
+    freeReplyObject(reply);
+    return "All module data for " + user + " was deleted";
+}
 
 std::string
 ModulesManager::getAllData(const std::string &user)

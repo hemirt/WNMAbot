@@ -45,7 +45,7 @@ std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage 
     {"!deletemodule", &CommandsHandler::deleteModule}, {"!adel", &CommandsHandler::deleteUserData}, 
     {"!adeletedata", &CommandsHandler::deleteUserData}, {"!lottowinners", &CommandsHandler::getLottoWinners},
     {"!whoisafk", &CommandsHandler::whoIsAfk}, {"!rcall", &CommandsHandler::reconnectAllChannels},
-    {"!chns", &CommandsHandler::printChannels}
+    {"!chns", &CommandsHandler::printChannels}, {"!adelfull", &CommandsHandler::deleteUserDataFull}
 };
 
 std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &)> CommandsHandler::normalCommands = {
@@ -2095,6 +2095,21 @@ CommandsHandler::deleteUserData(const IRCMessage &message,
     changeToLower(tokens[2]);
 
     response.message = message.user + ", " + this->channelObject->owner->modulesManager.deleteData(tokens[2], tokens[1]);
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::deleteUserDataFull(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() < 2) {
+        return response;
+    }
+    changeToLower(tokens[1]);
+    
+    response.message = message.user + ", " + this->channelObject->owner->modulesManager.deleteDataFull(tokens[1]);
     response.type = Response::Type::MESSAGE;
     return response;
 }

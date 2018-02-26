@@ -181,6 +181,8 @@ private:
                      std::vector<std::string> &tokens);
     Response deleteUserData(const IRCMessage &message,
                      std::vector<std::string> &tokens);
+    Response deleteUserDataFull(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
     Response clearQueue(const IRCMessage &message,
                      std::vector<std::string> &tokens);
     Response addLottoTicket(const IRCMessage &message,

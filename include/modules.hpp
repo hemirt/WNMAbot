@@ -75,6 +75,7 @@ public:
     std::pair<bool, std::string> getData(const std::string &user, const std::string &moduleName);
     std::string setData(const std::string &user, const std::string &moduleName, const std::string &data);
     std::string deleteData(const std::string &user, const std::string &moduleName);
+    std::string deleteDataFull(const std::string &user);
     
     std::string getAllData(const std::string &user);
 
