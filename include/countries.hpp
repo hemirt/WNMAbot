@@ -46,6 +46,7 @@ public:
     static Countries &
     getInstance()
     {
+        static Countries instance;
         return instance;
     }
     Countries(Countries const &) = delete;
@@ -56,7 +57,6 @@ private:
     ~Countries();
     static redisContext *context;
     static std::mutex accessMtx;
-    static Countries instance;
     UserIDs &userIDs;
 
     enum class Type {

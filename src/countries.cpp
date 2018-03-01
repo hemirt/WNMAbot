@@ -8,7 +8,6 @@ using std::experimental::optional;
 
 redisContext *Countries::context = NULL;
 std::mutex Countries::accessMtx;
-Countries Countries::instance;
 
 Countries::Countries()
     : userIDs(UserIDs::getInstance())

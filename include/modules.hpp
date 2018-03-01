@@ -58,7 +58,6 @@ public:
     ~ModulesManager();
     
     std::map<std::string, Module> modules;
-    UserIDs &userIDs;
     
     bool createModule(const std::string &name);
     bool setType(const std::string &moduleName, const std::string &type);

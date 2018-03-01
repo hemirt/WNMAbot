@@ -14,7 +14,6 @@ redisContext *UserIDs::context = nullptr;
 std::mutex UserIDs::accessMtx;
 std::mutex UserIDs::curlMtx;
 CURL *UserIDs::curl = nullptr;
-UserIDs UserIDs::instance;
 
 UserIDs::UserIDs()
 {
@@ -39,10 +38,11 @@ UserIDs::UserIDs()
     }
     
     /* cannot get db, cause its inited on main, but this is a static instance
+    */
     auto& db = DatabaseHandle::get();
     {
         hemirt::DB::Query<hemirt::DB::MariaDB::Values> q(
-            "CREATE TABLE IF NOT EXISTS `users` (`id` INT(8) UNIQUE NOT NULL UNSIGNED AUTO_INCREMENT, `userid` VARCHAR(64) UNIQUE NOT NULL, `username` VARCHAR(64) NOT NULL, `displayname` VARCHAR(128) NOT NULL, `level` INT(4) DEFAULT 0, PRIMARY KEY(`id`))");
+            "CREATE TABLE IF NOT EXISTS `users` (`id` INT(8) UNSIGNED UNIQUE NOT NULL AUTO_INCREMENT, `userid` VARCHAR(64) UNIQUE NOT NULL, `username` VARCHAR(64) NOT NULL, `displayname` VARCHAR(128) NOT NULL, `level` INT(4) DEFAULT 0, PRIMARY KEY(`id`))");
         q.type = hemirt::DB::QueryType::RAWSQL;
         auto res = db.executeQuery(std::move(q));
         if (auto eval = res.error(); eval) {
@@ -53,7 +53,7 @@ UserIDs::UserIDs()
             return;
         }
     }
-    */
+    /**/
 }
 
 UserIDs::~UserIDs()

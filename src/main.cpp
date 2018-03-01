@@ -6,7 +6,7 @@
 
 ConnectionHandler *irc = nullptr;
 
-void
+extern "C" void
 signalHandler(int signum)
 {
     std::cout << "Interrupted " << signum << std::endl;

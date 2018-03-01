@@ -6,6 +6,8 @@
 #include <mutex>
 #include <string>
 
+#include <iostream>
+
 class UserIDs
 {
 public:
@@ -18,6 +20,9 @@ public:
     static UserIDs &
     getInstance()
     {
+        std::cout << "Keepo";
+        static UserIDs instance;
+        std::cout << "Kappa";
         return instance;
     }
     UserIDs(UserIDs const &) = delete;
@@ -26,7 +31,6 @@ public:
 private:
     UserIDs();
     ~UserIDs();
-    static UserIDs instance;
     static std::mutex accessMtx;
     static std::mutex curlMtx;
     static redisContext *context;
