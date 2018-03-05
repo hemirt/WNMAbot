@@ -5,6 +5,7 @@
 
 Ignore::Ignore()
 {
+    /* moved into TablesInitialize::initTables() in ConnectionHandler::start()
     hemirt::DB::Query<hemirt::DB::MariaDB::Values> q(
         "CREATE TABLE IF NOT EXISTS `ignoredUsers` (`username` VARCHAR(64) UNIQUE NOT NULL)");
     q.type = hemirt::DB::QueryType::RAWSQL;
@@ -17,6 +18,7 @@ Ignore::Ignore()
         throw std::runtime_error(err);
         return;
     }
+    */
 }
 
 void

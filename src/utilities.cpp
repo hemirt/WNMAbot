@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <locale>
+#include <sstream>
 
 void
 changeToLower(std::string &str)
