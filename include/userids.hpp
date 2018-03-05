@@ -13,6 +13,8 @@ class UserIDs
 public:
     void addUser(const std::string &user, const std::string &userid = std::string(), const std::string &displayname = std::string());
     bool isUser(std::string user);
+    int newUser(const std::string& username, const std::string& userid, const std::string& displayname);
+    bool exists(const std::string& userid);
     std::string getID(const std::string &user);
     std::string getUserName(const std::string &userIDstr);
 

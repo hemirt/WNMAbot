@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <cstdlib>
 
 namespace pt = boost::property_tree;
 
@@ -42,7 +43,7 @@ UserIDs::UserIDs()
     auto& db = DatabaseHandle::get();
     {
         hemirt::DB::Query<hemirt::DB::MariaDB::Values> q(
-            "CREATE TABLE IF NOT EXISTS `users` (`id` INT(8) UNSIGNED UNIQUE NOT NULL AUTO_INCREMENT, `userid` VARCHAR(64) UNIQUE NOT NULL, `username` VARCHAR(64) NOT NULL, `displayname` VARCHAR(128) NOT NULL, `level` INT(4) DEFAULT 0, PRIMARY KEY(`id`))");
+            "CREATE TABLE IF NOT EXISTS `users` (`id` INT(8) UNSIGNED UNIQUE NOT NULL AUTO_INCREMENT, `userid` VARCHAR(64) UNIQUE NOT NULL, `username` VARCHAR(64) NOT NULL, `displayname` VARCHAR(128) NOT NULL, `level` INT(4) NOT NULL DEFAULT 0, PRIMARY KEY(`id`))");
         q.type = hemirt::DB::QueryType::RAWSQL;
         auto res = db.executeQuery(std::move(q));
         if (auto eval = res.error(); eval) {
@@ -105,22 +106,71 @@ WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
     return size * nmemb;
 }
 
+bool
+UserIDs::exists(const std::string &userid)
+{
+    auto& db = DatabaseHandle::get();
+    hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("SELECT EXISTS(SELECT 1 FROM `users` WHERE `userid` = \'" + userid + "\')");
+    q.type = hemirt::DB::QueryType::RAWSQL;
+    
+    auto res = db.executeQuery(q);
+    if (auto rval = res.returned(); rval) {
+        if (rval->data.empty()) {
+            std::cout << "UserIDs::exists userid: " << userid << ": rval empty" <<std::endl;
+            return false;
+        }
+        /* template:
+        for (const auto& row : rval->data) {
+            for (const auto& column : row) {
+                if (column.first) {
+                    std::cout << column.second << " ";
+                } else {
+                    std::cout << "NULL";
+                }
+            }
+        }
+        */
+        if (rval->data[0].empty()) {
+            std::cout << "UserIDs::exists userid: " << userid << ": rval row has no columns" <<std::endl;
+            return false;
+        }
+        if (!rval->data[0][0].first) {
+            std::cout << "UserIDs::exists userid: " << userid << ": column is null" <<std::endl;
+            return false;
+        }
+        return std::atoi(rval->data[0][0].second.c_str());
+    } else if (auto eval = res.error(); eval) { 
+        std::cout << "UserIDs::exists userid: " << userid << " error: " << eval->error() << std::endl;
+    }
+    return false;
+}
+
+int
+UserIDs::newUser(const std::string &user, const std::string &userid, const std::string &displayname)
+{
+    // work in progress
+    // todo: waiting for mariadb parametrized query
+    auto& db = DatabaseHandle::get();
+    hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("INSERT INTO `users` (`userid`, `username`, `displayname`) VALUES (?, ?, ?)", {userid, user, displayname});
+    q.type = hemirt::DB::QueryType::PARAMETER;
+    
+    int affectedRows = 0;
+    return affectedRows;
+}
+
 void
 UserIDs::addUser(const std::string &user, const std::string &userid, const std::string &displayname)
 {
     if (this->isUser(user)) {
-        /*
-        {
-            if (userid.empty() || displayname.empty()) {
-                return;
-            }
-            auto& db = DatabaseHandle::get();
-            
-            hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("SELECT EXISTS(SELECT 1 FROM `users` WHERE `userid` = \'" + userid + "\'"
-        }
-        */
         return;
     }
+
+    if (!userid.empty() && !displayname.empty()) {
+        if (!this->exists(userid)) {
+            
+        }
+    }
+    
     std::unique_lock<std::mutex> lock(this->curlMtx);
 
     char *escapedUser = curl_easy_escape(this->curl, user.c_str(), user.size());
