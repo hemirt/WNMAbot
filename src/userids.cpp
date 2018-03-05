@@ -38,7 +38,7 @@ UserIDs::UserIDs()
         std::cerr << "CURL ERROR" << std::endl;
     }
     
-    /* cannot get db, cause its inited on main, but this is a static instance
+    /* moved into TablesInitialize::initTables in ConnectionHandler::start();
     auto& db = DatabaseHandle::get();
     {
         hemirt::DB::Query<hemirt::DB::MariaDB::Values> q(

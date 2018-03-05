@@ -8,6 +8,11 @@ PingMe PingMe::instance;
 
 PingMe::PingMe()
 {
+    /*
+        // not done yet, check tablesinitialize.cpp
+        "CREATE TABLE IF NOT EXISTS `pingers` ()"
+    */
+    
     this->context = redisConnect("127.0.0.1", 6379);
     if (this->context == NULL || this->context->err) {
         if (this->context) {
