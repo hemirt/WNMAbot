@@ -351,11 +351,12 @@ ConnectionHandler::shutdown()
     //try {
         std::cout << "ConnectionHandler::shutdown() START" << std::endl;
         this->quit = true;
-        for (auto &p : this->channels) {
+        /*for (auto &p : this->channels) {
             p.second->shutdown();
         }
         this->channels.clear();
-        this->dummyWork.reset();
+        */
+        //this->dummyWork.reset();
         this->ioService.stop();
         std::cout << "ConnectionHandler::shutdown() END" << std::endl;
 

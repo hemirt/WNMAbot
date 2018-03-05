@@ -60,7 +60,6 @@ Module::setFormat(const std::string &newFormat)
 }
 
 ModulesManager::ModulesManager()
-    : userIDs(UserIDs::getInstance())
 {
     this->context = redisConnect("127.0.0.1", 6379);
     if (this->context == NULL || this->context->err) {
@@ -174,7 +173,7 @@ ModulesManager::getData(const std::string &user, const std::string &moduleName)
     std::lock_guard<std::mutex> lock(this->access);
     auto search = this->modules.find(moduleName);
     if (search != this->modules.end()) {
-        std::string userIDstr = this->userIDs.getID(user);
+        std::string userIDstr = UserIDs::getInstance().getID(user);
         if(userIDstr.empty()) {
             p.first = true;
             p.second = "user " + user + " not found";
@@ -209,7 +208,7 @@ ModulesManager::deleteData(const std::string &user, const std::string &moduleNam
     std::lock_guard<std::mutex> lock(this->access);
     auto search = this->modules.find(moduleName);
     if (search != this->modules.end()) {
-        std::string userIDstr = this->userIDs.getID(user);
+        std::string userIDstr = UserIDs::getInstance().getID(user);
         if(userIDstr.empty()) {
             return "user " + user + " not found";
         }
@@ -225,7 +224,7 @@ std::string
 ModulesManager::deleteDataFull(const std::string &user)
 {
     std::lock_guard<std::mutex> lock(this->access);
-    std::string userIDstr = this->userIDs.getID(user);
+    std::string userIDstr = UserIDs::getInstance().getID(user);
     if (userIDstr.empty()) {
         return "user " + user + " not found";
     }
@@ -239,7 +238,7 @@ ModulesManager::getAllData(const std::string &user)
 {
     std::string ret;
     std::lock_guard<std::mutex> lock(this->access);
-    std::string userIDstr = this->userIDs.getID(user);
+    std::string userIDstr = UserIDs::getInstance().getID(user);
     if(userIDstr.empty()) {
         ret = "user " + user + " not found";
     } else {
@@ -276,7 +275,7 @@ ModulesManager::setData(const std::string &user, const std::string &moduleName, 
         if (search->second.getStatus() == false) {
             return "this module is inactive NaM";
         }
-        std::string userIDstr = this->userIDs.getID(user);
+        std::string userIDstr = UserIDs::getInstance().getID(user);
         if(userIDstr.empty()) {
             return "user " + user + " not found";
         }
