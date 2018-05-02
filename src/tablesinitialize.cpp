@@ -11,7 +11,9 @@ namespace {
         q.type = hemirt::DB::QueryType::RAWSQL;
         auto res = db.executeQuery(std::move(q));
         if (auto eval = res.error(); eval) {
-            std::string err = "Creating table `" + tableName + "` error: ";
+            std::string err = "Creating table `";
+            err += tableName;
+            err += "` error: ";
             err += eval->error();
             std::cerr << err << std::endl;
             throw std::runtime_error(err);
@@ -21,7 +23,7 @@ namespace {
     
     void initUserids()
     {
-        initialize("users", "CREATE TABLE IF NOT EXISTS `users` (`id` INT(8) UNIQUE NOT NULL UNSIGNED AUTO_INCREMENT, `userid` VARCHAR(64) UNIQUE NOT NULL, `username` VARCHAR(64) NOT NULL, `displayname` VARCHAR(128) NOT NULL, `level` INT(4) DEFAULT 0, PRIMARY KEY(`id`))");
+        initialize("users", "CREATE TABLE IF NOT EXISTS `users` (`id` INT(8) UNSIGNED UNIQUE NOT NULL AUTO_INCREMENT, `userid` VARCHAR(64) UNIQUE NOT NULL, `username` VARCHAR(64) NOT NULL, `displayname` VARCHAR(128) NOT NULL, `level` INT(4) DEFAULT 0, PRIMARY KEY(`id`))");
     }
     
     void initConnectionhandler()
@@ -47,7 +49,7 @@ namespace {
     
 } // namespace
 
-void TablesInitialize::initTables()
+void initTables()
 {
     initUserids();
     initConnectionhandler();
