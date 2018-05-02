@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <locale>
 #include <sstream>
+#include <mutex>
 
 void
 changeToLower(std::string &str)
@@ -99,8 +100,11 @@ splitIntoChunks(std::string &&str)
     return vec;
 }
 
+std::mutex localTimeM;
+
 std::string localTime()
 {
+    std::lock_guard lock(localTimeM);
     std::time_t t = std::time(nullptr);
     std::stringstream ss;
     ss << std::put_time(std::localtime(&t), "%H:%M:%S");
@@ -109,6 +113,7 @@ std::string localTime()
 
 std::string localDate()
 {
+    std::lock_guard lock(localTimeM);
     std::time_t t = std::time(nullptr);
     std::stringstream ss;
     ss << std::put_time(std::localtime(&t), "%F");
@@ -117,6 +122,7 @@ std::string localDate()
 
 std::string utcDateTime()
 {
+    std::lock_guard lock(localTimeM);
     std::time_t t = std::time(nullptr);
     std::stringstream ss;
     ss << std::put_time(std::gmtime(&t), "[%F %H:%M:%S]");
