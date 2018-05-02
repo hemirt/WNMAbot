@@ -9,12 +9,21 @@
 #include <stdexcept>
 #include <cstdlib>
 
+#include <chrono>
+#include <numeric>
+
 namespace pt = boost::property_tree;
 
 redisContext *UserIDs::context = nullptr;
 std::mutex UserIDs::accessMtx;
 std::mutex UserIDs::curlMtx;
 CURL *UserIDs::curl = nullptr;
+
+std::mutex UserIDs::channelsULMtx;
+std::vector<UserList> UserIDs::channelsUserList;
+std::mutex UserIDs::usersPendingMtx;
+std::tuple<std::vector<std::string>, std::vector<std::string>, std::vector<std::string>> UserIDs::usersPending;
+
 
 UserIDs::UserIDs()
 {
@@ -108,6 +117,9 @@ WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 bool
 UserIDs::exists(const std::string &userid)
 {
+    return false;
+    // not yet implemented
+    
     auto& db = DatabaseHandle::get();
     hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("SELECT EXISTS(SELECT 1 FROM `users` WHERE `userid` = \'" + userid + "\')");
     q.type = hemirt::DB::QueryType::RAWSQL;
@@ -145,29 +157,93 @@ UserIDs::exists(const std::string &userid)
 }
 
 int
-UserIDs::newUser(const std::string &user, const std::string &userid, const std::string &displayname)
+UserIDs::insertUpdateUser(const User& user, const std::string &channelname)
 {
-    // work in progress
-    // todo: waiting for mariadb parametrized query
+    int ret = -1;
+    {
+        std::lock_guard<std::mutex> l(this->channelsULMtx);
+        bool ret = false;
+        for (auto& userlist : this->channelsUserList) {
+            if (std::unordered_set<User>::iterator indb = userlist.userList.find(user); indb != userlist.userList.end()) {
+                if (indb->username == user.username && indb->displayname == user.displayname) {
+                    ret = true;
+                } else {
+                    indb->username = user.username;
+                    indb->displayname = user.displayname;
+                }
+            }
+        }
+        
+        if (auto ul = std::find_if(this->channelsUserList.begin(), this->channelsUserList.end(), [channelname](const auto& userlist) {
+            return userlist.channelName == channelname;
+        }); ul != this->channelsUserList.end()) {
+            ul->userList.insert(user);
+        } else {
+            UserList usl;
+            usl.channelName = channelname;
+            usl.userList.insert(user);
+            this->channelsUserList.push_back(std::move(usl));        
+        }
+        
+        if (ret) {
+            return 0;
+        }
+    }
+    {
+        std::lock_guard<std::mutex> l(this->usersPendingMtx);
+        auto& first = std::get<0>(this->usersPending);
+        auto& second = std::get<1>(this->usersPending);
+        auto& third = std::get<2>(this->usersPending);
+        first.push_back(user.userid);
+        second.push_back(user.username);
+        third.push_back(user.displayname);
+        if (first.size() > 100) {
+            ret = this->insertUpdateUserDB();
+            first.clear();
+            second.clear();
+            third.clear();
+        }
+    }
+    return ret;
+}
+
+int
+UserIDs::insertUpdateUserDB()
+{
     auto& db = DatabaseHandle::get();
-    hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("INSERT INTO `users` (`userid`, `username`, `displayname`) VALUES (?, ?, ?)", {userid, user, displayname});
+    hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("INSERT INTO `users` (`userid`, `username`, `displayname`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `userid` = VALUES(`userid`), `username` = VALUES(`username`), `displayname` = VALUES(`displayname`)");
     q.type = hemirt::DB::QueryType::PARAMETER;
+    std::cout << std::get<0>(this->usersPending).size();
+    q.setBuffer(std::get<0>(this->usersPending), std::get<1>(this->usersPending), std::get<2>(this->usersPending));
     
-    int affectedRows = 0;
-    return affectedRows;
+    auto res = db.executeQuery(q);
+    if (auto eval = res.error(); eval) {
+        std::string err = "Inserting into `users` error: ";
+        err += eval->error();
+        std::cerr << err << std::endl;
+        return -1;
+    } else if (auto aval = res.affected(); aval) {
+        return aval->affected();
+    } else {
+        std::string err = "Inserting into `users` error.";
+        std::cerr << err << std::endl;
+        return -2;
+    }
 }
 
 void
-UserIDs::addUser(const std::string &user, const std::string &userid, const std::string &displayname)
+UserIDs::addUser(const std::string &user, const std::string &userid, const std::string &displayname, const std::string &channelname)
 {
+    if (!userid.empty() && !displayname.empty()) {
+        // add to mysql
+        auto t1 = std::chrono::steady_clock::now();
+        insertUpdateUser({userid, user, displayname}, channelname);
+        auto t2 = std::chrono::steady_clock::now();
+        std::cout << "user: " << user << " took: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " ns" << std::endl;
+    }
+    
     if (this->isUser(user)) {
         return;
-    }
-
-    if (!userid.empty() && !displayname.empty()) {
-        if (!this->exists(userid)) {
-            
-        }
     }
     
     std::unique_lock<std::mutex> lock(this->curlMtx);
@@ -236,7 +312,9 @@ UserIDs::addUser(const std::string &user, const std::string &userid, const std::
 std::string
 UserIDs::getID(const std::string &user)
 {
-    this->addUser(user);
+    if (!this->isUser(user)) {
+        return "error";
+    }
     std::lock_guard<std::mutex> lock(this->accessMtx);
 
     redisReply *reply = static_cast<redisReply *>(redisCommand(
