@@ -41,13 +41,11 @@ set(WNMAbot
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pingme.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ayah.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bible.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/encryption.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/modules.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/randomquote.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ignore.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lotto.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lotto/lottoimpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hemirt.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/tablesinitialize.cpp
 )
 
 add_subdirectory(mariadb)

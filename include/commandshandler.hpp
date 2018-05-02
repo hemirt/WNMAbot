@@ -1,15 +1,12 @@
 #ifndef COMMANDSHANDLER_HPP
 #define COMMANDSHANDLER_HPP
 
-#include "encryption.hpp"
 #include "ircmessage.hpp"
 #include "network.hpp"
 #include "redisclient.hpp"
 
 #include "countries.hpp"
 #include "userids.hpp"
-
-#include "lotto.hpp"
 
 #include <boost/property_tree/ptree.hpp>
 #include <chrono>
@@ -56,8 +53,6 @@ public:
     RedisClient redisClient;
 
     bool isAdmin(const std::string &user);
-
-    Encryption crypto;
 
 private:
     static std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &)> adminCommands;
@@ -141,10 +136,6 @@ private:
                                 std::vector<std::string> &tokens);
     Response randomChristianQuote(const IRCMessage &message,
                                   std::vector<std::string> &tokens);
-    Response encrypt(const IRCMessage &message,
-                     std::vector<std::string> &tokens);
-    Response decrypt(const IRCMessage &message,
-                     std::vector<std::string> &tokens);
     Response createModule(const IRCMessage &message,
                      std::vector<std::string> &tokens);
     Response setModuleType(const IRCMessage &message,
@@ -185,13 +176,11 @@ private:
                      std::vector<std::string> &tokens);
     Response clearQueue(const IRCMessage &message,
                      std::vector<std::string> &tokens);
-    Response addLottoTicket(const IRCMessage &message,
-                     std::vector<std::string> &tokens);
-    Response getLottoWinners(const IRCMessage &message,
-                     std::vector<std::string> &tokens);
     Response highlightResponse(const IRCMessage &message,
                      std::vector<std::string> &tokens);
     Response reconnectAllChannels(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response ignoreCmd(const IRCMessage &message,
                      std::vector<std::string> &tokens);
                      
     boost::asio::io_service &ioService;
@@ -202,8 +191,7 @@ private:
     
     bool cooldownCheck(const std::string &user, const std::string &cmd, int howmuch = 5);
     bool softCooldownCheck(const std::string &user, const std::string &cmd, int howmuch = 5);
-    
-    Lotto lotto;
+
 };
 
 #endif
