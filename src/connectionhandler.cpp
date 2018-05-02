@@ -6,8 +6,9 @@
 #include "hemirt.hpp"
 #include "channel.hpp"
 #include "randomquote.hpp"
-#include "lotto/lottoimpl.hpp"
 #include "databasehandle.hpp"
+#include <fstream>
+#include "tablesinitialize.hpp"
 
 //static const char *IRC_HOST = "irc.chat.twitch.tv";
 //static const char *IRC_PORT = "6667";
@@ -74,7 +75,6 @@ ConnectionHandler::start()
     Ayah::init();
     Bible::init();
     RandomQuote::init();
-    LottoImpl::init();
     Hemirt::init();
     
     hemirt::DB::Credentials* cred = nullptr;
@@ -130,6 +130,7 @@ ConnectionHandler::start()
         }
         */
         {
+            auto& db = DatabaseHandle::get();
             hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("INSERT INTO `wnmabot_settings` VALUES(\'username\', \'" + this->nick +"\') ON DUPLICATE KEY UPDATE `value` = \'" + this->nick + "\'");
             q.type = hemirt::DB::QueryType::RAWSQL;
             auto res = db.executeQuery(std::move(q));
@@ -266,7 +267,6 @@ ConnectionHandler::~ConnectionHandler()
     Ayah::deinit();
     Bible::deinit();
     RandomQuote::deinit();
-    LottoImpl::deinit();
     Hemirt::deinit();
     this->msgDecreaserTimer.reset();
     std::cout << "cleared end destr" << std::endl;

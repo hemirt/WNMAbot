@@ -1,5 +1,6 @@
 #include "tablesinitialize.hpp"
 #include "databasehandle.hpp"
+#include <iostream>
 
 namespace TablesInitialize {
 
