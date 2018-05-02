@@ -43,9 +43,9 @@ std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage 
     {"!unignore", &CommandsHandler::unignore}, {"!savemodule", &CommandsHandler::saveModule},
     {"!asetdata", &CommandsHandler::setDataAdmin}, {"!aset", &CommandsHandler::setDataAdmin},
     {"!deletemodule", &CommandsHandler::deleteModule}, {"!adel", &CommandsHandler::deleteUserData}, 
-    {"!adeletedata", &CommandsHandler::deleteUserData}, {"!lottowinners", &CommandsHandler::getLottoWinners},
-    {"!whoisafk", &CommandsHandler::whoIsAfk}, {"!rcall", &CommandsHandler::reconnectAllChannels},
-    {"!chns", &CommandsHandler::printChannels}, {"!adelfull", &CommandsHandler::deleteUserDataFull}
+    {"!adeletedata", &CommandsHandler::deleteUserData}, {"!whoisafk", &CommandsHandler::whoIsAfk},
+    {"!rcall", &CommandsHandler::reconnectAllChannels}, {"!chns", &CommandsHandler::printChannels},
+    {"!adelfull", &CommandsHandler::deleteUserDataFull}, {"!ignorecmd", &CommandsHandler::ignoreCmd}
 };
 
 std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage &, std::vector<std::string> &)> CommandsHandler::normalCommands = {
@@ -59,19 +59,16 @@ std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage 
     {"!mydelete", &CommandsHandler::myDelete}, {"!reminders", &CommandsHandler::myReminders},
     {"!reminder", &CommandsHandler::checkReminder}, {"!pingme", &CommandsHandler::pingMeCommand},
     {"!ri", &CommandsHandler::randomIslamicQuote}, {"!rb", &CommandsHandler::randomChristianQuote},
-    {"!encrypt", &CommandsHandler::encrypt}, {"!decrypt", &CommandsHandler::decrypt},
     {"!moduleinfo", &CommandsHandler::getModuleInfo}, {"!info", &CommandsHandler::getUserData},
     {"!arq", &CommandsHandler::getRandomQuote}, {"!set", &CommandsHandler::setData},
     {"!modules", &CommandsHandler::modules}, {"!del", &CommandsHandler::deleteMyData},
-    {"!lotto", &CommandsHandler::addLottoTicket}, {"!comebackmsg", &CommandsHandler::comeBackMsg},
-    {"!notify", &CommandsHandler::comeBackMsg}
+    {"!comebackmsg", &CommandsHandler::comeBackMsg}, {"!notify", &CommandsHandler::comeBackMsg}
 };
 
 CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService,
                                  Channel *_channelObject)
     : channelObject(_channelObject)
     , ioService(_ioService)
-    , lotto(_ioService, _channelObject->messenger)
 {
 }
 
@@ -83,7 +80,7 @@ CommandsHandler::~CommandsHandler()
 Response
 CommandsHandler::handle(const IRCMessage &message)
 {
-    UserIDs::getInstance().addUser(message.user);
+    UserIDs::getInstance().addUser(message.user, message.userid, message.displayname, this->channelObject->channelName);
     std::vector<std::string> tokens;
     boost::algorithm::split(tokens, message.message,
                             boost::algorithm::is_space(),
