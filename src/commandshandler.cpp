@@ -552,6 +552,50 @@ CommandsHandler::addCommand(const IRCMessage &message,
 }
 
 Response
+CommandsHandler::ignoreCmd(const IRCMessage &message,
+                            std::vector<std::string> &tokens)
+{
+    Response response(1);
+    if (tokens.size() < 2) {
+        response.message = "Invalid use of command NaM : !ignorecmd [cmdname] {optionaly where, see !syntax, default is channels.[thischannel].default}";
+        response.type = Response::Type::MESSAGE;
+        return response;
+    }
+
+    changeToLower(tokens[1]);
+
+    // toke[0] toke[1]
+    // !ignorecmd trigger
+
+    pt::ptree commandTree = redisClient.getCommandTree(tokens[1]);
+
+    std::string subchn = "channels." + message.channel + ".default";
+    if (tokens.size() == 3) {
+        if (tokens[2].size() > 2) {
+            changeToLower(tokens[2]);
+            subchn = tokens[2];
+        }
+    }
+    std::string valueString = "/w ";
+
+    int numParams = 0;
+
+    commandTree.put(subchn + ".response", valueString);
+    commandTree.put(subchn + ".numParams", numParams);  
+    commandTree.put(subchn + ".cooldown", 0);
+
+    std::stringstream ss;
+    pt::write_json(ss, commandTree, false);
+
+    redisClient.setCommandTree(tokens[1], ss.str());
+
+    response.message = message.user + " ignored command " + tokens[1] + " at " +
+                       subchn + "  PepeHands";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
 CommandsHandler::editCommand(const IRCMessage &message,
                              std::vector<std::string> &tokens)
 {
@@ -1826,54 +1870,6 @@ CommandsHandler::randomChristianQuote(const IRCMessage &message,
 }
 
 Response
-CommandsHandler::encrypt(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
-{
-    Response response(-1);
-    if (tokens.size() < 2) {
-        return response;
-    }
-    
-    if (!this->cooldownCheck(message.user, tokens[0])) {
-        return response;
-    }
-
-    std::string valueString;
-    for (size_t i = 1; i < tokens.size(); ++i) {
-        valueString += tokens[i] + ' ';
-    }
-    valueString.pop_back();
-
-    response.message = this->crypto.encrypt(valueString);
-    response.type = Response::Type::MESSAGE;
-    return response;
-}
-
-Response
-CommandsHandler::decrypt(const IRCMessage &message,
-                         std::vector<std::string> &tokens)
-{
-    Response response(-1);
-    if (tokens.size() < 2) {
-        return response;
-    }
-    
-    if (!this->cooldownCheck(message.user, tokens[0])) {
-        return response;
-    }
-
-    std::string valueString;
-    for (size_t i = 1; i < tokens.size(); ++i) {
-        valueString += tokens[i] + ' ';
-    }
-    valueString.pop_back();
-
-    response.message = this->crypto.decrypt(valueString);
-    response.type = Response::Type::MESSAGE;
-    return response;
-}
-
-Response
 CommandsHandler::createModule(const IRCMessage &message,
                  std::vector<std::string> &tokens)
 {
@@ -2332,35 +2328,6 @@ CommandsHandler::clearQueue([[maybe_unused]] const IRCMessage &message,
 {
     Response response(0);
     this->channelObject->messenger.clearQueue();
-    return response;
-}
-
-Response
-CommandsHandler::addLottoTicket(const IRCMessage &message,
-                 std::vector<std::string> &tokens)
-{
-    Response response(0);
-    
-    if (!this->cooldownCheck(message.user, "!lotto", 30)) {
-        return response;
-    }
-    
-    std::vector<int> v;
-    for (size_t i = 1; i < tokens.size() && i < 7; ++i) {
-        v.push_back(std::atoi(tokens[i].c_str()));
-    }
-    response.message = this->lotto.addPlay({message.user, std::move(v)});
-    response.type = Response::Type::MESSAGE;
-    return response;
-}
-
-Response
-CommandsHandler::getLottoWinners([[maybe_unused]] const IRCMessage &message,
-                 [[maybe_unused]] std::vector<std::string> &tokens)
-{
-    Response response(1);
-    response.message = this->lotto.getWinners();
-    response.type = Response::Type::MESSAGE;
     return response;
 }
 
