@@ -1411,8 +1411,8 @@ CommandsHandler::getUsersFrom(const IRCMessage &message,
         for (auto &i : pairDisplayUsers.second) {
             // insert special character at pos 1
             // and at pos before last
-            i.insert(1, std::string("\u05C4"));
-            i.insert(i.size() - 1, std::string("\u05C4"));
+            i.insert(1, std::string("\u206D"));
+            i.insert(i.size() - 1, std::string("\u206D"));
             response.message += i + ", ";
         }
         response.message.pop_back();
@@ -1456,8 +1456,8 @@ CommandsHandler::getUsersLiving(const IRCMessage &message,
         response.message =
             message.user + ", in " + pairDisplayUsers.first + " live users: ";
         for (auto &i : pairDisplayUsers.second) {
-            i.insert(1, std::string("\u05C4"));
-            i.insert(i.size() - 1, std::string("\u05C4"));
+            i.insert(1, std::string("\u206D"));
+            i.insert(i.size() - 1, std::string("\u206D"));
             response.message += i + ", ";
         }
         response.message.pop_back();

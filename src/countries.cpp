@@ -710,4 +710,4 @@ Countries::redisAddUserToCountrySet(const std::string &userID,
     freeReplyObject(reply);
 }
 
-// std::string("\u05C4")
+// std::string("\u206D")
