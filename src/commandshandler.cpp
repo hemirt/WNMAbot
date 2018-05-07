@@ -244,7 +244,7 @@ Response
 CommandsHandler::printChannels(const IRCMessage &message,
                                std::vector<std::string> &tokens)
 {
-    Response response(0);
+    Response response(1);
     
     if (!this->cooldownCheck(message.user, tokens[0])) {
         return response;
