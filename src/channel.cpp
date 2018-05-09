@@ -157,9 +157,7 @@ Channel::handleMessage(const IRCMessage &message)
                     if (response.priority == 1) {
                         auto vec =
                             splitIntoChunks(std::move(response.message));
-                        for (auto &i : vec) {
-                            this->messenger.push_front(std::move(i));
-                        }
+                        this->messenger.push_front(std::move(vec));
                     } else if (response.priority == 0) {
                         auto vec =
                             splitIntoChunks(std::move(response.message));

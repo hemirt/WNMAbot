@@ -7,6 +7,7 @@
 #include <deque>
 #include <functional>
 #include <mutex>
+#include <vector>
 
 class Messenger
 {
@@ -15,6 +16,8 @@ public:
               std::function<bool(const std::string &)> _sendFunc);
     void push_front(const std::string &value);
     void push_front(std::string &&value);
+    void push_front(const std::vector<std::string>& vec);
+    void push_front(std::vector<std::string>&& vec);
     void push_back(const std::string &value);
     void push_back(std::string &&value);
     size_t size() const;
