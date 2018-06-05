@@ -182,6 +182,8 @@ private:
                      std::vector<std::string> &tokens);
     Response ignoreCmd(const IRCMessage &message,
                      std::vector<std::string> &tokens);
+    Response purgeMe(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
                      
     boost::asio::io_service &ioService;
 

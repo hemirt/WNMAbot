@@ -62,7 +62,8 @@ std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage 
     {"!moduleinfo", &CommandsHandler::getModuleInfo}, {"!info", &CommandsHandler::getUserData},
     {"!arq", &CommandsHandler::getRandomQuote}, {"!set", &CommandsHandler::setData},
     {"!modules", &CommandsHandler::modules}, {"!del", &CommandsHandler::deleteMyData},
-    {"!comebackmsg", &CommandsHandler::comeBackMsg}, {"!notify", &CommandsHandler::comeBackMsg}
+    {"!comebackmsg", &CommandsHandler::comeBackMsg}, {"!notify", &CommandsHandler::comeBackMsg},
+    {"!purgeme", &CommandsHandler::purgeMe}
 };
 
 CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService,
@@ -2102,7 +2103,24 @@ CommandsHandler::deleteUserDataFull(const IRCMessage &message,
     }
     changeToLower(tokens[1]);
     
+    Countries::getInstance().deleteFrom(tokens[1]);
+    Countries::getInstance().deleteLive(tokens[1]);
+    
     response.message = message.user + ", " + this->channelObject->owner->modulesManager.deleteDataFull(tokens[1]);
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::purgeMe(const IRCMessage &message,
+                 std::vector<std::string> &tokens)
+{
+    Response response(1);
+    
+    Countries::getInstance().deleteFrom(message.user);
+    Countries::getInstance().deleteLive(message.user);
+    
+    response.message = message.user + ", " + this->channelObject->owner->modulesManager.deleteDataFull(message.user);
     response.type = Response::Type::MESSAGE;
     return response;
 }
