@@ -52,4 +52,4 @@ add_subdirectory(mariadb)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mariadb/include)
 
 add_executable(WNMAbot ${WNMAbot})
-target_link_libraries(WNMAbot ${Boost_LIBRARIES} ${HIREDIS_LIBRARIES} ${CURL_LIBRARIES} database)
+target_link_libraries(WNMAbot ${Boost_LIBRARIES} ${HIREDIS_LIBRARIES} ${CURL_LIBRARIES} tz database)
