@@ -87,7 +87,13 @@ struct User
     
     void updateChannelActivity(const std::string& channelName, date::utc_clock::time_point tp) const
     {
-        this->updateChannelActivity(channelName, std::move(tp));
+        if (auto it = std::find_if(this->channels.begin(), this->channels.end(), [&channelName](const ChannelActivity& cha) {
+            return cha.channelName == channelName;
+        }); it != this->channels.end()) {
+            it->time = std::move(tp);
+        } else {
+            this->channels.push_front({channelName, std::move(tp)});
+        }
     }
     
     bool operator==(const User& rhs) const
