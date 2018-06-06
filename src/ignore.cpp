@@ -6,7 +6,7 @@
 Ignore::Ignore()
 {
     /* moved into TablesInitialize::initTables() in ConnectionHandler::start()
-    hemirt::DB::Query<hemirt::DB::MariaDB::Values> q(
+    hemirt::DB::Query q(
         "CREATE TABLE IF NOT EXISTS `ignoredUsers` (`username` VARCHAR(64) UNIQUE NOT NULL)");
     q.type = hemirt::DB::QueryType::RAWSQL;
     auto& db = DatabaseHandle::get();
@@ -43,7 +43,7 @@ Ignore::addUser(std::string user)
         }
     }
     
-    hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("INSERT IGNORE INTO `ignoredUsers` VALUES(\'" + user + "\')");
+    hemirt::DB::Query q("INSERT IGNORE INTO `ignoredUsers` VALUES(\'" + user + "\')");
     q.type = hemirt::DB::QueryType::RAWSQL;
     auto res = db.executeQuery(std::move(q));
     if (auto eval = res.error(); eval) {
@@ -72,7 +72,7 @@ Ignore::removeUser(std::string user)
         }
     }
     
-    hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("DELETE FROM `ignoredUsers` WHERE `username` = \'" + user + "\'");
+    hemirt::DB::Query q("DELETE FROM `ignoredUsers` WHERE `username` = \'" + user + "\'");
     q.type = hemirt::DB::QueryType::RAWSQL;
     auto res = db.executeQuery(std::move(q));
     if (auto eval = res.error(); eval) {
@@ -100,7 +100,7 @@ Ignore::isIgnored(std::string user)
             }
         }
     }
-    hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("SELECT EXISTS(SELECT 1 FROM `ignoredUsers` WHERE `username` LIKE \'" + user + "\')");
+    hemirt::DB::Query q("SELECT EXISTS(SELECT 1 FROM `ignoredUsers` WHERE `username` LIKE \'" + user + "\')");
     q.type = hemirt::DB::QueryType::RAWSQL;
     auto res = db.executeQuery(std::move(q));
     if (auto rval = res.returned(); rval) {

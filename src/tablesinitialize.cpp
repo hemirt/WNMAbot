@@ -7,7 +7,7 @@ namespace TablesInitialize {
 namespace {
     void initialize(const char* tableName, std::string&& query) {
         auto& db = DatabaseHandle::get();
-        hemirt::DB::Query<hemirt::DB::MariaDB::Values> q(std::move(query));
+        hemirt::DB::Query q(std::move(query));
         q.type = hemirt::DB::QueryType::RAWSQL;
         auto res = db.executeQuery(std::move(q));
         if (auto eval = res.error(); eval) {

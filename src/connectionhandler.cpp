@@ -108,7 +108,7 @@ ConnectionHandler::start()
         /* moved into TablesInitialize::initTables()
         auto& db = DatabaseHandle::get();
         {
-            hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("SHOW TABLES LIKE \'wnmabot_settings\'");
+            hemirt::DB::Query q("SHOW TABLES LIKE \'wnmabot_settings\'");
             q.type = hemirt::DB::QueryType::RAWSQL;
             auto res = db.executeQuery(std::move(q));
             if (auto eval = res.error(); eval) {
@@ -131,7 +131,7 @@ ConnectionHandler::start()
         */
         {
             auto& db = DatabaseHandle::get();
-            hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("INSERT INTO `wnmabot_settings` VALUES(\'username\', \'" + this->nick +"\') ON DUPLICATE KEY UPDATE `value` = \'" + this->nick + "\'");
+            hemirt::DB::Query q("INSERT INTO `wnmabot_settings` VALUES(\'username\', \'" + this->nick +"\') ON DUPLICATE KEY UPDATE `value` = \'" + this->nick + "\'");
             q.type = hemirt::DB::QueryType::RAWSQL;
             auto res = db.executeQuery(std::move(q));
             if (auto eval = res.error(); eval) {
@@ -144,7 +144,7 @@ ConnectionHandler::start()
         
         /* moved into TablesInitialize::initTables()
         {
-            hemirt::DB::Query<hemirt::DB::MariaDB::Values> q(
+            hemirt::DB::Query q(
                 "CREATE TABLE IF NOT EXISTS `channels` (`m_channel_id` INT(8) UNSIGNED AUTO_INCREMENT, `userid` VARCHAR(64) UNIQUE NOT NULL, `username` VARCHAR(64) NOT NULL, PRIMARY KEY(`m_channel_id`))");
             q.type = hemirt::DB::QueryType::RAWSQL;
             auto res = db.executeQuery(std::move(q));

@@ -116,9 +116,9 @@ ComeBackMsg::sendMsgs(const std::string &user, Messenger &messenger)
         auto &MSG = it->second;
         this->removeVecUser(MSG.from, to);
         
-        send += MSG.from + "(" + makeTimeString(std::chrono::duration_cast<std::chrono::seconds>(
+        send += MSG.from + "(-" + makeTimeString(std::chrono::duration_cast<std::chrono::seconds>(
                                    std::chrono::system_clock::now() - MSG.when)
-                                   .count()) + " ago): " + MSG.msg + " ;";
+                                   .count()) + " ch: " + MSG.msg + " ;";
     }
     
     if (!send.empty()) {

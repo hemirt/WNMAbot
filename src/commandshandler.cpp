@@ -1159,8 +1159,13 @@ CommandsHandler::comeBackMsg(const IRCMessage &message,
     if (!UserIDs::getInstance().isUser(tokens[1])) {
         return response;
     }
-
     std::string msg;
+    if (!message.channel.empty()) {
+        msg += message.channel.front();
+        msg += "\u206D";
+        msg += message.channel.substr(1);
+    }
+    msg += ") ";
     for (decltype(tokens.size()) i = 2; i < tokens.size(); ++i) {
         msg += tokens[i] + ' ';
     }
@@ -1169,11 +1174,13 @@ CommandsHandler::comeBackMsg(const IRCMessage &message,
         msg.pop_back();
     }
     
-    if (msg.size() > 150) {
+    bool admin = this->isAdmin(message.user);
+    
+    if (!admin && msg.size() > 150) {
         msg = msg.substr(0, 150);
     }
     
-    bool admin = this->isAdmin(message.user);
+    
 
     int added = this->channelObject->owner->comebacks.makeComeBackMsg(message.user,
                                                           tokens[1], msg, admin);

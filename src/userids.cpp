@@ -120,7 +120,7 @@ UserIDs::exists(const std::string &userid)
     // not yet implemented
     
     auto& db = DatabaseHandle::get();
-    hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("SELECT EXISTS(SELECT 1 FROM `users` WHERE `userid` = \'" + userid + "\')");
+    hemirt::DB::Query q("SELECT EXISTS(SELECT 1 FROM `users` WHERE `userid` = \'" + userid + "\')");
     q.type = hemirt::DB::QueryType::RAWSQL;
     
     auto res = db.executeQuery(q);
@@ -210,7 +210,7 @@ int
 UserIDs::insertUpdateUserDB()
 {
     auto& db = DatabaseHandle::get();
-    hemirt::DB::Query<hemirt::DB::MariaDB::Values> q("INSERT INTO `users` (`userid`, `username`, `displayname`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `userid` = VALUES(`userid`), `username` = VALUES(`username`), `displayname` = VALUES(`displayname`)");
+    hemirt::DB::Query q("INSERT INTO `users` (`userid`, `username`, `displayname`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `userid` = VALUES(`userid`), `username` = VALUES(`username`), `displayname` = VALUES(`displayname`)");
     q.type = hemirt::DB::QueryType::PARAMETER;
     std::cout << std::get<0>(this->usersPending).size();
     q.setBuffer(std::get<0>(this->usersPending), std::get<1>(this->usersPending), std::get<2>(this->usersPending));
@@ -235,7 +235,6 @@ UserIDs::addUser(const std::string &user, const std::string &userid, const std::
 {
     if (!userid.empty() && !displayname.empty()) {
         // add to mysql
-        std::cout << date::utc_clock::now() << '\n';
         auto t1 = std::chrono::steady_clock::now();
         insertUpdateUser(User(userid, user, displayname), channelname);
         auto t2 = std::chrono::steady_clock::now();
