@@ -235,10 +235,7 @@ UserIDs::addUser(const std::string &user, const std::string &userid, const std::
 {
     if (!userid.empty() && !displayname.empty()) {
         // add to mysql
-        auto t1 = std::chrono::steady_clock::now();
         insertUpdateUser(User(userid, user, displayname), channelname);
-        auto t2 = std::chrono::steady_clock::now();
-        std::cout << "user: " << user << " took: " << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() << " ns" << std::endl;
     }
     
     if (this->isUser(user)) {

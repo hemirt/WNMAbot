@@ -1,4 +1,5 @@
 #include "messenger.hpp"
+#include "utilities.hpp"
 
 Messenger::Messenger(boost::asio::io_service &_ioService,
                      std::function<bool(const std::string &)> _sendFunc)
@@ -11,7 +12,11 @@ void
 Messenger::push_front(const std::string &value)
 {
     std::unique_lock<std::mutex> lk(this->mtx);
-    this->deque.push_front(value);
+    auto val = value;
+    auto chunks = splitIntoChunks(std::move(val), this->maxlen);
+    for (auto && chunk : chunks) {
+        this->deque.push_front(std::move(chunk));
+    }
     lk.unlock();
     this->startSending();
 }
@@ -20,7 +25,10 @@ void
 Messenger::push_front(std::string &&value)
 {
     std::unique_lock<std::mutex> lk(this->mtx);
-    this->deque.push_front(std::move(value));
+    auto chunks = splitIntoChunks(std::move(value), this->maxlen);
+    for (auto && chunk : chunks) {
+        this->deque.push_front(std::move(chunk));
+    }
     lk.unlock();
     this->startSending();
 }
@@ -52,7 +60,11 @@ void
 Messenger::push_back(const std::string &value)
 {
     std::unique_lock<std::mutex> lk(this->mtx);
-    this->deque.push_back(value);
+    auto val = value;
+    auto chunks = splitIntoChunks(std::move(val), this->maxlen);
+    for (auto && chunk : chunks) {
+        this->deque.push_back(std::move(chunk));
+    }
     lk.unlock();
     this->startSending();
 }
@@ -61,7 +73,10 @@ void
 Messenger::push_back(std::string &&value)
 {
     std::unique_lock<std::mutex> lk(this->mtx);
-    this->deque.push_back(std::move(value));
+    auto chunks = splitIntoChunks(std::move(value), this->maxlen);
+    for (auto && chunk : chunks) {
+        this->deque.push_back(std::move(chunk));
+    }
     lk.unlock();
     this->startSending();
 }

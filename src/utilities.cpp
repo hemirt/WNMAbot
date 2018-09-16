@@ -79,14 +79,14 @@ makeTimeString(int64_t seconds)
 }
 
 std::vector<std::string>
-splitIntoChunks(std::string &&str)
+splitIntoChunks(std::string &&str, int maxlen)
 {
     std::vector<std::string> vec;
     for (;;) {
-        if (str.size() > 350) {
-            auto pos = str.find_last_of(' ', 350);
+        if (str.size() > maxlen) {
+            auto pos = str.find_last_of(' ', maxlen);
             if (pos == std::string::npos) {
-                pos = 350;
+                pos = maxlen;
             } else if (pos == 0) {
                 break;
             }

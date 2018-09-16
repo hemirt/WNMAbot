@@ -31,7 +31,7 @@ private:
     void startConnect();
     void startConnect(std::shared_ptr<BoostConnection::socket> sock);
 
-    void writeRawMessage(const std::string &message);
+    void writeRawMessage(std::string message);
 
     void doRead();
     void doWrite();

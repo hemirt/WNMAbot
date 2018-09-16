@@ -7,6 +7,7 @@
 #include "utilities.hpp"
 #include "randomquote.hpp"
 #include "hemirt.hpp"
+#include "time.hpp"
 
 #include <stdint.h>
 #include <vector>
@@ -63,7 +64,8 @@ std::unordered_map<std::string, Response (CommandsHandler::*) (const IRCMessage 
     {"!arq", &CommandsHandler::getRandomQuote}, {"!set", &CommandsHandler::setData},
     {"!modules", &CommandsHandler::modules}, {"!del", &CommandsHandler::deleteMyData},
     {"!comebackmsg", &CommandsHandler::comeBackMsg}, {"!notify", &CommandsHandler::comeBackMsg},
-    {"!purgeme", &CommandsHandler::purgeMe}
+    {"!purgeme", &CommandsHandler::purgeMe}, {"!gdpr", &CommandsHandler::gdpr},
+    {"!time", &CommandsHandler::time}, {"!settime", &CommandsHandler::setTime}, {"!deletetime", &CommandsHandler::deleteTime}, {"!deltime", &CommandsHandler::deleteTime}, {"!timezones", &CommandsHandler::timezones}
 };
 
 CommandsHandler::CommandsHandler(boost::asio::io_service &_ioService,
@@ -110,7 +112,7 @@ CommandsHandler::handle(const IRCMessage &message)
     }
 
     // messenger queue is full
-    if (!this->channelObject->messenger.able()) {
+    if (!this->channelObject->messenger.able() && !this->isAdmin(message.user)) {
         return response;
     }
     
@@ -127,48 +129,186 @@ CommandsHandler::handle(const IRCMessage &message)
     }
 
     pt::ptree commandTree = redisClient.getCommandTree(tokens[0]);
-    if (commandTree.empty()) {
-        return this->highlightResponse(message, tokens);
-    }
+    if (!commandTree.empty()) {
+        
+        // channel user command
+        boost::optional<std::string> responseString =
+            commandTree.get_optional<std::string>("channels." + message.channel +
+                                                  "." + message.user + ".response");
+        if (responseString) {
+            return this->makeResponse(
+                message, *responseString, tokens, commandTree,
+                "channels." + message.channel + "." + message.user);
+        }
 
-    // channel user command
-    boost::optional<std::string> responseString =
-        commandTree.get_optional<std::string>("channels." + message.channel +
-                                              "." + message.user + ".response");
-    if (responseString) {
-        return this->makeResponse(
-            message, *responseString, tokens, commandTree,
-            "channels." + message.channel + "." + message.user);
-    }
+        // global user command
+        responseString =
+            commandTree.get_optional<std::string>(message.user + ".response");
+        if (responseString) {
+            return this->makeResponse(message, *responseString, tokens, commandTree,
+                                      message.user);
+        }
 
-    // global user command
-    responseString =
-        commandTree.get_optional<std::string>(message.user + ".response");
-    if (responseString) {
-        return this->makeResponse(message, *responseString, tokens, commandTree,
-                                  message.user);
-    }
+        // default channel command
+        responseString = commandTree.get_optional<std::string>(
+            "channels." + message.channel + ".default.response");
+        if (responseString) {
+            return this->makeResponse(message, *responseString, tokens, commandTree,
+                                      "channels." + message.channel + ".default");
+        }
 
-    // default channel command
-    responseString = commandTree.get_optional<std::string>(
-        "channels." + message.channel + ".default.response");
-    if (responseString) {
-        return this->makeResponse(message, *responseString, tokens, commandTree,
-                                  "channels." + message.channel + ".default");
+        // default global command
+        responseString = commandTree.get_optional<std::string>("default.response");
+        if (responseString) {
+            return this->makeResponse(message, *responseString, tokens, commandTree,
+                                      "default");
+        }
     }
-
-    // default global command
-    responseString = commandTree.get_optional<std::string>("default.response");
-    if (responseString) {
-        return this->makeResponse(message, *responseString, tokens, commandTree,
-                                  "default");
+    if (this->isAdmin(message.user)) {
+        response = this->delegateWords(message, tokens);
+        if (response.type != Response::Type::UNKNOWN) {
+            return response;
+        }
     }
-
     return this->highlightResponse(message, tokens);
 }
 
 Response
+CommandsHandler::delegateWords(const IRCMessage &message,
+                               std::vector<std::string> &tokens)
+{
+    Response response(1);
+    
+    std::vector<std::pair<int, int>> poswords;
+    for (int i = 0; i < tokens.size(); ++i) {
+        const auto &token = tokens[i];
+        if (token.compare(0, 3, "!\\\\") == 0) {
+            int words = 1;
+            if (token.size() > 3) {
+                words = std::atoi(token.c_str() + 3);
+            }
+            poswords.push_back({i, words});
+        }
+        if (token.compare(0, 9, "\u206D\u206D\u206D") == 0) {
+            int words = 1;
+            if (token.size() > 9) {
+                words = std::atoi(token.c_str() + 9);
+            }
+            poswords.push_back({i, words});
+        }
+    }
+    if (poswords.empty()) {
+        return response;
+    }
 
+    for (auto &i : poswords) {
+        auto &pos = i.first;
+        auto &words = i.second;
+        if (pos < tokens.size()) {
+            ++pos;
+            int j = 0;
+            while ((pos + j) < tokens.size() && j < words) {
+                response.message += tokens[pos + j] + " ";
+                ++j;
+            }
+        }
+    }
+    
+    if (response.message.empty()) {
+        return response;
+    }
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::time([[maybe_unused]] const IRCMessage &message,
+                                   std::vector<std::string> &tokens)
+{
+    Response response;
+    auto& time = Time::getInstance();
+    
+    if (tokens.size() < 2) {
+        auto str = time.getUsersCurrentTime(message.userid);
+        if (str.empty()) {
+            response.message = message.user + ", you have not set your time zone, use !settime <TIMEZONE>, for a list of time zones see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones";
+            response.whisperReceiver = message.user;
+            response.type = Response::Type::WHISPER;
+            return response;
+        }
+        response.message = message.user + ", your current time is " + str;
+        response.type = Response::Type::MESSAGE;
+        return response;
+    } else {
+        changeToLower(tokens[1]);
+        
+        auto& userids = UserIDs::getInstance();
+        if(userids.isUser(tokens[1])) {
+            auto userid = userids.getID(tokens[1]); 
+            auto str = time.getUsersCurrentTime(userid);
+            if (str.empty()) {
+                response.message = "User " + tokens[1] + " has not set their time zone";
+            } else {
+                response.message = message.user + ", " + tokens[1] + "'s current time is " + str;
+            }
+            response.type = Response::Type::MESSAGE;
+        } else {
+            response.message = "User " + tokens[1] + " does not exist";
+            response.whisperReceiver = message.user;
+            response.type = Response::Type::WHISPER;
+        }
+        return response;
+    }
+}
+
+Response
+CommandsHandler::setTime([[maybe_unused]] const IRCMessage &message,
+                                   std::vector<std::string> &tokens)
+{
+    Response response;
+    
+    if (tokens.size() < 2) {
+        response.message = "Usage: !settime <TIMEZONE>, for a list of time zones see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones";
+        response.whisperReceiver = message.user;
+        response.type = Response::Type::WHISPER;
+        return response;
+    }
+    auto& time = Time::getInstance();
+    
+    if (!time.setTimeZone(message.userid, tokens[1])) {
+        response.message = message.user + ", this time zone does not exist, type !timezones for a whisper with time zones wiki link or search for \"List of tz database time zones\"";
+        
+    } else {
+        response.message = message.user + ", successfully set your time zone to " + tokens[1];
+    }
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::deleteTime([[maybe_unused]] const IRCMessage &message,
+                                   std::vector<std::string> &tokens)
+{
+    Response response;
+    auto &time = Time::getInstance();
+    time.delTimeZone(message.userid);
+    response.message = message.user + ", successfully deleted your time zone";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
+CommandsHandler::timezones([[maybe_unused]] const IRCMessage &message,
+                                   std::vector<std::string> &tokens)
+{
+    Response response;
+    response.message = "For a list of time zones see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones";
+    response.whisperReceiver = message.user;
+    response.type = Response::Type::WHISPER;
+    return response;
+}
+
+Response
 CommandsHandler::highlightResponse([[maybe_unused]] const IRCMessage &message,
                                    std::vector<std::string> &tokens)
 {
@@ -295,6 +435,108 @@ CommandsHandler::makeResponse(const IRCMessage &message,
     } else if (!this->cooldownCheck(message.user, tokens[0])) {
         return response;
     }
+    
+    
+    // defaults
+    
+    {
+        // \d+ 1
+        // (({user})|({channel})) 2
+        // ({user}) 3
+        // ({channel}) 4
+        boost::regex e("{(\\d+)\\|((user)|(channel))}");
+        boost::match_results<std::string::const_iterator> results;
+        while (boost::regex_search(responseString, results, e)) {
+            std::string numAfter = results[1];
+            int num = std::atoi(numAfter.c_str());
+            if (num < tokens.size()) {
+                std::string rpl = "{" + numAfter + "}";
+                responseString = boost::regex_replace(responseString, e, tokens[num], boost::match_default | boost::format_first_only);
+            } else {
+                if (results[3].matched) {
+                    responseString = boost::regex_replace(responseString, e, message.user, boost::match_default | boost::format_first_only);
+                }
+                if (results[4].matched) {
+                    responseString = boost::regex_replace(responseString, e, message.channel, boost::match_default | boost::format_first_only);
+                }
+            }
+        }
+    }
+    
+    {
+        // \d+\+ 1
+        // ([^}]*) 2
+        boost::regex e("{(\\d+)\\+\\|((user)|(channel))}");
+        boost::match_results<std::string::const_iterator> results;
+        while (boost::regex_search(responseString, results, e)) {
+            std::string numAfter = results[1];
+            int num = std::atoi(numAfter.c_str());
+            std::string msg;
+            for (decltype(tokens.size()) i = num; i < tokens.size(); i++) {
+                msg += tokens[i] + " ";
+            }
+            if (!msg.empty()) {
+                msg.pop_back();
+                responseString = boost::regex_replace(responseString, e, msg, boost::match_default | boost::format_first_only);
+            } else {
+                if (results[3].matched) {
+                    responseString = boost::regex_replace(responseString, e, message.user, boost::match_default | boost::format_first_only);
+                }
+                if (results[4].matched) {
+                    responseString = boost::regex_replace(responseString, e, message.channel, boost::match_default | boost::format_first_only);
+                }
+            }
+        }
+    }
+    
+    {
+        // \d+ 1
+        // ([^}]*) 2
+        boost::regex e("{(\\d+)\\|([^}]*)}");
+        boost::match_results<std::string::const_iterator> results;
+        while (boost::regex_search(responseString, results, e)) {
+            std::string numAfter = results[1];
+            int num = std::atoi(numAfter.c_str());
+            if (num < tokens.size()) {
+                std::string rpl = "{" + numAfter + "}";
+                responseString = boost::regex_replace(responseString, e, tokens[num], boost::match_default | boost::format_first_only);
+            } else {
+                if (results[2].matched) {
+                    std::string match = results[2];
+                    responseString = boost::regex_replace(responseString, e, match, boost::match_default | boost::format_first_only);
+                }
+            }
+        }
+    }
+    
+    {
+        // \d+\+ 1
+        // ([^}]*) 2
+        boost::regex e("{(\\d+)\\+\\|([^}]*)}");
+        boost::match_results<std::string::const_iterator> results;
+        while (boost::regex_search(responseString, results, e)) {
+            std::string numAfter = results[1];
+            int num = std::atoi(numAfter.c_str());
+            std::string msg;
+            for (decltype(tokens.size()) i = num; i < tokens.size(); i++) {
+                msg += tokens[i] + " ";
+            }
+            if (!msg.empty()) {
+                msg.pop_back();
+                responseString = boost::regex_replace(responseString, e, msg, boost::match_default | boost::format_first_only);
+            } else {
+                if (results[2].matched) {
+                    std::string match = results[2];
+                    responseString = boost::regex_replace(responseString, e, match, boost::match_default | boost::format_first_only);
+                }
+            }
+        }
+    }
+    
+    
+    
+    
+    // defaults
 
     boost::optional<int> numParams =
         commandTree.get_optional<int>(path + ".numParams");
@@ -959,7 +1201,7 @@ CommandsHandler::remind(const IRCMessage &message,
         response.type = Response::Type::WHISPER;
         response.message = "Negative amount of time "
                            "\xF0\x9F\xA4\x94, sorry I can't travel "
-                           "back in time (yet)",
+                           "back in time (yet)";
         response.whisperReceiver = message.user;
         return response;
     }
@@ -1057,6 +1299,9 @@ CommandsHandler::afk(const IRCMessage &message,
         msg.pop_back();
     }
 
+    if (!this->isAdmin(message.user) && msg.size() > 300) {
+        msg.resize(300);
+    }
     // this->channelObject->owner->sanitizeMsg(msg);
 
     this->channelObject->owner->afkers.setAfker(message.user, msg);
@@ -1078,10 +1323,13 @@ CommandsHandler::goodNight(const IRCMessage &message,
 {
     Response response(0);
 
-    if (tokens.size() > 1 && UserIDs::getInstance().isUser(tokens[1])) {
-        auto str = Hemirt::getRaw("http://tmi.twitch.tv/group/user/" + message.channel + "/chatters");
-        if (auto pos = str.find(tokens[1]); pos != std::string::npos && str[pos-1] == '\"' && str[pos+tokens[1].size()] == '\"') {
-            return response;
+    if (tokens.size() > 1) {
+        auto name = changeToLower_copy(tokens[1]);
+        if (UserIDs::getInstance().isUser(name)) {
+            auto str = Hemirt::getRaw("http://tmi.twitch.tv/group/user/" + message.channel + "/chatters");
+            if (auto pos = str.find(name); pos != std::string::npos && str[pos-1] == '\"' && str[pos+name.size()] == '\"') {
+                return response;
+            }
         }
     }
 
@@ -1157,6 +1405,10 @@ CommandsHandler::comeBackMsg(const IRCMessage &message,
     changeToLower(tokens[1]);
     
     if (!UserIDs::getInstance().isUser(tokens[1])) {
+        return response;
+    }
+    
+    if (tokens[1] == "nymn") {
         return response;
     }
     std::string msg;
@@ -1857,6 +2109,21 @@ CommandsHandler::randomIslamicQuote(const IRCMessage &message,
 }
 
 Response
+CommandsHandler::gdpr(const IRCMessage &message,
+                                    std::vector<std::string> &tokens)
+{
+    Response response(1);
+
+    if (!this->cooldownCheck(message.user, tokens[0], 120)) {
+        return response;
+    }
+
+    response.message = "Any info you put in the bot via commands is entirely optional and everyone else can view this information via provided commands. Use !purgeme command to delete all your info. We also store data that identifies your Twitch account and can track you across the Twitch service (nickname, userid, displayname, et cetera). If you do not want to be part of this, write an email to gdpr@hemirt(dot)com and you will be removed afterwards (you will also lose access to this service).";
+    response.type = Response::Type::MESSAGE;
+    return response;
+}
+
+Response
 CommandsHandler::randomChristianQuote(const IRCMessage &message,
                                       std::vector<std::string> &tokens)
 {
@@ -2137,6 +2404,8 @@ CommandsHandler::getRandomQuote(const IRCMessage &message,
                  std::vector<std::string> &tokens)
 {
     Response response(-1);
+    if (message.channel == "pajlada")
+        return response;
     
     if (this->channelObject->channelName == "forsen" && !this->isAdmin(message.user)) {
         return response;

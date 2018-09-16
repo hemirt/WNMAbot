@@ -29,6 +29,9 @@ Channel::Channel(const std::string &_channelName,
     , ioService(_ioService)
     , credentials(owner->nick, owner->pass)
 {
+    if (this->channelName == "forsen") {
+        this->messenger.setMaxLen(135);
+    }
 }
 
 Channel::~Channel()
@@ -75,11 +78,15 @@ Channel::say(const std::string &message)
     if (this->channelName == "forsen" && Hemirt::forsenBanned(message)) {
         return false;
     }
+    int maxlen = 350;
+    if (this->channelName == "forsen" && message.size() > 135) {
+        maxlen = 135;
+    }
     std::string rawMessage = "PRIVMSG #" + this->channelName + " :";
 
     // Message length at most 350 characters
-    if (message.length() >= 350) {
-        rawMessage += message.substr(0, 350);
+    if (message.length() >= maxlen) {
+        rawMessage += message.substr(0, maxlen);
     } else {
         rawMessage += message;
     }
@@ -137,9 +144,13 @@ Channel::handleMessage(const IRCMessage &message)
                                                   howLongWasGone +
                                                   " ago) HeyGuys");
                     } else {
-                        this->messenger.push_back(message.user + " is back(" +
+                        if (this->channelName == "forsen" && Hemirt::forsenBanned(afk.message)) {
+                            this->messenger.push_back(message.user + " is back(" + howLongWasGone + " ago): BANPHRASED MESSAGE");
+                        } else {
+                            this->messenger.push_back(message.user + " is back(" +
                                                   howLongWasGone + " ago): " +
                                                   afk.message);
+                        }
                     }
                 } else {
                     afk.time = now;
@@ -154,20 +165,24 @@ Channel::handleMessage(const IRCMessage &message)
                 auto response = this->commandsHandler.handle(message);
 
                 if (response.type == Response::Type::MESSAGE) {
+                    int maxlen = 350;
+                    if (this->channelName == "forsen") {
+                        maxlen = 135;
+                    }
                     if (response.priority == 1) {
                         auto vec =
-                            splitIntoChunks(std::move(response.message));
+                            splitIntoChunks(std::move(response.message), maxlen);
                         this->messenger.push_front(std::move(vec));
                     } else if (response.priority == 0) {
                         auto vec =
-                            splitIntoChunks(std::move(response.message));
+                            splitIntoChunks(std::move(response.message), maxlen);
                         for (decltype(vec.size()) i = 0; i < 2 && i < vec.size(); i++) {
                             this->messenger.push_back(std::move(vec[i]));
                         }
                     } else if (this->messenger
                                    .able() /* && message.priority == -1 */) {
                         auto vec =
-                            splitIntoChunks(std::move(response.message));
+                            splitIntoChunks(std::move(response.message), maxlen);
                         for (decltype(vec.size()) i = 0; i < 2 && i < vec.size(); i++) {
                             this->messenger.push_back(std::move(vec[i]));
                         }
@@ -229,9 +244,12 @@ Channel::handleMessage(const IRCMessage &message)
                                 users +=
                                     ". At channel " + this->channelName + ".";
                             }
-
+                            int maxlen = 350;
+                            if (this->channelName == "forsen") {
+                                maxlen = 135;
+                            }
                             auto vec = splitIntoChunks(
-                                message.user + " is back: " + users);
+                                message.user + " is back: " + users, maxlen);
 
                             try {
                                 for (auto &msg : vec) {

@@ -15,7 +15,8 @@ class Module
 public:  
     Module(const std::string &_name);
     Module(const std::string &name, const std::string &type, const std::string &subtype
-        , const std::string &format, bool status) : name(name), type(type), subtype(subtype), format(format), status(status) {};
+        , const std::string &format, bool status) : name(name), type(type), subtype(subtype), format(format), status(status) 
+    {}
     ~Module() = default;
     
     void setName(const std::string &newName);

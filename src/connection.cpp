@@ -49,12 +49,31 @@ Connection::shutdown()
 }
 
 void
-Connection::writeRawMessage(const std::string &message)
+Connection::writeRawMessage(std::string message)
 {
-    const auto asioBuffer = boost::asio::buffer(message);
+    using FuncType = decltype(&Connection::handleWrite);
+    struct Handler
+    {
+        Handler(std::string&& msg_, Connection *that_, const std::shared_ptr<BoostConnection::socket> &sock_, FuncType func_)
+        :   msg(std::make_shared<std::string>(std::move(msg_)))
+        ,   that(that_)
+        ,   sock(sock_)
+        ,   func(func_)
+        {
+        }
+        void operator()(const boost::system::error_code& ec, std::size_t bytes_transferred)
+        {
+            (that->*func)(sock, ec);
+        }
+        std::shared_ptr<std::string> msg;
+        Connection *that;
+        std::shared_ptr<BoostConnection::socket> sock;
+        FuncType func;
+    };
+    
+    Handler handler(std::move(message), this, this->socket, &Connection::handleWrite);
 
-    boost::asio::async_write(*this->socket, asioBuffer,
-                             boost::bind(&Connection::handleWrite, this, this->socket, _1));
+    boost::asio::async_write(*this->socket, boost::asio::buffer(*handler.msg), handler);
 }
 
 void

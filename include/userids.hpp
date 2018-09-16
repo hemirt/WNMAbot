@@ -54,7 +54,7 @@ struct User
         {}
         ChannelActivity(ChannelActivity&& cha)
             : channelName(std::move(const_cast<std::string&>(cha.channelName)))
-            , time(std::move(cha.time.load()))
+            , time(cha.time.load())
         {}
         ChannelActivity(const ChannelActivity& cha)
             : channelName(cha.channelName)
@@ -151,7 +151,7 @@ private:
     static std::mutex accessMtx;
     static std::mutex curlMtx;
     static redisContext *context;
-    struct curl_slist *chunk = NULL;
+    struct curl_slist *chunk = nullptr;
     static CURL *curl;
     static std::mutex channelsULMtx;
     static std::vector<UserList> channelsUserList;

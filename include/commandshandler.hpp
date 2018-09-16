@@ -184,6 +184,18 @@ private:
                      std::vector<std::string> &tokens);
     Response purgeMe(const IRCMessage &message,
                      std::vector<std::string> &tokens);
+    Response gdpr(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response delegateWords(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response time(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response deleteTime(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response setTime(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response timezones(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
                      
     boost::asio::io_service &ioService;
 

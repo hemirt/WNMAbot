@@ -1,6 +1,7 @@
 #ifndef MESSENGER_HPP
 #define MESSENGER_HPP
 
+#include <boost/asio.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <chrono>
 #include <condition_variable>
@@ -8,6 +9,7 @@
 #include <functional>
 #include <mutex>
 #include <vector>
+#include <atomic>
 
 class Messenger
 {
@@ -25,6 +27,9 @@ public:
     void startSending();
     bool able() const;
     void clearQueue();
+    void setMaxLen(int i = 350) {
+        this->maxlen = i;
+    }
 
 private:
     std::function<bool(const std::string &)> sendFunc;
@@ -34,6 +39,7 @@ private:
     boost::asio::io_service &ioService;
     std::string extract_front();
     constexpr static int maxMsgsInQueue = 2;
+    std::atomic_int maxlen = 350;
 };
 
 #endif

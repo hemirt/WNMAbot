@@ -87,10 +87,31 @@ Hemirt::getRaw(const std::string &page)
     return readBuffer;
 }
 
+namespace
+{
+    
+int countSubstring(const std::string &str, const std::string sub)
+{
+    if (sub.length() == 0) return 0;
+    int count = 0;
+    for (std::size_t offset = str.find(sub); offset != std::string::npos; offset = str.find(sub, offset + sub.length()))
+    {
+        ++count;
+    }
+    return count;
+}
+
+}
 bool
 Hemirt::forsenBanned(const std::string &msg)
 {
-
+    static const std::vector<std::string> v{"NaM", "SexPanda"};
+    for (const auto &i : v) {
+        if (countSubstring(msg, i) > 2) {
+            return true;
+        }
+    }
+    
     std::lock_guard<std::mutex> lk(Hemirt::curlMtx);
     std::string readBuffer;
     
