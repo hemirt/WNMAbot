@@ -257,6 +257,10 @@ ConnectionHandler::reconnectAllChannels(const std::string &chn)
         for (auto &conn : connections) {
             conn->reconnect();
         }
+        i.second->shutdown();
+        i.second.reset();
+        i.second = std::make_shared<Channel>(i.first, this->ioService, this);
+        i.second->createConnection();
     }
 }
 

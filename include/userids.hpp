@@ -24,7 +24,7 @@ struct User
         , channels()
     {}
     User(User&& u)
-        : userid(std::move(const_cast<std::string&>(u.userid)))
+        : userid(u.userid)
         , username(std::move(u.username))
         , displayname(std::move(u.displayname))
         , channels(std::move(u.channels))
@@ -53,7 +53,7 @@ struct User
             , time(std::move(tp))
         {}
         ChannelActivity(ChannelActivity&& cha)
-            : channelName(std::move(const_cast<std::string&>(cha.channelName)))
+            : channelName(cha.channelName)
             , time(cha.time.load())
         {}
         ChannelActivity(const ChannelActivity& cha)
