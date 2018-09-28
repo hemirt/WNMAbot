@@ -94,17 +94,3 @@ Time::setTimeZone(const std::string &userid, const std::string &timezone)
     freeReplyObject(reply);
     return true;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
