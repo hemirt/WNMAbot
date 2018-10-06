@@ -1,7 +1,7 @@
 # WNMAbot
 
 # installation instructions
-<h3> Linux </h3>
+### Linux
 1. clone this repo `git clone https://github.com/hemirt/WNMAbot.git`
 2. cd into the repo directory `cd WNMAbot`
 3. Create the build directory `mkdir build`
