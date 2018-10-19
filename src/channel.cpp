@@ -78,18 +78,9 @@ Channel::say(const std::string &message)
     if (this->channelName == "forsen" && Hemirt::forsenBanned(message)) {
         return false;
     }
-    int maxlen = 350;
-    if (this->channelName == "forsen" && message.size() > 135) {
-        maxlen = 135;
-    }
-    std::string rawMessage = "PRIVMSG #" + this->channelName + " :";
 
-    // Message length at most 350 characters
-    if (message.length() >= maxlen) {
-        rawMessage += message.substr(0, maxlen);
-    } else {
-        rawMessage += message;
-    }
+    std::string rawMessage = "PRIVMSG #" + this->channelName + " :" + message;
+
     this->sendToOne(rawMessage);
     messageCount++;
     return true;
@@ -126,6 +117,12 @@ Channel::handleMessage(const IRCMessage &message)
             
             auto afk = owner->afkers.getAfker(message.user);
             if (afk.exists) {
+                int maxlen = 350;
+                if (this->channelName == "forsen") {
+                    maxlen = 135;
+                } else if (this->channelName == "pajlada") {
+                    maxlen = 500;
+                }
                 auto now = std::chrono::system_clock::now();
                 if (std::chrono::duration_cast<std::chrono::seconds>(now -
                                                                      afk.time)
@@ -144,12 +141,13 @@ Channel::handleMessage(const IRCMessage &message)
                                                   howLongWasGone +
                                                   " ago) HeyGuys");
                     } else {
+                        
                         if (this->channelName == "forsen" && Hemirt::forsenBanned(afk.message)) {
                             this->messenger.push_back(message.user + " is back(" + howLongWasGone + " ago): BANPHRASED MESSAGE");
                         } else {
-                            this->messenger.push_back(message.user + " is back(" +
-                                                  howLongWasGone + " ago): " +
-                                                  afk.message);
+                            auto msg = message.user + " is back(" + howLongWasGone + " ago): " + afk.message;
+                            auto vec = splitIntoChunks(std::move(afk.message), maxlen);
+                            this->messenger.push_back(std::move(vec));
                         }
                     }
                 } else {
