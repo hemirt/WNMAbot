@@ -81,6 +81,29 @@ Messenger::push_back(std::string &&value)
     this->startSending();
 }
 
+void
+Messenger::push_back(const std::vector<std::string>& vec)
+{
+    std::unique_lock<std::mutex> lk(this->mtx);
+    for (auto it = vec.crbegin(); it != vec.crend(); ++it) {
+        this->deque.push_back(*it);
+    }
+    lk.unlock();
+    this->startSending();
+}
+
+void
+Messenger::push_back(std::vector<std::string>&& vec)
+{
+    std::unique_lock<std::mutex> lk(this->mtx);
+    for (auto it = vec.rbegin(); it != vec.rend(); ++it) {
+        this->deque.push_back(std::move(*it));
+    }
+    vec.clear();
+    lk.unlock();
+    this->startSending();
+}
+
 size_t
 Messenger::size() const
 {

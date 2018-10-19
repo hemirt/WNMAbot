@@ -22,6 +22,8 @@ public:
     void push_front(std::vector<std::string>&& vec);
     void push_back(const std::string &value);
     void push_back(std::string &&value);
+    void push_back(const std::vector<std::string>& vec);
+    void push_back(std::vector<std::string>&& vec);
     size_t size() const;
     bool empty() const;
     void startSending();
