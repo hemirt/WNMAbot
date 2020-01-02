@@ -1,5 +1,7 @@
 # WNMAbot
 
+Suspended indefinitely, thank you all for being here with me.
+
 # installation instructions
 ### Linux
 1. clone this repo `git clone https://github.com/hemirt/WNMAbot.git`
