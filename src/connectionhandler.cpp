@@ -9,6 +9,10 @@
 #include "databasehandle.hpp"
 #include <fstream>
 #include "tablesinitialize.hpp"
+#include "acccheck.hpp"
+#include <boost/regex.hpp>
+#include <boost/algorithm/string/regex.hpp>
+#include "trivia.hpp"
 
 //static const char *IRC_HOST = "irc.chat.twitch.tv";
 //static const char *IRC_PORT = "6667";
@@ -76,6 +80,8 @@ ConnectionHandler::start()
     Bible::init();
     RandomQuote::init();
     Hemirt::init();
+    AccCheck::init();
+    Trivia::init();
     
     hemirt::DB::Credentials* cred = nullptr;
     try {
@@ -272,6 +278,8 @@ ConnectionHandler::~ConnectionHandler()
     Bible::deinit();
     RandomQuote::deinit();
     Hemirt::deinit();
+    AccCheck::deinit();
+    Trivia::deinit();
     this->msgDecreaserTimer.reset();
     std::cout << "cleared end destr" << std::endl;
 }
@@ -422,13 +430,21 @@ ConnectionHandler::sanitizeMsg(std::string &msg)
     for (const auto &i : this->blacklist) {
         if (i.second != "*") boost::algorithm::ireplace_all(msg, i.first, i.second);
     }
+    
+    boost::regex e(R"mycstmdelimiter(\b(?:N|n|ñ|[Ii7]V)\s?[liI1y!j\/]{1,}\s?(?:[GgbB6934QqğĜ]\s?){2,}(?!arcS|l|Ktlw|ylul|ie217))mycstmdelimiter");
+    boost::regex_replace(msg, e, "", boost::match_default | boost::format_first_only);
 }
 
 bool
 ConnectionHandler::isBlacklisted(const std::string &msg)
 {
     std::shared_lock<std::shared_mutex> lock(blacklistMtx);
-    return this->blacklist.count(msg) == 1;
+    boost::regex e(R"mycstmdelimiter(\b(?:N|n|ñ|[Ii7]V)\s?[liI1y!j\/]{1,}\s?(?:[GgbB6934QqğĜ]\s?){2,}(?!arcS|l|Ktlw|ylul|ie217))mycstmdelimiter");
+    bool blacklisted = false;
+    if (boost::regex_search(msg, e)) {
+        blacklisted = true;
+    }
+    return blacklisted || this->blacklist.count(msg) == 1;
 }
 
 void

@@ -44,7 +44,6 @@ RandomQuote::getRandomQuote(const std::string &channel, const std::string &user)
     curl_easy_setopt(RandomQuote::curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(RandomQuote::curl, CURLOPT_WRITEDATA, &readBuffer);
     curl_easy_setopt(RandomQuote::curl, CURLOPT_TIMEOUT, 3L);
-    curl_easy_setopt(RandomQuote::curl, CURLOPT_CONNECTTIMEOUT , 5L);
     CURLcode res = curl_easy_perform(RandomQuote::curl);
     long response_code;
     curl_easy_getinfo(RandomQuote::curl, CURLINFO_RESPONSE_CODE, &response_code);

@@ -13,6 +13,8 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <atomic>
+#include "trivia.hpp"
 
 class Channel;
 
@@ -35,6 +37,7 @@ public:
     int priority = -1;
     std::string message;
     std::string whisperReceiver;
+    std::string trigger;
 
 private:
 };
@@ -196,6 +199,28 @@ private:
                      std::vector<std::string> &tokens);
     Response timezones(const IRCMessage &message,
                      std::vector<std::string> &tokens);
+    Response getCommandsWheres(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response getCommandAt(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response purge(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response shadowAfk(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response test0(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response addAllow(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response delAllow(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response triviaTop5(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response triviaStart(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response triviaPoints(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
+    Response triviaStop(const IRCMessage &message,
+                     std::vector<std::string> &tokens);
                      
     boost::asio::io_service &ioService;
 
@@ -203,8 +228,15 @@ private:
         cooldownsMap;
     std::mutex cooldownsMtx;
     
-    bool cooldownCheck(const std::string &user, const std::string &cmd, int howmuch = 5);
-    bool softCooldownCheck(const std::string &user, const std::string &cmd, int howmuch = 5);
+    bool cooldownCheck(const std::string &path, const std::string &user, const std::string &cmd, const std::string &channel, int howmuch = 5);
+    bool softCooldownCheck(const std::string &path, const std::string &user, const std::string &cmd, const std::string &channel, int howmuch = 5);
+    
+    std::mutex triviaMtx;
+    bool triviaRunning = false;
+    Question currentQuestion;
+    int questionsLeft = 0;
+    bool startNextTriviaQuestion();
+    std::shared_ptr<boost::asio::steady_timer> triviaTimer = nullptr;
 
 };
 

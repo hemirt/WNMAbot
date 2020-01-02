@@ -14,15 +14,15 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("debug")
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra -pthread -std=c++17 -O1 -g -fsanitize=thread -fno-omit-frame-pointer ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -pthread -std=c++2a -O0 -g -fsanitize=thread -fno-omit-frame-pointer ${CMAKE_CXX_FLAGS}")
 else()
     message("release")
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra -pthread -std=c++17 -O3 -flto ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -pthread -std=c++2a -O3 -flto ${CMAKE_CXX_FLAGS}")
 endif()
 
 if (${WEVERYTHING})
     message("weverything")
-    set(CMAKE_CXX_FLAGS "-Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-newline-eof -Wno-return-std-move-in-c++11 -Wno-exit-time-destructors -std=c++17")
+    set(CMAKE_CXX_FLAGS "-Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-newline-eof -Wno-return-std-move-in-c++11 -Wno-exit-time-destructors -std=c++2a")
 endif()
 
 set(WNMAbot
@@ -52,6 +52,9 @@ set(WNMAbot
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hemirt.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/tablesinitialize.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/time.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/usage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/acccheck.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/trivia.cpp
 )
 
 add_subdirectory(mariadb)

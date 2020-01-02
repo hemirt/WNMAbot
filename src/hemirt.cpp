@@ -44,6 +44,7 @@ Hemirt::getRandom(const std::string &page)
     curl_easy_setopt(Hemirt::curl, CURLOPT_URL, rawurl.c_str());
     curl_easy_setopt(Hemirt::curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(Hemirt::curl, CURLOPT_WRITEDATA, &readBuffer);
+    curl_easy_setopt(Hemirt::curl, CURLOPT_TIMEOUT, 5L);
     CURLcode res = curl_easy_perform(Hemirt::curl);
     curl_easy_reset(curl);
 
@@ -71,6 +72,7 @@ Hemirt::getRaw(const std::string &page)
     curl_easy_setopt(Hemirt::curl, CURLOPT_URL, rawurl.c_str());
     curl_easy_setopt(Hemirt::curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(Hemirt::curl, CURLOPT_WRITEDATA, &readBuffer);
+    curl_easy_setopt(Hemirt::curl, CURLOPT_TIMEOUT, 4L);
     CURLcode res = curl_easy_perform(Hemirt::curl);
     curl_easy_reset(curl);
 
@@ -103,14 +105,16 @@ int countSubstring(const std::string &str, const std::string sub)
 
 }
 bool
-Hemirt::forsenBanned(const std::string &msg)
-{
-    static const std::vector<std::string> v{"NaM", "SexPanda"};
-    for (const auto &i : v) {
-        if (countSubstring(msg, i) > 2) {
-            return true;
-        }
-    }
+Hemirt::banned(const std::string &msg, const std::string& channel)
+{    
+    std::string page;
+    if (channel == "forsen") page = "https://forsen.tv/api/v1/banphrases/test";
+    else if (channel == "nymn") page = "https://nymn.pajbot.com/api/v1/banphrases/test";
+    else if (channel == "nani") page = "https://nani.pajbot.com/api/v1/banphrases/test";
+    else if (channel == "pajlada") page = "https://paj.pajlada.se/api/v1/banphrases/test";
+    else if (channel == "narwhal_dave") page = "https://narwhaldave.pajbot.com/api/v1/banphrases/test";
+    //else if (channel == "infinitegachi") page = "https://bot.infinitegachi.com/api/v1/banphrases/test";
+    else return false;
     
     std::lock_guard<std::mutex> lk(Hemirt::curlMtx);
     std::string readBuffer;
@@ -126,25 +130,26 @@ Hemirt::forsenBanned(const std::string &msg)
     curl_mime_name(part, "message");
     
     curl_easy_setopt(easy, CURLOPT_MIMEPOST, mime);
-    curl_easy_setopt(easy, CURLOPT_URL, "https://forsen.tv/api/v1/banphrases/test");
+    curl_easy_setopt(easy, CURLOPT_URL, page.c_str());
     curl_easy_setopt(easy, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(easy, CURLOPT_WRITEDATA, &readBuffer);
+    curl_easy_setopt(easy, CURLOPT_TIMEOUT, 2L);
     
     CURLcode res = curl_easy_perform(easy);
     curl_easy_cleanup(easy);
     curl_mime_free(mime);
 
     if (res) {
-        std::cerr << "Hemirt forsenBanned res: \"" << res << "\"" << std::endl;
+        std::cerr << "Hemirt banned res: \"" << res << "\"" << std::endl;
         return true;
     }
 
     if (readBuffer.empty()) {
-        std::cerr << "Hemirt forsenBanned readBuffer empty" << std::endl;
+        std::cerr << "Hemirt banned readBuffer empty" << std::endl;
         return true;
     }
     if (readBuffer.find("\"banned\": true") != std::string::npos) {
-        std::cout << "forsenBanned true: " << msg << std::endl;
+        std::cout << "banned true: " << msg << std::endl;
         return true;
     }
     return false;

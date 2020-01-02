@@ -34,6 +34,7 @@ parseMessage(const std::string &rawMessage)
         // remove \r\n
         ircMessage.raw = rawMessage.substr(0, rawMessage.size() -2);
     }
+        
     if (rawMessage.compare(0, 4, "PING") == 0) {
         ircMessage.type = IRCMessage::Type::PING;
         return ircMessage;

@@ -8,6 +8,7 @@
 #include "remindusers.hpp"
 #include "userids.hpp"
 #include "modules.hpp"
+#include "usage.hpp"
 
 #include <boost/asio/basic_waitable_timer.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -85,6 +86,8 @@ public:
     bool stop() const {
         return quit;
     }
+    
+    Usage usage;
 
 private:
     std::mutex channelMtx;

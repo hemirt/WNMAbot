@@ -12,7 +12,7 @@ public:
     static void deinit();
     static std::string getRandom(const std::string &page);
     static std::string getRaw(const std::string &page);
-    static bool forsenBanned(const std::string &msg);
+    static bool banned(const std::string &msg, const std::string&);
 
 private:
     static std::mutex curlMtx;

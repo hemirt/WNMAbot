@@ -2,6 +2,7 @@
 #include "connectionhandler.hpp"
 #include "utilities.hpp"
 #include "hemirt.hpp"
+#include "acccheck.hpp"
 
 #include <cstdlib>
 #include <functional>
@@ -75,7 +76,7 @@ Channel::say(const std::string &message)
         // Too many messages sent recently
         return false;
     }
-    if (this->channelName == "forsen" && Hemirt::forsenBanned(message)) {
+    if (Hemirt::banned(message, this->channelName)) {
         return false;
     }
 
@@ -116,7 +117,49 @@ Channel::handleMessage(const IRCMessage &message)
             }
             
             auto afk = owner->afkers.getAfker(message.user);
-            if (afk.exists) {
+            if (afk.exists && !afk.announce) {
+                auto now = std::chrono::system_clock::now();
+                if (boost::iequals(message.message.substr(0, 5), "!back")) {
+                    owner->usage.IncrAll(message.user, message.channel, "!back");
+                    owner->afkers.removeAfker(message.user);
+                    owner->usage.IncrAll(message.user, message.channel, "!afk comeback");
+
+                    auto seconds =
+                        std::chrono::duration_cast<std::chrono::seconds>(
+                            std::chrono::system_clock::now() - afk.time)
+                            .count();
+                    std::string howLongWasGone = makeTimeString(seconds);
+
+                    if (afk.message.empty()) {
+                        std::string msg = message.user + " is back(" + howLongWasGone + " ago) HeyGuys";
+                        if (Hemirt::banned(msg, this->channelName)) {
+                            msg = message.user + " is back(" + howLongWasGone + " ago)";
+                        }                        
+                        this->messenger.push_back(msg);
+                    } else {
+                        if (message.channel == "forsen" || message.channel == "nani") {
+                            boost::algorithm::replace_all(afk.message, "ResidentSleeper", "zzz");
+                        }
+                        
+                        if (Hemirt::banned(afk.message, this->channelName)) {
+                            this->messenger.push_back(message.user + " is back(" + howLongWasGone + " ago): BANPHRASED MESSAGE");
+                        } else {
+                            auto msg = message.user + " is back(" + howLongWasGone + " ago): " + afk.message;
+                            auto vec = splitIntoChunks(std::move(msg), 350);
+                            this->messenger.push_back(std::move(vec));
+                        }
+                    }
+                } else if (std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                                     afk.time)
+                            .count() > 15) {
+                    owner->afkers.removeAfker(message.user);
+                    owner->usage.IncrAll(message.user, message.channel, "!shadow afk comeback");
+                } else {
+                    afk.time = now;
+                    owner->afkers.updateAfker(message.user, afk);
+                }
+            }
+            if (afk.exists && afk.announce) {
                 int maxlen = 350;
                 if (this->channelName == "forsen") {
                     maxlen = 135;
@@ -128,7 +171,11 @@ Channel::handleMessage(const IRCMessage &message)
                                                                      afk.time)
                             .count() > 60 ||
                     boost::iequals(message.message.substr(0, 5), "!back")) {
+                    if (boost::iequals(message.message.substr(0, 5), "!back")) {
+                        owner->usage.IncrAll(message.user, message.channel, "!back");
+                    }
                     owner->afkers.removeAfker(message.user);
+                    owner->usage.IncrAll(message.user, message.channel, "!afk comeback");
 
                     auto seconds =
                         std::chrono::duration_cast<std::chrono::seconds>(
@@ -137,16 +184,21 @@ Channel::handleMessage(const IRCMessage &message)
                     std::string howLongWasGone = makeTimeString(seconds);
 
                     if (afk.message.empty()) {
-                        this->messenger.push_back(message.user + " is back(" +
-                                                  howLongWasGone +
-                                                  " ago) HeyGuys");
+                        std::string msg = message.user + " is back(" + howLongWasGone + " ago) HeyGuys";
+                        if (Hemirt::banned(msg, this->channelName)) {
+                            msg = message.user + " is back(" + howLongWasGone + " ago)";
+                        }
+                        this->messenger.push_back(msg);
                     } else {
+                        if (message.channel == "forsen" || message.channel == "nani") {
+                            boost::algorithm::replace_all(afk.message, "ResidentSleeper", "zzz");
+                        }
                         
-                        if (this->channelName == "forsen" && Hemirt::forsenBanned(afk.message)) {
+                        if (Hemirt::banned(afk.message, this->channelName)) {
                             this->messenger.push_back(message.user + " is back(" + howLongWasGone + " ago): BANPHRASED MESSAGE");
                         } else {
                             auto msg = message.user + " is back(" + howLongWasGone + " ago): " + afk.message;
-                            auto vec = splitIntoChunks(std::move(afk.message), maxlen);
+                            auto vec = splitIntoChunks(std::move(msg), maxlen);
                             this->messenger.push_back(std::move(vec));
                         }
                     }
@@ -156,11 +208,19 @@ Channel::handleMessage(const IRCMessage &message)
                 }
             }
 
-            owner->comebacks.sendMsgs(message.user, this->messenger);
+            owner->comebacks.sendMsgs(message.user, this->messenger, this->owner);
+            
             
             if (!this->ignore.isIgnored(message.user)) {
                 // user is not ignored
                 auto response = this->commandsHandler.handle(message);
+                
+                if (response.type != Response::Type::UNKNOWN) {
+                    this->owner->usage.IncrAll(message.user, message.channel, response.trigger);
+                    if (AccCheck::ageById(message.userid).count() < 47335428LL && !AccCheck::isAllowed(message.user)) {
+                        return true;
+                    }
+                }
 
                 if (response.type == Response::Type::MESSAGE) {
                     int maxlen = 350;
@@ -276,7 +336,7 @@ Channel::handleMessage(const IRCMessage &message)
         } break;
 
         default: {
-            //std::cout << "UNKWNON MESSAGE (" << static_cast<std::underlying_type<IRCMessage::Type>::type>(message.type) << ") :\n" << message << "\n" << std::endl;
+            //std::cout << "UNKNOWN MESSAGE (" << static_cast<std::underlying_type<IRCMessage::Type>::type>(message.type) << ") :\n" << message << "\n" << std::endl;
             // Unknown message type
         } break;
     }

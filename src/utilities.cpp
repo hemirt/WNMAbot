@@ -6,6 +6,8 @@
 #include <sstream>
 #include <mutex>
 
+#include <boost/algorithm/string/replace.hpp>
+
 void
 changeToLower(std::string &str)
 {
@@ -120,6 +122,34 @@ std::string localDate()
     return ss.str();
 }
 
+std::string todayDateName()
+{
+    std::lock_guard lock(localTimeM);
+    std::time_t t = std::time(nullptr);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&t), "%e %b");
+    return ss.str();
+}
+
+std::string todayDateNameLong()
+{
+    std::lock_guard lock(localTimeM);
+    std::time_t t = std::time(nullptr);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&t), "%d %B");
+    return ss.str();
+}
+
+std::string todayDateNameNumber()
+{
+    std::lock_guard lock(localTimeM);
+    std::time_t t = std::time(nullptr);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&t), "%d %m");
+    return ss.str();
+}
+
+
 std::string utcDateTime()
 {
     std::lock_guard lock(localTimeM);
@@ -127,4 +157,11 @@ std::string utcDateTime()
     std::stringstream ss;
     ss << std::put_time(std::gmtime(&t), "[%F %H:%M:%S]");
     return ss.str();
+}
+
+void replaceTodayDates(std::string& str)
+{
+    boost::algorithm::replace_all(str, "{today1}", todayDateName());
+    boost::algorithm::replace_all(str, "{today2}", todayDateNameLong());
+    boost::algorithm::replace_all(str, "{today3}", todayDateNameNumber());
 }

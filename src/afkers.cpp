@@ -2,7 +2,9 @@
 #include <stdint.h>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include "rapidjson/document.h"
 #include <iostream>
+#include <string>
 
 namespace pt = boost::property_tree;
 
@@ -39,6 +41,15 @@ Afkers::setAfker(const std::string &user, const std::string &message)
 {
     std::lock_guard<std::mutex> lock(this->afkersMapMtx);
     const Afk afk = {true, message, std::chrono::system_clock::now()};
+    this->afkersMap[user] = afk;
+    this->setAfkerRedis(user, afk);
+}
+
+void
+Afkers::setShadowAfker(const std::string &user, const std::string &message)
+{
+    std::lock_guard<std::mutex> lock(this->afkersMapMtx);
+    const Afk afk = {true, message, std::chrono::system_clock::now(), false};
     this->afkersMap[user] = afk;
     this->setAfkerRedis(user, afk);
 }
@@ -94,6 +105,7 @@ Afkers::setAfkerRedis(const std::string &user, const Afk &afk)
                         afk.time.time_since_epoch())
                         .count();
     tree.put("time", epoch);
+    tree.put("announce", static_cast<int>(afk.announce));
     std::stringstream ss;
     pt::write_json(ss, tree, false);
     std::string json = ss.str();
@@ -126,27 +138,61 @@ Afkers::getAllAfkersRedis()
 
     if (reply->type == REDIS_REPLY_ARRAY) {
         for (decltype(reply->elements) i = 0; i < reply->elements; i += 2) {
-            pt::ptree tree;
+            rapidjson::Document document;
+            //pt::ptree tree;
 
             std::string user(reply->element[i]->str, reply->element[i]->len);
 
             std::string jsonString(reply->element[i + 1]->str,
                                    reply->element[i + 1]->len);
-            std::stringstream ss(jsonString);
-            pt::read_json(ss, tree);
-
-            int64_t time = tree.get<int64_t>("time", -1);
-            if (time == -1) {
+            document.Parse(jsonString.c_str());
+            
+            //std::stringstream ss(jsonString);
+            //pt::read_json(ss, tree);
+            auto it = document.FindMember("time");
+            if (it == document.MemberEnd() || !it->value.IsString()) {
+                std::cerr << "time NOT A string" << std::endl;
                 continue;
             }
-            std::string message = tree.get("message", "");
+            
+            int64_t time;
+            try {
+                time = std::stoll(it->value.GetString());
+            } catch (std::exception &e) {
+                std::cerr << "getallafkers time not convertable: " << user << " " << e.what() << std::endl;
+                continue;
+            }
+
+            /*int64_t time = tree.get<int64_t>("time", -1);
+            if (time == -1) {
+                continue;
+            }*/
+            
+            auto it2 = document.FindMember("message");
+            if (it2 == document.MemberEnd() || !it2->value.IsString()) {
+                std::cerr << "message NOT A string" << std::endl;
+                continue;
+            }
+            //std::string message = tree.get("message", "");
+            std::string message = it2->value.GetString();
+            
+            bool announce = true;
+            auto it3 = document.FindMember("announce");
+            if (it3 != document.MemberEnd() && it3->value.IsInt()) {
+                if(!it3->value.GetInt()) {
+                    announce = false;
+                }
+            }
+            
+            std::cout << "MSG: " << message << "\ntime: " << time << std::endl;
 
             auto dur = std::chrono::seconds(time);
             auto timepoint =
                 std::chrono::time_point<std::chrono::system_clock>(dur);
 
-            this->afkersMap[user] = {true, message, timepoint};
+            this->afkersMap[user] = {true, message, timepoint, announce};
         }
     }
+    
     freeReplyObject(reply);
 }

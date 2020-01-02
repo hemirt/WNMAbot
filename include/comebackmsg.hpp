@@ -26,7 +26,7 @@ public:
     ~ComeBackMsg();
     int makeComeBackMsg(const std::string &from, const std::string &to,
                          const std::string &msg, bool isAdmin);
-    void sendMsgs(const std::string &user, Messenger &messenger);
+    void sendMsgs(const std::string &user, Messenger &messenger, ConnectionHandler *handler);
 
     ConnectionHandler *owner;
 

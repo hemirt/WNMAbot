@@ -12,5 +12,9 @@ std::vector<std::string> splitIntoChunks(std::string &&str, int maxlen = 350);
 std::string localTime();
 std::string localDate();
 std::string utcDateTime();
+std::string todayDateName();
+std::string todayDateNameLong();
+std::string todayDateNameNumber();
+void replaceTodayDates(std::string& str);
 
 #endif
