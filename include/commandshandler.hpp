@@ -233,6 +233,7 @@ private:
     
     std::mutex triviaMtx;
     bool triviaRunning = false;
+    bool triviaQuestionInFlight = false;
     Question currentQuestion;
     int questionsLeft = 0;
     bool startNextTriviaQuestion();

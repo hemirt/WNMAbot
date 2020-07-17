@@ -100,6 +100,45 @@ CommandsHandler::~CommandsHandler()
     std::cout << "CommandsHandler::~CommandsHandler(): " << this->channelObject->channelName << std::endl;
 }
 
+static float relativeSimilarity(const std::string &str1, const std::string &str2)
+{
+    // Longest Common Substring Problem
+    std::vector<std::vector<int>> tree(str1.size(),
+                                       std::vector<int>(str2.size(), 0));
+    int z = 0;
+
+    for (int i = 0; i < str1.size(); ++i)
+    {
+        for (int j = 0; j < str2.size(); ++j)
+        {
+            if (str1[i] == str2[j])
+            {
+                if (i == 0 || j == 0)
+                {
+                    tree[i][j] = 1;
+                }
+                else
+                {
+                    tree[i][j] = tree[i - 1][j - 1] + 1;
+                }
+                if (tree[i][j] > z)
+                {
+                    z = tree[i][j];
+                }
+            }
+            else
+            {
+                tree[i][j] = 0;
+            }
+        }
+    }
+
+    // ensure that no div by 0
+    return z == 0 ? 0.f
+                  : float(z) /
+                        std::max<int>(1, std::max(str1.size(), str2.size()));
+}
+
 Response
 CommandsHandler::handle(const IRCMessage &message)
 {
@@ -107,16 +146,22 @@ CommandsHandler::handle(const IRCMessage &message)
     
     {
         std::unique_lock lk(this->triviaMtx);
-        if (this->triviaRunning) {
-            if (changeToLower_copy(message.message) == this->currentQuestion.answer) {
+        if (this->triviaRunning && this->triviaQuestionInFlight) {
+            if (relativeSimilarity(changeToLower_copy(message.message), this->currentQuestion.answer) > 0.85) {
                 if(this->triviaTimer) this->triviaTimer->cancel();
+                this->triviaQuestionInFlight = false;
                 this->triviaTimer.reset();
                 this->channelObject->messenger.push_back("Trivia: " + message.user + " got it right! PogChamp the answer was: \"" + this->currentQuestion.displayAnswer + "\"");
                 Trivia::addPoint(message.user);
                 lk.unlock();
-                if (!this->startNextTriviaQuestion()) {
-                    this->channelObject->messenger.push_back("And trivia is over FeelsBadMan");
-                }
+                
+                auto t = std::make_shared<boost::asio::steady_timer>(ioService,
+                                               std::chrono::seconds(5));
+                t->async_wait([this, t]([[maybe_unused]] const boost::system::error_code &er) {
+                    if (!this->startNextTriviaQuestion()) {
+                        this->channelObject->messenger.push_back("And trivia is over FeelsBadMan");
+                    }
+                });
             }
         }
     }
@@ -1698,7 +1743,7 @@ CommandsHandler::comeBackMsg(const IRCMessage &message,
     std::string msg;
     if (!message.channel.empty()) {
         msg += message.channel.front();
-        msg += u8"\U000E0000";
+        msg += "\xF3\xA0\x80\x80";
         msg += message.channel.substr(1);
     }
     msg += ") ";
@@ -1955,8 +2000,8 @@ CommandsHandler::getUsersFrom(const IRCMessage &message,
         for (auto &i : pairDisplayUsers.second) {
             // insert special character at pos 1
             // and at pos before last
-            i.insert(1, std::string(u8"\U000E0000"));
-            i.insert(i.size() - 1, std::string(u8"\U000E0000"));
+            i.insert(1, std::string("\xF3\xA0\x80\x80"));
+            i.insert(i.size() - 1, std::string("\xF3\xA0\x80\x80"));
             response.message += i + ", ";
         }
         response.message.pop_back();
@@ -2000,8 +2045,8 @@ CommandsHandler::getUsersLiving(const IRCMessage &message,
         response.message =
             message.user + ", in " + pairDisplayUsers.first + " live users: ";
         for (auto &i : pairDisplayUsers.second) {
-            i.insert(1, std::string(u8"\U000E0000"));
-            i.insert(i.size() - 1, std::string(u8"\U000E0000"));
+            i.insert(1, std::string("\xF3\xA0\x80\x80"));
+            i.insert(i.size() - 1, std::string("\xF3\xA0\x80\x80"));
             response.message += i + ", ";
         }
         response.message.pop_back();
@@ -2867,7 +2912,7 @@ CommandsHandler::setData(const IRCMessage &message,
         if (UserIDs::getInstance().isUser(tokens[i]) && !isEmote(tokens[i])) {
             auto str = tokens[i];
             if (str.size() > 1) {
-                str.insert(1, u8"\U000E0000");
+                str.insert(1, "\xF3\xA0\x80\x80");
             }
             tokens[i] = str;
         }
@@ -3180,55 +3225,63 @@ CommandsHandler::startNextTriviaQuestion()
         return false;
     }
     
+    this->triviaQuestionInFlight = true;
     --this->questionsLeft;
     
     this->currentQuestion = std::move(Trivia::pop());
     this->triviaTimer = std::make_shared<boost::asio::steady_timer>(ioService,
-                                               std::chrono::seconds(30));
-    this->triviaTimer->async_wait([this](const boost::system::error_code &er) {
+                                               std::chrono::seconds(20));
+    int answersize = this->currentQuestion.answer.size();
+    int spaces = std::count(this->currentQuestion.answer.begin(), this->currentQuestion.answer.end(), ' ');
+
+    std::stringstream ss;
+    ss << "answer has " << answersize - spaces << " characters and " << spaces << " spaces";
+    std::string hint_of_size = ss.str();
+    this->triviaTimer->async_wait([this, hint_of_size] (const boost::system::error_code &er) mutable {
         if (er) return;
         std::unique_lock lk(this->triviaMtx);
         
-        int answersize = this->currentQuestion.answer.size();
-        answersize /= 4;
-        std::string hint = this->currentQuestion.displayAnswer.substr(0, answersize);
-        bool var = true;
-        for (int i = answersize; i < this->currentQuestion.answer.size(); ++i) {
-            if (this->currentQuestion.answer[i] == ' ') hint += ' ';
-            else if (var) hint += '_';
-            else hint += '-';
-            var = !var;
-        }
+        std::string hint;
+        if (this->currentQuestion.hint1) hint = this->currentQuestion.hint1str;
+        else hint = hint_of_size;
         
-        this->channelObject->messenger.push_back("LuL Hint: " + hint);
+        this->channelObject->messenger.push_back("Hint: " + hint);
+        
+        if (!this->currentQuestion.hint1) hint_of_size = "";
         
         this->triviaTimer = std::make_shared<boost::asio::steady_timer>(ioService,
-                                               std::chrono::seconds(15));
-        this->triviaTimer->async_wait([this](const boost::system::error_code &er) {
+                                               std::chrono::seconds(20));
+        this->triviaTimer->async_wait([this, hint_of_size](const boost::system::error_code &er) {
             if (er) return;
             std::unique_lock lk(this->triviaMtx);
             
-            int answersize = this->currentQuestion.answer.size();
-            answersize /= 2;
-            std::string hint = this->currentQuestion.displayAnswer.substr(0, answersize);
-            bool var = true;
-            for (int i = answersize; i < this->currentQuestion.answer.size(); ++i) {
-                if (this->currentQuestion.answer[i] == ' ') hint += ' ';
-                else if (var) hint += '_';
-                else hint += '-';
-                var = !var;
+            std::string hint;
+            if (this->currentQuestion.hint2) hint = this->currentQuestion.hint2str;
+            else hint = hint_of_size;
+            
+            if (hint_of_size == "") {
+                int answersize = this->currentQuestion.answer.size();
+                answersize /= 3;
+                hint = this->currentQuestion.displayAnswer.substr(0, answersize);
+                bool var = true;
+                for (int i = answersize; i < this->currentQuestion.answer.size(); ++i) {
+                    if (this->currentQuestion.answer[i] == ' ') hint += ' ';
+                    else if (var) hint += '_';
+                    else hint += '-';
+                    var = !var;
+                }
             }
             
-            this->channelObject->messenger.push_back("LuL Hint: " + hint);
+            this->channelObject->messenger.push_back("Hint: " + hint);
             
             this->triviaTimer = std::make_shared<boost::asio::steady_timer>(ioService,
-                                               std::chrono::seconds(15));
+                                               std::chrono::seconds(20));
             this->triviaTimer->async_wait([this](const boost::system::error_code &er) {
                 if (er) return;
-                this->channelObject->messenger.push_back("LuL Nobody got the answer right, the correct answer was " + this->currentQuestion.displayAnswer);
+                this->channelObject->messenger.push_back("Nobody got the answer right, the correct answer was " + this->currentQuestion.displayAnswer);
                 
                 this->triviaTimer = std::make_shared<boost::asio::steady_timer>(ioService,
-                                               std::chrono::seconds(5));
+                                               std::chrono::seconds(10));
                 this->triviaTimer->async_wait([this](const boost::system::error_code &er) {
                     if (er) return;
                     if (!this->startNextTriviaQuestion()) {
@@ -3238,7 +3291,10 @@ CommandsHandler::startNextTriviaQuestion()
             });  
         });
     });
-    std::string q = "New Trivia question in category: \"" + this->currentQuestion.category + "\" is: " + this->currentQuestion.question; 
+    std::string q;
+    if (questionsLeft == 0) 
+        q = std::to_string(questionsLeft+1)+ " trivia question left: \"" + this->currentQuestion.category + "\": " + this->currentQuestion.question;
+    else q = std::to_string(questionsLeft+1)+ " trivia questions left: \"" + this->currentQuestion.category + "\": " + this->currentQuestion.question;
     this->channelObject->messenger.push_back(std::move(q));
 
     return true;

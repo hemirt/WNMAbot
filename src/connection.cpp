@@ -97,7 +97,7 @@ Connection::writeMessage(const std::string &message)
     }
     this->duplicateMsg = !this->duplicateMsg;
     if (this->duplicateMsg) {
-        this->writeRawMessage(message + u8" \U000E0000\r\n");
+        this->writeRawMessage(message + " \xF3\xA0\x80\x80\r\n");
     } else {
         this->writeRawMessage(message + " \r\n");
     }

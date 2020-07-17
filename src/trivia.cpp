@@ -100,19 +100,19 @@ long long Trivia::getPoints(const std::string& username)
         freeReplyObject(reply);
         lk.unlock();
         Trivia::reconnect();
-        return 0;
+        return -1;
     }
     
     if (reply == nullptr) {
-        return 0;
+        return -2;
     }
 
-    if (reply->type != REDIS_REPLY_INTEGER) {
+    if (reply->type != REDIS_REPLY_STRING) {
         freeReplyObject(reply);
-        return 0;
+        return -3;
     }
     
-    long long i = reply->integer;
+    long long i = std::stoll(reply->str);
     freeReplyObject(reply);
     return i;
 }
@@ -149,6 +149,15 @@ bool Trivia::allowedToStart(const std::string &user)
     }
 }
 
+static std::string deping(std::string str)
+{
+    if (str.size() > 1)
+    {
+        str.insert(1, "\xF3\xA0\x80\x80");
+    }
+    return str;
+}
+
 std::string Trivia::top5()
 {
     std::lock_guard lk(Trivia::mtx);
@@ -160,7 +169,7 @@ std::string Trivia::top5()
     );
     std::stringstream ss;
     for (const auto& i : results) {
-        ss << i.first << " " << i.second << ", ";
+        ss << deping(i.first) << " " << i.second << ", ";
     }
     auto res = ss.str();
     res.pop_back();
@@ -207,7 +216,7 @@ bool Trivia::getQuestions()
     {
         
         
-        std::string rawurl = "https://opentdb.com/api.php?amount=50&encode=base64";
+        std::string rawurl = "https://api.gazatu.xyz/trivia/questions?count=100&include=[Anime,Hentai]";
         
         curl_easy_setopt(Trivia::curl, CURLOPT_URL, rawurl.c_str());
         curl_easy_setopt(Trivia::curl, CURLOPT_WRITEFUNCTION, WriteCallback);
@@ -231,23 +240,19 @@ bool Trivia::getQuestions()
     
     rapidjson::Document d;
     d.Parse(readBuffer.c_str());
-    auto it = d.FindMember("results");
-    if (it == d.MemberEnd() || !it->value.IsArray()) {
-        std::cerr << "Trivia::getQuestions results NOT AN array" << std::endl;
-        return false;
-    }
     
-    const auto& arr = it->value.GetArray();
+    const auto& arr = d.GetArray();
     for (const auto& v : arr) {
         Question q;
-        q.category = decode(v["category"].GetString());
-        q.question = decode(v["question"].GetString());
-        q.answer = decode(v["correct_answer"].GetString());
+        q.category = v["category"].GetString();
+        q.question = v["question"].GetString();
+        q.answer = v["answer"].GetString();
         q.displayAnswer = q.answer;
         changeToLower(q.answer);
-        if (std::string(v["type"].GetString()) == "Ym9vbGVhbg==") {
-            q.question += " True or False?";
-        }
+        q.hint1 = !v["hint1"].IsNull();
+        q.hint2 = !v["hint2"].IsNull();
+        if (q.hint1) q.hint1str = v["hint1"].GetString();
+        if (q.hint2) q.hint2str = v["hint2"].GetString();
         Trivia::questions.push_back(std::move(q));
     }
 
